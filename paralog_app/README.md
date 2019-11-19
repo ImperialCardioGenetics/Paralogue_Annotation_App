@@ -11,3 +11,6 @@ You can see the app in action here (TODO:app-link).
 - Output known ClinVar ids for query vars :heavy_check_mark:
 - Genarate url for ClinVar result variants and insert into output df as links :heavy_check_mark:
 - Generate url for ENSEMBL paralog alignemts and insert into output df as links :heavy_check_mark:
+- Fix links in download file
+- Fix column lenght names
+- Fix logo width
