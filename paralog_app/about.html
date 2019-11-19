@@ -1,0 +1,318 @@
+<h2>About CardioBoost</h2>
+<p>CardioBoost is a disease-specific machine learning classifier to predict the pathogenicity of rare (gnomAD Allele Frequency &lt;=0.1%) missense variant in genes associated with cardiomyopathies and arrhythmias that outperforms existing genome-wide prediction tools.</p>
+<p>The methods and evaluations are described fully in our manuscript available here [TODO: preprint-link]. The source code for the manuscript, along with all data and code necessary to reproduce the analyses, is available on <a href="https://github.com/ImperialCardioGenetics/CardioBoost_manuscript">GitHub</a>.</p>
+
+<p>The web app was built using <a href="http://shiny.rstudio.com">Shiny</a>, the source code is freely available <a href="https://github.com/ImperialCardioGenetics/CardioBoost">here.</a></p>
+
+<p>&nbsp;</p>
+
+<u><h2>Recommended Usage</h2></u>
+<p>Although we showed the benefits of the proposed model for gene-disease classification and its superiority over existing genome-wide machine learning tools, we emphasize that CardioBoost is not intended to use as a standalone clinical decision tool to replace the whole ACMG guidelines <a href="https://www.ncbi.nlm.nih.gov/pubmed/25741868">(Richards et al. 2015)</a> for clinical variant interpretation. For example, a variant with higher than 90% pathogenicity score predicted by CardioBoost as pathogenic shouldn’t straightforwardly be interpreted as Pathogenic without integrating other lines of evidences. Therefore, in the context of inherited cardiac conditions, the clinically-relevant classification by CardioBoost is intended to use as the evidence PP3 within ACMG guidelines as a more reliable and accurate computational tool over genome-wide ones in supporting variant interpretation in Cardiomyopathies and Arrhythmias.</p>
+<br></br>
+<u><h3>Inherited Cardiac Conditions</h3></u>
+We consider two types of conditions:
+<ul>
+<li>
+Cardiomyopathies: dilated cardiomyopathy and hypertrophic cardiomyopathy</li>
+<li>
+Inherited Arrhythmias: Long QT syndrome and Brugada syndrome</li>
+</ul>
+
+<u><h3>Inherited Cardiac Conditions related genes</h3></u>
+<p>The following tables display the genes related to the conditions and only the genes with known pathogenic variants in our curated data sets would be included.</p>
+<p>&nbsp;</p>
+<h4>Cardiomyopathies</h4>
+<table class="table table-hover" border="1">
+<thead>
+<tr>
+<th>Gene Symbol</th>
+<th>Ensemble Gene ID</th>
+<th>Ensemble Transcript ID</th>
+<th>Ensemble Protein ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="cellinside"><i>ACTC1</i></td>
+<td class="cellinside">ENSG00000159251</td>
+<td class="cellinside">ENST00000290378</td>
+<td class="cellinside">ENSP00000290378</td>
+</tr>
+<tr>
+<td class="cellinside"><i>CSRP3</i></td>
+<td class="cellinside">ENSG00000129170</td>
+<td class="cellinside">ENST00000533783</td>
+<td class="cellinside">ENSP00000431813</td>
+</tr>
+<tr>
+<td class="cellinside"><i>DES</i></td>
+<td class="cellinside">ENSG00000175084</td>
+<td class="cellinside">ENST00000373960</td>
+<td class="cellinside">ENSP00000363071</td>
+</tr>
+<tr>
+<td class="cellinside"><i>GLA</i></td>
+<td class="cellinside">ENSG00000102393</td>
+<td class="cellinside">ENST00000218516</td>
+<td class="cellinside">ENSP00000218516</td>
+</tr>
+<tr>
+<td class="cellinside"><i>LAMP2</i></td>
+<td class="cellinside">ENSG00000005893</td>
+<td class="cellinside">ENST00000200639</td>
+<td class="cellinside">ENSP00000200639</td>
+</tr>
+<tr>
+<td class="cellinside"><i>LMNA</i></td>
+<td class="cellinside">ENSG00000160789</td>
+<td class="cellinside">ENST00000368300</td>
+<td class="cellinside">ENSP00000357283</td>
+</tr>
+<tr>
+<td class="cellinside"><i>MYBPC3</i></td>
+<td class="cellinside">ENSG00000134571</td>
+<td class="cellinside">ENST00000545968</td>
+<td class="cellinside">ENSP00000442795</td>
+</tr>
+<tr>
+<td class="cellinside"><i>MYH7</i></td>
+<td class="cellinside">ENSG00000092054</td>
+<td class="cellinside">ENST00000355349</td>
+<td class="cellinside">ENSP00000347507</td>
+</tr>
+<tr>
+<td class="cellinside"><i>MYL2</i></td>
+<td class="cellinside">ENSG00000111245</td>
+<td class="cellinside">ENST00000228841</td>
+<td class="cellinside">ENSP00000228841</td>
+</tr>
+<tr>
+<td class="cellinside"><i>MYL3</i></td>
+<td class="cellinside">ENSG00000160808</td>
+<td class="cellinside">ENST00000395869</td>
+<td class="cellinside">ENSP00000379210</td>
+</tr>
+<tr>
+<td class="cellinside"><i>PLN</i></td>
+<td class="cellinside">ENSG00000198523</td>
+<td class="cellinside">ENST00000357525</td>
+<td class="cellinside">ENSP00000350132</td>
+</tr>
+<tr>
+<td class="cellinside"><i>PRKAG2</i></td>
+<td class="cellinside">ENSG00000106617</td>
+<td class="cellinside">ENST00000287878</td>
+<td class="cellinside">ENSP00000287878</td>
+</tr>
+<tr>
+<td class="cellinside"><i>PTPN11</i></td>
+<td class="cellinside">ENSG00000179295</td>
+<td class="cellinside">ENST00000351677</td>
+<td class="cellinside">ENSP00000340944</td>
+</tr>
+<tr>
+<td class="cellinside"><i>RBM20</i></td>
+<td class="cellinside">ENSG00000203867</td>
+<td class="cellinside">ENST00000369519</td>
+<td class="cellinside">ENSP00000358532</td>
+</tr>
+<tr>
+<td class="cellinside"><i>SCN5A</i></td>
+<td class="cellinside">ENSG00000183873</td>
+<td class="cellinside">ENST00000333535</td>
+<td class="cellinside">ENSP00000328968</td>
+</tr>
+<tr>
+<td class="cellinside"><i>TAZ</i></td>
+<td class="cellinside">ENSG00000102125</td>
+<td class="cellinside">ENST00000299328</td>
+<td class="cellinside">ENSP00000299328</td>
+</tr>
+<tr>
+<td class="cellinside"><i>TNNI3</i></td>
+<td class="cellinside">ENSG00000129991</td>
+<td class="cellinside">ENST00000344887</td>
+<td class="cellinside">ENSP00000341838</td>
+</tr>
+<tr>
+<td class="cellinside"><i>TNNT2</i></td>
+<td class="cellinside">ENSG00000118194</td>
+<td class="cellinside">ENST00000367318</td>
+<td class="cellinside">ENSP00000356287</td>
+</tr>
+<tr>
+<td class="cellinside"><i>TPM1</i></td>
+<td class="cellinside">ENSG00000140416</td>
+<td class="cellinside">ENST00000403994</td>
+<td class="cellinside">ENSP00000385107</td>
+</tr>
+<tr>
+<td class="cellinside"><i>TTN</i></td>
+<td class="cellinside">ENSG00000155657</td>
+<td class="cellinside">ENST00000589042</td>
+<td class="cellinside">ENSP00000467141</td>
+</tr>
+</tbody>
+</table>
+<br></br>
+<h4>Inherited Arrhythmias Syndromes</h4>
+<table class="table table-hover" border="1">
+<thead>
+<tr>
+<th>Gene Symbol</th>
+<th>Ensemble Gene ID</th>
+<th>Ensemble Transcript ID</th>
+<th>Ensemble Protein ID</th>
+</tr>
+</thead>
+<tbody>
+
+  <tr>
+  <td class=cellinside><i>ANK2</i>
+  </td>
+  <td class=cellinside>ENSG00000145362
+  </td>
+  <td class=cellinside>ENST00000264366
+  </td>
+  <td class=cellinside>ENSP00000264366
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>CACNA1C</i>
+  </td>
+  <td class=cellinside>ENSG00000151067
+  </td>
+  <td class=cellinside>ENST00000399655
+  </td>
+  <td class=cellinside>ENSP00000382563
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>CALM1</i>
+  </td>
+  <td class=cellinside>ENSG00000198668
+  </td>
+  <td class=cellinside>ENST00000356978
+  </td>
+  <td class=cellinside>ENSP00000349467
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>CALM2</i>
+  </td>
+  <td class=cellinside>ENSG00000143933
+  </td>
+  <td class=cellinside>ENST00000272298
+  </td>
+  <td class=cellinside>ENSP00000272298
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>CALM3</i>
+  </td>
+  <td class=cellinside>ENSG00000160014
+  </td>
+  <td class=cellinside>ENST00000291295
+  </td>
+  <td class=cellinside>ENSP00000291295
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>CAV3</i>
+  </td>
+  <td class=cellinside>ENSG00000182533
+  </td>
+  <td class=cellinside>ENST00000343849
+  </td>
+  <td class=cellinside>ENSP00000341940
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>KCNE1</i>
+  </td>
+  <td class=cellinside>ENSG00000180509
+  </td>
+  <td class=cellinside>ENST00000399289
+  </td>
+  <td class=cellinside>ENSP00000382228
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>KCNE2</i>
+  </td>
+  <td class=cellinside>ENSG00000159197
+  </td>
+  <td class=cellinside>ENST00000290310
+  </td>
+  <td class=cellinside>ENSP00000290310
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>KCNH2</i>
+  </td>
+  <td class=cellinside>ENSG00000055118
+  </td>
+  <td class=cellinside>ENST00000262186
+  </td>
+  <td class=cellinside>ENSP00000262186
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>KCNJ2</i>
+  </td>
+  <td class=cellinside>ENSG00000123700
+  </td>
+  <td class=cellinside>ENST00000535240
+  </td>
+  <td class=cellinside>ENSP00000441848
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>KCNQ1</i>
+  </td>
+  <td class=cellinside>ENSG00000053918
+  </td>
+  <td class=cellinside>ENST00000155840
+  </td>
+  <td class=cellinside>ENSP00000155840
+  </td></tr>
+
+  <tr>
+  <td class=cellinside><i>SCN5A</i>
+  </td>
+  <td class=cellinside>ENSG00000183873
+  </td>
+  <td class=cellinside>ENST00000333535
+  </td>
+  <td class=cellinside>ENSP00000328968
+  </td></tr>
+
+
+</tbody>
+</table>
+<br></br>
+
+<u><h2>Classification Criteria</h2></u>
+<p>Variant classification is based on the pathogenic probability predicted by CardioBoost. According to the ACMG guidelines, we use  Pr>=0.9 as the high classification certainty threshold to classify variants. A variant with lower than 90% classification probability is considered as indeterminate with low classification confidence level.
+In short, a variant is classified given its predicted pathogenicity:
+<ul>
+<li>pathogenicity&gt;=0.9: Pathogenic/Likely pathogenic </li>
+<li>pathogenicity&lt;=0.1: Benign/Likely benign</li>
+<li>0.1&lt;pathogenicity&gt;0.9: indeterminate</li>
+</ul>
+<br></br>
+<u><h2>FAQ</h2></u>
+<h3>Why does CardioBoost not output predictions on my input list of variants?</h3>
+<p>There are mainly three reasons that CardioBoost would not return any prediction:</p>
+<ul>
+<li>The gene is not included as disease-related genes described above. Please check the gene lists above.</li>
+<li>The mutation is not a valid missense change on the gene's canonical transcript (shown in the gene lists above).</li>
+<li>The variant's gnomAD allele frequency is larger than 0.1%, which can be considered as a common variant and highly likely benign to cardiomyopathies and arrhythmias.</li>
+</ul>
+<br></br>
+
+
+<u><h2>License</h2></u>
+<p>The data provided here is available under the <a href="https://opendatacommons.org/licenses/odbl/summary/index.html">ODC Open Database License (ODbL) </a>: you are free to share and modify the data provided here as long as you attribute any public use of the database, or works produced from the database; keep the resulting data-sets open; and offer your shared or adapted version of the dataset under the same ODbL license.</p>
+
+<p>The app is released under a GNU Lesser General Public License v2.1 [TODO:license-link].</p>
