@@ -10,7 +10,7 @@ shinyServer(function(input, output){
   mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=FALSE)
   map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
   
-  get_paralog<-function(){
+  get_paralog<-function(savefile){
     
     #input<-data.frame(chr="1",pos="114713907",ref="T",alt="A")
     
@@ -41,25 +41,36 @@ shinyServer(function(input, output){
         }
       }
     }
-  
-    #add ClinVar IDs with URLs 
-    result$Query_ClinVar<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  
-    result$ClinVar_ID<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ClinVar_ID,"/"), "' target='_blank'>", result$ClinVar_ID, "</a>")  
+    if (savefile=="NO"){
+      #add ClinVar IDs with URLs 
+      result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  
+      result$ClinVar_ID_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ClinVar_ID,"/"), "' target='_blank'>", result$ClinVar_ID, "</a>")  
+      
+      #generate ensembl alignment URLs
+      # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
+      result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Query_Gene)],";g1=",map[unlist(result$Gene)]), "' target='_blank'>alignment</a>")  
+      
     
-    #generate ensembl alignment URLs
-    # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-    result$Ensembl_alignment<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Query_Gene)],";g1=",map[unlist(result$Gene)]), "' target='_blank'>alignment</a>")  
+      reorder_cols<-c("Variant_ID","Query_Gene","Query_ClinVar_link", "Chr","Position","REF","ALT","ClinVar_ID_link","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score","Ensembl_alignment_link" )
+      rename_cols<-c("Query Variant","Query Gene","Query ClinVar ID", "Chr","Position","REF","ALT","ClinVar ID","Gene","Protein Position","REF AA", "ALT AA","Codons","para_Z Score","Ensembl alignment" )
+      
+      result<- result[,reorder_cols]
+      names(result)<-rename_cols
+      
+      return(result)
+    } else {
+      return(result)
+    }
   
-    return(result)
   }
   
-  output$paralog<-renderDataTable(DT::datatable(get_paralog(),
+  output$paralog<-renderDataTable(DT::datatable(get_paralog("NO"),
                                                 escape = F, # escape text hyperlink to url instead of text
                                                 options = list(paging = FALSE),# set options for table eg. per page lines
                                                 rownames = F, 
                                                 caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
                                                 ) %>%
-                                                formatStyle(c("Variant_ID","Query_Gene","Query_ClinVar"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+                                                formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
                                   )
   
   output$download <- downloadHandler(
@@ -67,7 +78,7 @@ shinyServer(function(input, output){
       paste("paralog_annotation", ".tsv",sep="") # need to give specific name?
     },
     content = function(file) {
-      write.table(get_paralog(), file, row.names = FALSE,quote = F,sep="\t")
+      write.table(get_paralog("YES"), file, row.names = FALSE,quote = F,sep="\t")
     }
   )
   
