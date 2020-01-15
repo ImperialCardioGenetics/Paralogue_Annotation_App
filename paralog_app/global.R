@@ -37,4 +37,3 @@ predict_output<-function(output,input_data){
   
   return(output)
 }
-
