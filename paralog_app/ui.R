@@ -36,19 +36,22 @@ fluidPage(
                       p("e.g. 1:114713907:T:G, 3:38551076:T:A, or X:71223741:G:A"),
                       conditionalPanel(
                         condition="input.format=='pick'",
+                        ##Chromosome
                         # selectInput(inputId = "chr",
                         #             label = "Chromosome:",
                         #             selected = "1",width = "80",multiple = F,selectize = F,
                         #             choices = c(1:22,"x","Y")),
                         selectizeInput(
-                          "chr", "Chromosome",
-                          width = "220",
+                          "chr", "Chromosome:",
+                          width = "200",
                           choices = c(1:22,"X","Y"),
                           options = list(
                             placeholder = "Select chromosome",
                             onInitialize = I('function() { this.setValue(""); }')
                           )
                         ),
+                        
+                        ##Position
                         textInput(inputId = "pos",
                                   label = "Position:",
                                   width = "140",
@@ -64,16 +67,40 @@ fluidPage(
                         #   )
                         # ),
                         
-                      selectInput(inputId = "ref",
-                                  label = "Reference:", 
-                                  selected = "T",width = "80",multiple = F,selectize = F,
-                                  choices = c("A","G","T","C")),
-                      selectInput(inputId = "alt",
-                                  label = "Alternate:", 
-                                  selected = "A",width = "80",multiple = F,selectize = F,
-                                  choices = c("A","G","T","C"))
-                      ),
-                      conditionalPanel(condition="input.format=='paste'",textAreaInput("var",label=NULL,placeholder = "1:114713907:T:G")),
+                        ##Ref
+                        # selectInput(inputId = "ref",
+                        #             label = "Reference:", 
+                        #             selected = "T",width = "80",multiple = F,selectize = F,
+                        #             choices = c("A","G","T","C")),
+                        selectizeInput(
+                          "ref", "Reference:",
+                          width = "200",
+                          choices = c("A","G","T","C"),
+                          options = list(
+                            placeholder = "Select ref allele",
+                            onInitialize = I('function() { this.setValue(""); }')
+                          )
+                        ),
+                        
+                        ##Alt
+                        # selectInput(inputId = "alt",
+                        #             label = "Alternate:",
+                        #             selected = "A",width = "80",multiple = F,selectize = F,
+                        #             choices = c("A","G","T","C"))
+                        selectizeInput(
+                          "alt", "Alternate",
+                          width = "200",
+                          choices = c("A","G","T","C"),
+                          options = list(
+                            placeholder = "Select alt allele",
+                            onInitialize = I('function() { this.setValue(""); }')
+                          )
+                        )
+                        ),
+                      conditionalPanel(
+                        condition="input.format=='paste'",
+                        textAreaInput("var",label=NULL,placeholder = "1:114713907:T:G")
+                        ),
                       conditionalPanel(condition="input.format=='upload'",fileInput("file", NULL,accept = c(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
@@ -81,15 +108,17 @@ fluidPage(
                       ),
                    mainPanel(
                      tabsetPanel(
+                       type = "tabs",
                        tabPanel("Query Variant",
                                 h2("Missense Variant Paralogue Annotation",align="center"),
                                 dataTableOutput("paralog"),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
                        ),
-                       tabPanel("Known pathogenic variants in paralogous positions",
-                                h2("Missense Variant Paralogue Annotation",align="center"),
-                                dataTableOutput("paralog"),
-                                conditionalPanel("output.paralog",downloadButton("download","Download"))
+                       tabPanel("Known pathogenic variants in paralogous positions"
+                                # ,
+                                # h2("Missense Variant Paralogue Annotation",align="center"),
+                                # dataTableOutput("paralog"),
+                                # conditionalPanel("output.paralog",downloadButton("download","Download"))
                                 )
                        )
                      )
