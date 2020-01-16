@@ -104,7 +104,8 @@ fluidPage(
                       conditionalPanel(condition="input.format=='upload'",fileInput("file", NULL,accept = c(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
-                                      ".csv")))
+                                      ".csv"))),
+                    #PUT QUERY BUTTON HERE
                       ),
                    mainPanel(
                      tabsetPanel(
