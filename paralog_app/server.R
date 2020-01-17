@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(shinythemes)
+library(shinyjs)
 
 #library(tidyverse)
 
@@ -64,7 +65,8 @@ shinyServer(function(input, output){
   
   }
   
-  output$paralog<-renderDataTable(DT::datatable(get_paralog("NO"),
+  observeEvent(input$sumbit_button, {
+    output$paralog<-renderDataTable(DT::datatable(get_paralog("NO"),
                                                 escape = F, # escape text hyperlink to url instead of text
                                                 options = list(paging = FALSE),# set options for table eg. per page lines
                                                 rownames = F, 
@@ -72,6 +74,7 @@ shinyServer(function(input, output){
                                                 ) %>%
                                                 formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
                                   )
+  })
   
   output$download <- downloadHandler(
     filename = function() {
