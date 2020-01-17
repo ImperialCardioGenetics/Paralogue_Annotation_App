@@ -1,5 +1,6 @@
 library(shiny)
 library(shinythemes)
+library(shinyjs)
 
 # css <- HTML(".pull-left{float: left !important;}
 #               .pull-right{float: right !important;}")
@@ -12,6 +13,7 @@ library(shinythemes)
 #            });")
 
 fluidPage(
+  useShinyjs(),
   # tags$head(
   #   tags$style(css),
   #   tags$script(js)
@@ -25,6 +27,7 @@ fluidPage(
                sidebarLayout(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
+                    id = "myapp",
                     h3("Input your variant"),
                     br(),
                     radioButtons("format",label=NULL,
@@ -45,9 +48,11 @@ fluidPage(
                           "chr", "Chromosome:",
                           width = "200",
                           choices = c(1:22,"X","Y"),
+                          multiple = TRUE,
                           options = list(
                             placeholder = "Select chromosome",
-                            onInitialize = I('function() { this.setValue(""); }')
+                            onInitialize = I('function() { this.setValue(""); }'),
+                            maxItems = 1
                           )
                         ),
                         
@@ -76,9 +81,11 @@ fluidPage(
                           "ref", "Reference:",
                           width = "200",
                           choices = c("A","G","T","C"),
+                          multiple = TRUE,
                           options = list(
                             placeholder = "Select ref allele",
-                            onInitialize = I('function() { this.setValue(""); }')
+                            onInitialize = I('function() { this.setValue(""); }'),
+                            maxItems = 1
                           )
                         ),
                         
@@ -91,9 +98,11 @@ fluidPage(
                           "alt", "Alternate",
                           width = "200",
                           choices = c("A","G","T","C"),
+                          multiple = TRUE,
                           options = list(
                             placeholder = "Select alt allele",
-                            onInitialize = I('function() { this.setValue(""); }')
+                            onInitialize = I('function() { this.setValue(""); }'),
+                            maxItems = 1
                           )
                         )
                         ),
@@ -105,7 +114,8 @@ fluidPage(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv"))),
-                    actionButton("sumbit_button","Submit")
+                    actionButton("sumbit_button","Submit"),
+                    actionButton("reset", "Reset form")
                       ),
                    mainPanel(
                      tabsetPanel(

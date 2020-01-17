@@ -75,7 +75,9 @@ shinyServer(function(input, output){
                                                 formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
                                   )
   })
-  
+  observeEvent(input$reset, {
+    shinyjs::reset("myapp")
+  })
   output$download <- downloadHandler(
     filename = function() {
       paste("paralog_annotation", ".tsv",sep="") # need to give specific name?
