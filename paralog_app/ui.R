@@ -28,6 +28,19 @@ fluidPage(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
                     id = "myapp",
+                    tags$head(tags$style(type="text/css", "#loadmessage {
+position: fixed;
+top: 100px;
+left: 100px;
+width: 100%;
+padding: 5px 0px 5px 0px;
+text-align: center;
+font-weight: bold;
+font-size: 100%;
+color: #000000;
+background-color: #CCFF66;
+z-index: 105;
+             }")),
                     h3("Input your variant"),
                     br(),
                     radioButtons("format",label=NULL,
@@ -114,6 +127,8 @@ fluidPage(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv"))),
+                    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                     tags$div("Loading...",id="loadmessage")),
                     actionButton("sumbit_button","Submit"),
                     actionButton("reset", "Reset form")
                       ),
