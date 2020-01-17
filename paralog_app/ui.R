@@ -105,7 +105,7 @@ fluidPage(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv"))),
-                    #PUT QUERY BUTTON HERE
+                    actionButton("sumbit_button","Submit")
                       ),
                    mainPanel(
                      tabsetPanel(
