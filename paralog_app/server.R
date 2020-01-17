@@ -2,6 +2,7 @@ library(shiny)
 library(DT)
 library(shinythemes)
 library(shinyjs)
+library(shinycssloaders)
 
 #library(tidyverse)
 
@@ -14,7 +15,6 @@ shinyServer(function(input, output){
   get_paralog<-function(savefile){
     
     #input<-data.frame(chr="1",pos="114713907",ref="T",alt="A")
-    
     if(input$format=='pick'){
       req(input$chr)
       req(input$pos)
@@ -66,7 +66,7 @@ shinyServer(function(input, output){
   }
   
   observeEvent(input$sumbit_button, {
-    output$paralog<-renderDataTable(DT::datatable(get_paralog("NO"),
+    output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
                                                 escape = F, # escape text hyperlink to url instead of text
                                                 options = list(paging = FALSE),# set options for table eg. per page lines
                                                 rownames = F, 
@@ -77,6 +77,9 @@ shinyServer(function(input, output){
   })
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
+    output$paralog<-renderText({
+      
+    })
   })
   output$download <- downloadHandler(
     filename = function() {

@@ -1,6 +1,7 @@
 library(shiny)
 library(shinythemes)
 library(shinyjs)
+library(shinycssloaders)
 
 # css <- HTML(".pull-left{float: left !important;}
 #               .pull-right{float: right !important;}")
@@ -28,19 +29,21 @@ fluidPage(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
                     id = "myapp",
-                    tags$head(tags$style(type="text/css", "#loadmessage {
-position: fixed;
-top: 100px;
-left: 100px;
-width: 100%;
-padding: 5px 0px 5px 0px;
-text-align: center;
-font-weight: bold;
-font-size: 100%;
-color: #000000;
-background-color: #CCFF66;
-z-index: 105;
-             }")),
+                    
+                      #dont need below as now have shinycssloaders
+#                     tags$head(tags$style(type="text/css", "#loadmessage {
+# position: fixed;
+# top: 100px;
+# left: 100px;
+# width: 100%;
+# padding: 5px 0px 5px 0px;
+# text-align: center;
+# font-weight: bold;
+# font-size: 100%;
+# color: #000000;
+# background-color: #CCFF66;
+# z-index: 105;
+#              }")),
                     h3("Input your variant"),
                     br(),
                     radioButtons("format",label=NULL,
@@ -127,17 +130,19 @@ z-index: 105;
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv"))),
-                    conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                                     tags$div("Loading...",id="loadmessage")),
+                    #dont need below as now have shinycssloaders
+                    # conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                    #                  tags$div("Loading...",id="loadmessage")),
                     actionButton("sumbit_button","Submit"),
                     actionButton("reset", "Reset form")
                       ),
                    mainPanel(
                      tabsetPanel(
+                       id = "All_results",
                        type = "tabs",
                        tabPanel("Query Variant",
                                 h2("Missense Variant Paralogue Annotation",align="center"),
-                                dataTableOutput("paralog"),
+                                conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("paralog"))),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
                        ),
                        tabPanel("Known pathogenic variants in paralogous positions"
