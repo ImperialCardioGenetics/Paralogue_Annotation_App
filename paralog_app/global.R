@@ -6,7 +6,7 @@ library(shinythemes)
 
 
 
-predict_output<-function(output,input_data){
+predict_output<-function(output,input_data,chromosome){
   
   # I opened formated and outputted again the RData odject from Nick to edit rownames and NAs 
   # This can be done here within a function
@@ -14,11 +14,15 @@ predict_output<-function(output,input_data){
   # load("data/paralog_tmp.RData")
   
   #   exported RData with hardcoded dataframe name raw_data
-  load("data/place_holder_results_datatable.RData",)
-  raw_data<-place_holder_results_datatable
+  # load("data/place_holder_results_datatable.RData",)
+  
+  if (chromosome == "1"){
+  load("data/chrom_1/Total_annotations_chrom_1_noQC.RData")
+  }
+  raw_data = Total_annotations
   
   # write new column chr:pos:ref:alt to look up
-  raw_data$var<-paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=":")
+  # raw_data$var<-paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=":")
   
   #generate Clinvar URLs for query and result
   # moved that to the server side
@@ -27,13 +31,31 @@ predict_output<-function(output,input_data){
   
   # select dataframe columns if not formated
   # paralog_tmp<-subset(raw_data,select=c(raw_data$var,raw_data$CHROM.y ,raw_data$POS.y,raw_data$REF.y,raw_data$ALT.y,raw_data$ID.y ,raw_data$SYMBOL,raw_data$Protein_position.y,raw_data$REF_Amino_acids.y,raw_data$ALT_Amino_acids.y ,raw_data$Codons.y,raw_data$Para_Z_score.y))
-  raw_data<-subset(raw_data,select=c(var, Gene, ID.x, CHROM.y ,POS.y,REF.y,ALT.y,ID.y ,SYMBOL,Protein_position.y,
-                                     REF_Amino_acids.y,ALT_Amino_acids.y ,Codons.y,Para_Z_score.y),)
-  # rename dataframe columns for webpage
-  colnames(raw_data)<-c("Variant_ID","Query_Gene","Query_ClinVar", "Chr","Position","REF","ALT","ClinVar_ID","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score" )
+  # raw_data<-subset(raw_data,select=c(var, Gene, ID.x, CHROM.y ,POS.y,REF.y,ALT.y,ID.y ,SYMBOL,Protein_position.y,REF_Amino_acids.y,ALT_Amino_acids.y ,Codons.y,Para_Z_score.y),)
+  raw_data<-subset(raw_data,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
   
+  # rename dataframe columns for webpage
+  # colnames(raw_data)<-c("Variant ID","Query_Gene","Query_ClinVar", "Chr","Position","REF","ALT","ClinVar_ID","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score" )
+
   # select the vars ## this can be done first to reduce filtering time if final dataset is huge
-  output<- raw_data[raw_data$Variant_ID %in% input_data$mutation,]
+  # output<- raw_data[raw_data$Variant_ID %in% input_data$mutation,]
+  output = raw_data[raw_data$CHROM.x == as.numeric(input_data$chr) & 
+                      raw_data$POS.x == as.numeric(input_data$pos) & 
+                      raw_data$REF.x == input_data$ref &
+                      raw_data$ALT.x == input_data$alt,]
   
   return(output)
 }
+
+sketch = htmltools::withTags(table(
+  class = 'display',
+  thead(
+    tr(
+      th(colspan = 9, 'Query'),
+      th(colspan = 10, 'Paralogue')
+    ),
+    tr(
+      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Chr", "Position", "REF", "ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score"), th)
+    )
+  )
+))

@@ -20,10 +20,11 @@ shinyServer(function(input, output){
       req(input$pos)
       req(input$ref)
       req(input$alt)
-      var<-paste(input$chr,input$pos,input$ref,input$alt,sep = ":")
-      var=var[nzchar(x=var)]
-      input_data<-data.frame(mutation=var)
-      result<-predict_output(raw_data,input_data)
+      # var<-paste(input$chr,input$pos,input$ref,input$alt,sep = ":") 
+      # var=var[nzchar(x=var)]
+      # input_data<-data.frame(mutation=var)
+      input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt)
+      result<-predict_output(raw_data,input_data,input$chr)
   }else{
     if(input$format=='paste'){
       req(input$var)
@@ -44,19 +45,18 @@ shinyServer(function(input, output){
     }
     if (savefile=="NO"){
       #add ClinVar IDs with URLs 
-      result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  
-      result$ClinVar_ID_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ClinVar_ID,"/"), "' target='_blank'>", result$ClinVar_ID, "</a>")  
+      #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
+      result$ClinVar_ID_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
       
       #generate ensembl alignment URLs
       # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-      result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Query_Gene)],";g1=",map[unlist(result$Gene)]), "' target='_blank'>alignment</a>")  
+      result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene)],";g1=",map[unlist(result$SYMBOL)]), "' target='_blank'>alignment</a>")  
       
-    
-      reorder_cols<-c("Variant_ID","Query_Gene","Query_ClinVar_link", "Chr","Position","REF","ALT","ClinVar_ID_link","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score","Ensembl_alignment_link" )
-      rename_cols<-c("Query Variant","Query Gene","Query ClinVar ID", "Chr","Position","REF","ALT","ClinVar ID","Gene","Protein Position","REF AA", "ALT AA","Codons","para_Z Score","Ensembl alignment" )
-      
-      result<- result[,reorder_cols]
-      names(result)<-rename_cols
+      #edit and add this later
+      # reorder_cols<-c("Variant_ID","Query_Gene","Query_ClinVar_link", "Chr","Position","REF","ALT","ClinVar_ID_link","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score","Ensembl_alignment_link" )
+      # rename_cols<-c("Query Variant","Query Gene","Query ClinVar ID", "Chr","Position","REF","ALT","ClinVar ID","Gene","Protein Position","REF AA", "ALT AA","Codons","para_Z Score","Ensembl alignment" )
+      # result<- result[,reorder_cols]
+      # names(result)<-rename_cols
       
       return(result)
     } else {
@@ -69,10 +69,11 @@ shinyServer(function(input, output){
     output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
                                                 escape = F, # escape text hyperlink to url instead of text
                                                 options = list(paging = FALSE),# set options for table eg. per page lines
-                                                rownames = F, 
+                                                rownames = FALSE, 
+                                                # container = sketch,
                                                 caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
-                                                ) %>%
-                                                formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+                                                ) #%>%
+                                                # formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
                                   )
   })
   observeEvent(input$reset, {
