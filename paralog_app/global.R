@@ -8,7 +8,7 @@ library(shinythemes)
 raw_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-  load(paste0("/media/nick/821ED5711ED55F2B/Users/Nick/Documents/PhD/Paralogues/Paralogue_Annotation_App/paralog_app/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData"))
+  load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData"))
   if (is.null(raw_data)){
     Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
     Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
@@ -85,7 +85,7 @@ sketch = htmltools::withTags(table(
       th(colspan = 11, 'Paralogue')
     ),
     tr(
-      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids"), th,
+      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids"), th
              # bgcolor="#cbcbcd", color = "#000000"
              ),
       th("Para_Z score", style = "border-right: solid 2px;"),

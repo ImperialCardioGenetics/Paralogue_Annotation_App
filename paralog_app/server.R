@@ -68,7 +68,7 @@ shinyServer(function(input, output){
   observeEvent(input$sumbit_button, {
     output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
                                                 escape = F, # escape text hyperlink to url instead of text
-                                                options = list(paging = FALSE),# set options for table eg. per page lines
+                                                options = list(paging = FALSE,scrollX = TRUE),# set options for table eg. per page lines
                                                 rownames = FALSE, 
                                                 container = sketch,
                                                 caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
