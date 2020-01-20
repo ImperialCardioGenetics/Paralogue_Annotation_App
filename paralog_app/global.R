@@ -72,6 +72,7 @@ predict_output<-function(output,input_data){
   # }
   
   return(output)
+  print(output)
 }
 
 sketch = htmltools::withTags(table(

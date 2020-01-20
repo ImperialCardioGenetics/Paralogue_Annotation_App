@@ -127,7 +127,9 @@ fluidPage(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "1:114713907:T:G")
                         ),
-                      conditionalPanel(condition="input.format=='upload'",fileInput("file", NULL,accept = c(
+                      conditionalPanel(
+                        condition="input.format=='upload'",
+                        fileInput("file", NULL,accept = c(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
                                       ".csv"))),

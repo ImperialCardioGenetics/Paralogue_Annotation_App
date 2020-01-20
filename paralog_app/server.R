@@ -25,24 +25,28 @@ shinyServer(function(input, output){
       input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
       # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
       result<-predict_output(raw_data,input_data)
-  }else{
-    if(input$format=='paste'){
-      req(input$var)
-      var<-unlist(strsplit(input$var,split="\\s+"))
-      var=var[nzchar(x=var)]
-      input_data<-data.frame(mutation=var)
-      colnames(input_data)<-"mutation"
-      result<-predict_output(raw_data,input_data)
     }else{
-        if (input$format == 'upload') {
-          req(input$file)
-          inFile <- input$file
-          input_file = read.table(inFile$datapath)
-          colnames(input_file) <- "mutation"
-          result <- predict_output(raw_data, input_file)
-        }
+      if(input$format=='paste'){
+      #input<-data.frame(var="1:114713907:T:G",stringsAsFactors = F)  
+      #input$var<-data.frame(var="1\t114713907\tT\tG")
+        req(input$var)
+        var<-unlist(strsplit(input$var,split="\\s+"))
+        var=var[nzchar(x=var)]
+        input_data<-data.frame(mutation=var)
+        input_data$mutation<-gsub(":","\t",input_data$mutation)
+        colnames(input_data)<-"mutation"
+        result<-predict_output(raw_data,input_data)
+    }else{
+      if(input$format == 'upload') {
+        req(input$file)
+        inFile <- input$file
+        input_file = read.table(inFile$datapath)
+        input_file$V1<-gsub(":","\t",input_file$V1)
+        colnames(input_file) <- "mutation"
+        result <- predict_output(raw_data, input_file)
       }
     }
+  }
     if (savefile=="NO"){
       #add ClinVar IDs with URLs 
       #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
@@ -63,7 +67,7 @@ shinyServer(function(input, output){
       return(result)
     }
   
-  }
+}
   
   observeEvent(input$sumbit_button, {
     output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
