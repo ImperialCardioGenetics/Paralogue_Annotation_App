@@ -53,7 +53,7 @@ fluidPage(
                                  choices = list("Choose position"="pick","Paste variants"="paste", "Upload Variants"="upload"),
                                  selected = NULL),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
-                      p("e.g. 1:114713907:T:G, 3:38551076:T:A, or X:71223741:G:A"),
+                      p("e.g. 1:115256528:T:G, 3:38592567:T:A, or X:70443591:G:A"),
                       conditionalPanel(
                         condition="input.format=='pick'",
                         ##Chromosome

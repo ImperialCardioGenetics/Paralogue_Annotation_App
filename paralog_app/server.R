@@ -20,11 +20,11 @@ shinyServer(function(input, output){
       req(input$pos)
       req(input$ref)
       req(input$alt)
-      # var<-paste(input$chr,input$pos,input$ref,input$alt,sep = ":") 
-      # var=var[nzchar(x=var)]
-      # input_data<-data.frame(mutation=var)
-      input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt)
-      result<-predict_output(raw_data,input_data,input$chr)
+      var = paste(input$chr,input$pos,input$ref,input$alt,sep = "\t")
+      var = var[nzchar(x=var)]
+      input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
+      # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
+      result<-predict_output(raw_data,input_data)
   }else{
     if(input$format=='paste'){
       req(input$var)
@@ -46,7 +46,7 @@ shinyServer(function(input, output){
     if (savefile=="NO"){
       #add ClinVar IDs with URLs 
       #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
-      result$ClinVar_ID_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
+      result$ID.y<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
       
       #generate ensembl alignment URLs
       # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
@@ -70,17 +70,18 @@ shinyServer(function(input, output){
                                                 escape = F, # escape text hyperlink to url instead of text
                                                 options = list(paging = FALSE),# set options for table eg. per page lines
                                                 rownames = FALSE, 
-                                                # container = sketch,
+                                                container = sketch,
                                                 caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
-                                                ) #%>%
-                                                # formatStyle(c("Query Variant","Query Gene","Query ClinVar ID"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+                                                ) %>%
+                                                formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                      formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
                                   )
   })
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
-    output$paralog<-renderText({
-      
-    })
+    # output$paralog<-renderText(isolate({
+    #   
+    # }))
   })
   output$download <- downloadHandler(
     filename = function() {

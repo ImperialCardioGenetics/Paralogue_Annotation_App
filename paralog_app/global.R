@@ -4,10 +4,27 @@ library(shinythemes)
 
 #library(tidyverse)
 
+#PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
+raw_data = NULL
+# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+  load(paste0("/media/nick/821ED5711ED55F2B/Users/Nick/Documents/PhD/Paralogues/Paralogue_Annotation_App/paralog_app/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData"))
+  if (is.null(raw_data)){
+    Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
+    Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
+    raw_data = Total_annotations
+  } else {
+    Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
+    Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
+    raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
+  }
+}
+raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep="\t")
+raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
 
 
-predict_output<-function(output,input_data,chromosome){
-  
+predict_output<-function(output,input_data){
+  print(input_data)
   # I opened formated and outputted again the RData odject from Nick to edit rownames and NAs 
   # This can be done here within a function
   # load the RData or rds file
@@ -16,13 +33,10 @@ predict_output<-function(output,input_data,chromosome){
   #   exported RData with hardcoded dataframe name raw_data
   # load("data/place_holder_results_datatable.RData",)
   
-  if (chromosome == "1"){
-  load("data/chrom_1/Total_annotations_chrom_1_noQC.RData")
-  }
-  raw_data = Total_annotations
-  
+  #MOVED LOADING OF DATA TO ABOVE, OUTSIDE OF FUNCTION
+
   # write new column chr:pos:ref:alt to look up
-  # raw_data$var<-paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=":")
+  # raw_data$var<-paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep="\t") #done above as website loads
   
   #generate Clinvar URLs for query and result
   # moved that to the server side
@@ -32,17 +46,30 @@ predict_output<-function(output,input_data,chromosome){
   # select dataframe columns if not formated
   # paralog_tmp<-subset(raw_data,select=c(raw_data$var,raw_data$CHROM.y ,raw_data$POS.y,raw_data$REF.y,raw_data$ALT.y,raw_data$ID.y ,raw_data$SYMBOL,raw_data$Protein_position.y,raw_data$REF_Amino_acids.y,raw_data$ALT_Amino_acids.y ,raw_data$Codons.y,raw_data$Para_Z_score.y))
   # raw_data<-subset(raw_data,select=c(var, Gene, ID.x, CHROM.y ,POS.y,REF.y,ALT.y,ID.y ,SYMBOL,Protein_position.y,REF_Amino_acids.y,ALT_Amino_acids.y ,Codons.y,Para_Z_score.y),)
-  raw_data<-subset(raw_data,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
   
   # rename dataframe columns for webpage
   # colnames(raw_data)<-c("Variant ID","Query_Gene","Query_ClinVar", "Chr","Position","REF","ALT","ClinVar_ID","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score" )
 
   # select the vars ## this can be done first to reduce filtering time if final dataset is huge
-  # output<- raw_data[raw_data$Variant_ID %in% input_data$mutation,]
-  output = raw_data[raw_data$CHROM.x == as.numeric(input_data$chr) & 
-                      raw_data$POS.x == as.numeric(input_data$pos) & 
-                      raw_data$REF.x == input_data$ref &
-                      raw_data$ALT.x == input_data$alt,]
+  output = raw_data[raw_data$var %in% input_data$mutation,]
+  # output = raw_data[raw_data$CHROM.x == as.numeric(input_data$chr) & 
+  #                     raw_data$POS.x == as.numeric(input_data$pos) & 
+  #                     raw_data$REF.x == input_data$ref &
+  #                     raw_data$ALT.x == input_data$alt,]
+  output$CHROM.x = sapply(strsplit(output$var, "\t"), "[", 1)
+  output$POS.x = sapply(strsplit(output$var, "\t"), "[", 2)
+  output$REF.x = sapply(strsplit(output$var, "\t"), "[", 3)
+  output$ALT.x = sapply(strsplit(output$var, "\t"), "[", 4)
+  output = subset(output,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
+  
+  #in order to remove duplicated query rows
+  # tmp_chrom = NULL
+  # tmp_pos = NULL
+  # tmp_ref = NULL
+  # tmp_alt = NULL
+  # for (row in 1:nrow(output)){
+  #   
+  # }
   
   return(output)
 }
@@ -51,11 +78,18 @@ sketch = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(colspan = 9, 'Query'),
-      th(colspan = 10, 'Paralogue')
+      th(colspan = 9, 'Query', 
+         # bgcolor="#cbcbcd",
+         # color = "#000000",
+         style = "border-right: solid 2px;"),
+      th(colspan = 11, 'Paralogue')
     ),
     tr(
-      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Chr", "Position", "REF", "ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score"), th)
+      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids"), th,
+             # bgcolor="#cbcbcd", color = "#000000"
+             ),
+      th("Para_Z score", style = "border-right: solid 2px;"),
+      lapply(c("Chr", "Position", "REF", "ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
     )
   )
 ))
