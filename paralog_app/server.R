@@ -30,7 +30,9 @@ shinyServer(function(input, output){
       #input<-data.frame(var="1:114713907:T:G",stringsAsFactors = F)  
       #input$var<-data.frame(var="1\t114713907\tT\tG")
         req(input$var)
-        var<-unlist(strsplit(input$var,split="\\s+"))
+        # print(input$var)
+        var<-unlist(strsplit(input$var,split="\n"))
+        # print(var)
         var=var[nzchar(x=var)]
         input_data<-data.frame(mutation=var)
         input_data$mutation<-gsub(":","\t",input_data$mutation)
