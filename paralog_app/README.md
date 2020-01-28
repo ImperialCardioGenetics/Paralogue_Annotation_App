@@ -16,7 +16,8 @@ You can see the app in action here (TODO:app-link).
 	- Fix column lenght names :heavy_check_mark:
 	- Fix logo width
 	- Look at changing layout to move sidepanel to top and results table below it
-	- Fix Upload and Paste variant input
+	- Fix Upload and Paste variant input :heavy_check_mark:
+	- Error catch incorrect format in Upload and Paste inputs
 
 * Nick
 	- Swap place holder for all missense :heavy_check_mark:
