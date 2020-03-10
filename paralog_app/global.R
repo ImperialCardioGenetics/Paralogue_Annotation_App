@@ -23,7 +23,7 @@ raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT
 raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
 
 
-predict_output<-function(output,input_data){
+predict_output = function(output,input_data){
   print(input_data)
   # I opened formated and outputted again the RData odject from Nick to edit rownames and NAs 
   # This can be done here within a function
@@ -73,6 +73,20 @@ predict_output<-function(output,input_data){
   
   return(output)
   print(output)
+}
+
+#use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F)
+clinvar_P_LP = clinvar_P_LP[,1:5]
+colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
+check_if_known = function(chr,pos,ref,alt){
+  query_variant_ID = clinvar_P_LP[clinvar_P_LP$CHR == chr & clinvar_P_LP$POS == pos & clinvar_P_LP$REF == ref & clinvar_P_LP$ALT == alt,]
+  if (length(query_variant_ID)>0){
+    query_variant_ID = paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",query_variant_ID,"/"), "' target='_blank'>", query_variant_ID, "</a>")  
+  } else {
+    query_variant_ID = "Th"
+  }
+  return(query_variant_ID)
 }
 
 sketch = htmltools::withTags(table(

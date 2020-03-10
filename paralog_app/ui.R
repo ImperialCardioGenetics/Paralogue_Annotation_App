@@ -148,11 +148,9 @@ fluidPage(
                                 conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("paralog"))),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
                        ),
-                       tabPanel("Known pathogenic variants in paralogous positions"
-                                # ,
-                                # h2("Missense Variant Paralogue Annotation",align="center"),
-                                # dataTableOutput("paralog"),
-                                # conditionalPanel("output.paralog",downloadButton("download","Download"))
+                       tabPanel("Known pathogenic variants in paralogous positions",
+                                conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("known_clinvar")))
+                                
                                 )
                        )
                      )

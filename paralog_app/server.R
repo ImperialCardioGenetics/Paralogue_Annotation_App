@@ -82,6 +82,7 @@ shinyServer(function(input, output){
                                                 formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                       formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
                                   )
+    output$known_clinvar<-renderDataTable(DT::datatable((isolate())))
   })
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
