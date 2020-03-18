@@ -24,7 +24,7 @@ shinyServer(function(input, output){
       var = var[nzchar(x=var)]
       input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
       # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
-      result<-predict_output(raw_data,input_data)
+      result<-predict_output(input_data)
     }else{
       if(input$format=='paste'){
       #input<-data.frame(var="1:114713907:T:G",stringsAsFactors = F)  
@@ -37,7 +37,7 @@ shinyServer(function(input, output){
         input_data<-data.frame(mutation=var)
         input_data$mutation<-gsub(":","\t",input_data$mutation)
         colnames(input_data)<-"mutation"
-        result<-predict_output(raw_data,input_data)
+        result<-predict_output(input_data)
     }else{
       if(input$format == 'upload') {
         req(input$file)
@@ -45,7 +45,7 @@ shinyServer(function(input, output){
         input_file = read.table(inFile$datapath)
         input_file$V1<-gsub(":","\t",input_file$V1)
         colnames(input_file) <- "mutation"
-        result <- predict_output(raw_data, input_file)
+        result <- predict_output(input_file)
       }
     }
   }
