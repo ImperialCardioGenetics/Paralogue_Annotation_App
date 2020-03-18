@@ -68,8 +68,40 @@ shinyServer(function(input, output){
     } else {
       return(result)
     }
+  }
   
-}
+  get_known<-function(){
+    if(input$format=='pick'){
+      req(input$chr)
+      req(input$pos)
+      req(input$ref)
+      req(input$alt)
+      var = paste(input$chr,input$pos,input$ref,input$alt,sep = "\t")
+      var = var[nzchar(x=var)]
+      input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
+      result<-predict_output_for_known(input_data)
+    }else{
+      if(input$format=='paste'){
+        req(input$var)
+        var<-unlist(strsplit(input$var,split="\n"))
+        var=var[nzchar(x=var)]
+        input_data<-data.frame(mutation=var)
+        input_data$mutation<-gsub(":","\t",input_data$mutation)
+        colnames(input_data)<-"mutation"
+        result<-predict_output(input_data)
+      }else{
+        if(input$format == 'upload') {
+          req(input$file)
+          inFile <- input$file
+          input_file = read.table(inFile$datapath)
+          input_file$V1<-gsub(":","\t",input_file$V1)
+          colnames(input_file) <- "mutation"
+          result <- predict_output(input_file)
+        }
+      }
+    }
+    return(result)
+  }
   
   observeEvent(input$sumbit_button, {
     output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
@@ -79,10 +111,17 @@ shinyServer(function(input, output){
                                                 container = sketch,
                                                 caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
                                                 ) %>%
-                                                formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                      formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                       formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
                                   )
-    output$known_clinvar<-renderDataTable(DT::datatable((isolate())))
+    output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
+                                                                 escape = F,
+                                                                 options = list(paging = FALSE,scrollX = TRUE),
+                                                                 rownames = FALSE, 
+                                                                 container = sketch2
+                                                                 ) %>%
+                                            formatStyle(c("CHR", "POS", "ID", "REF", "ALT"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+                                            )
   })
   observeEvent(input$reset, {
     shinyjs::reset("myapp")

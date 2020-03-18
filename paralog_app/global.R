@@ -80,20 +80,24 @@ clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentConte
 clinvar_P_LP = clinvar_P_LP[,1:5]
 colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
+clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
-predict_output_for_known = function(output,input_data){
+predict_output_for_known = function(input_data){
   #print(input_data)
   output = clinvar_P_LP[clinvar_P_LP$var %in% input_data$mutation,]
-  output$CHROM.x = sapply(strsplit(output$var, "\t"), "[", 1)
-  output$POS.x = sapply(strsplit(output$var, "\t"), "[", 2)
-  output$REF.x = sapply(strsplit(output$var, "\t"), "[", 3)
-  output$ALT.x = sapply(strsplit(output$var, "\t"), "[", 4)
-  output = subset(output,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
-  return(output)
+  output$CHR = sapply(strsplit(output$var, "\t"), "[", 1)
+  output$POS = sapply(strsplit(output$var, "\t"), "[", 2)
+  output$REF = sapply(strsplit(output$var, "\t"), "[", 3)
+  output$ALT = sapply(strsplit(output$var, "\t"), "[", 4)
+  output = subset(output,select=c(CHR, POS, ID, REF, ALT))
+  
+  output$ID<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",output$ID,"/"), "' target='_blank'>", output$ID, "</a>")  
+  
   print(output)
+  return(output)
 }
 
-
+#MAY NOT EVEN NEED THIS FUNCTION BELOW, COULD JUST INTEGRATE TO FUNCTION ABOVE
 check_if_known = function(chr,pos,ref,alt){
   query_variant_ID = clinvar_P_LP[clinvar_P_LP$CHR == chr & clinvar_P_LP$POS == pos & clinvar_P_LP$REF == ref & clinvar_P_LP$ALT == alt,]
   if (length(query_variant_ID)>0){
@@ -122,6 +126,17 @@ sketch = htmltools::withTags(table(
              ),
       th("Para_Z score", style = "border-right: solid 2px;"),
       lapply(c("Chr", "Position", "REF", "ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
+    )
+  )
+))
+
+sketch2 = htmltools::withTags(table(
+  class = 'display',
+  thead(
+    tr(
+      lapply(c("Chr", "Position", "ClinVar ID", "REF", "ALT"), th
+             # bgcolor="#cbcbcd", color = "#000000"
+      )
     )
   )
 ))
