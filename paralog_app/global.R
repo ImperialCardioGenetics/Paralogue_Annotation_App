@@ -79,6 +79,21 @@ predict_output = function(output,input_data){
 clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F)
 clinvar_P_LP = clinvar_P_LP[,1:5]
 colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
+clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
+
+predict_output_for_known = function(output,input_data){
+  #print(input_data)
+  output = clinvar_P_LP[clinvar_P_LP$var %in% input_data$mutation,]
+  output$CHROM.x = sapply(strsplit(output$var, "\t"), "[", 1)
+  output$POS.x = sapply(strsplit(output$var, "\t"), "[", 2)
+  output$REF.x = sapply(strsplit(output$var, "\t"), "[", 3)
+  output$ALT.x = sapply(strsplit(output$var, "\t"), "[", 4)
+  output = subset(output,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
+  return(output)
+  print(output)
+}
+
+
 check_if_known = function(chr,pos,ref,alt){
   query_variant_ID = clinvar_P_LP[clinvar_P_LP$CHR == chr & clinvar_P_LP$POS == pos & clinvar_P_LP$REF == ref & clinvar_P_LP$ALT == alt,]
   if (length(query_variant_ID)>0){
@@ -88,6 +103,8 @@ check_if_known = function(chr,pos,ref,alt){
   }
   return(query_variant_ID)
 }
+
+
 
 sketch = htmltools::withTags(table(
   class = 'display',
