@@ -114,11 +114,11 @@ sketch = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(colspan = 9, 'Query', 
+      th(colspan = 9, 'Query variant(s)', 
          # bgcolor="#cbcbcd",
          # color = "#000000",
          style = "border-right: solid 2px;"),
-      th(colspan = 11, 'Paralogue')
+      th(colspan = 11, 'Equivalent variant(s)')
     ),
     tr(
       lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids"), th
