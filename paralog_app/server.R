@@ -52,12 +52,13 @@ shinyServer(function(input, output){
     if (savefile=="NO"){
       #add ClinVar IDs with URLs 
       #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
-      result$ID.y<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
+      if (nrow(result)!=0){ # that where the error was generated
+        result$ID.y<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
       
       #generate ensembl alignment URLs
       # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-      result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene)],";g1=",map[unlist(result$SYMBOL)]), "' target='_blank'>alignment</a>")  
-      
+        result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene)],";g1=",map[unlist(result$SYMBOL)]), "' target='_blank'>alignment</a>")  
+      }
       #edit and add this later
       # reorder_cols<-c("Variant_ID","Query_Gene","Query_ClinVar_link", "Chr","Position","REF","ALT","ClinVar_ID_link","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score","Ensembl_alignment_link" )
       # rename_cols<-c("Query Variant","Query Gene","Query ClinVar ID", "Chr","Position","REF","ALT","ClinVar ID","Gene","Protein Position","REF AA", "ALT AA","Codons","para_Z Score","Ensembl alignment" )
@@ -103,26 +104,43 @@ shinyServer(function(input, output){
     return(result)
   }
   
-  observeEvent(input$sumbit_button, {
-    output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
-                                                escape = F, # escape text hyperlink to url instead of text
-                                                options = list(paging = FALSE,scrollX = TRUE),# set options for table eg. per page lines
-                                                rownames = FALSE, 
-                                                container = sketch,
-                                                caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
-                                                ) %>%
-                                      formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
-                                      formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
-                                  )
-    output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
-                                                                 escape = F,
-                                                                 options = list(paging = FALSE,scrollX = TRUE),
-                                                                 rownames = FALSE, 
-                                                                 container = sketch2
-                                                                 ) %>%
-                                            formatStyle(c("CHR", "POS", "ID", "REF", "ALT"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
-                                            )
-  })
+  if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
+      output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
+                                                          escape = F,
+                                                          options = list(paging = FALSE,scrollX = TRUE),
+                                                          rownames = FALSE, 
+                                                          container = sketch2
+      ) %>%
+        formatStyle(c("CHR", "POS", "ID", "REF", "ALT"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+      )
+      
+      output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
+                                                    escape = F, # escape text hyperlink to url instead of text
+                                                    options = list(paging = FALSE,scrollX = TRUE),# set options for table eg. per page lines
+                                                    rownames = FALSE,
+                                                    container = sketch,
+                                                    caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
+      ) %>%
+        formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+        formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
+      )
+      
+    } else {
+      output$known_clinvar<- showModal(modalDialog(
+        title = "The input variant(s) were not found in ClinVar", # We can change the msg
+        "Please try another input variant(s)", # and this msg
+        easyClose = TRUE))
+      shinyjs::reset("myapp") # we can delete this so the app does not restart every time
+      
+      output$paralog<- showModal(modalDialog(
+        title = "No paralogous variants found", # We can change the msg
+        "Please try another input variant(s)", # and this msg
+        easyClose = TRUE))
+      shinyjs::reset("myapp") # we can delete this so the app does not restart every time
+      
+  }
+  
+  
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
     # output$paralog<-renderText(isolate({
