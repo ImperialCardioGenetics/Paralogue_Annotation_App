@@ -127,12 +127,14 @@ shinyServer(function(input, output){
       )
       
     } else {
+      #ERROR CATCHING FOR IF QUERY IS KNOWN
       output$known_clinvar<- showModal(modalDialog(
         title = "The input variant(s) were not found in ClinVar", # We can change the msg
         "Please try another input variant(s)", # and this msg
         easyClose = TRUE))
       shinyjs::reset("myapp") # we can delete this so the app does not restart every time
       
+      #ERROR CATCHING FOR IF QUERY HAS EQUIVALENT PARALOGUE LOCATION AND/OR VARIANT 
       output$paralog<- showModal(modalDialog(
         title = "No paralogous variants found", # We can change the msg
         "Please try another input variant(s)", # and this msg
