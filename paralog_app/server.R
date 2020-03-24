@@ -104,7 +104,8 @@ shinyServer(function(input, output){
     return(result)
   }
   
-  if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
+  observeEvent(input$sumbit_button, {
+    if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
       output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
                                                           escape = F,
                                                           options = list(paging = FALSE,scrollX = TRUE),
@@ -138,8 +139,9 @@ shinyServer(function(input, output){
         easyClose = TRUE))
       shinyjs::reset("myapp") # we can delete this so the app does not restart every time
       
-  }
-  
+    }
+    
+  })
   
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
