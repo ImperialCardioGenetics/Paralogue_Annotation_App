@@ -143,12 +143,12 @@ fluidPage(
                      tabsetPanel(
                        id = "All_results",
                        type = "tabs",
-                       tabPanel("Known pathogenic variants in paralogous positions",
+                       tabPanel("Query Variant",
                                 h4("If your variant(s) are already documented in ClinVar they will appear here"),
                                 conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("known_clinvar")))
                                 
                        ),
-                       tabPanel("Query Variant",
+                       tabPanel("Known pathogenic variants in paralogous positions",
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
                                 conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("paralog"))),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
