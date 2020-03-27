@@ -89,7 +89,7 @@ shinyServer(function(input, output){
         input_data<-data.frame(mutation=var)
         input_data$mutation<-gsub(":","\t",input_data$mutation)
         colnames(input_data)<-"mutation"
-        result<-predict_output(input_data)
+        result<-predict_output_for_known(input_data)
       }else{
         if(input$format == 'upload') {
           req(input$file)
@@ -97,7 +97,7 @@ shinyServer(function(input, output){
           input_file = read.table(inFile$datapath)
           input_file$V1<-gsub(":","\t",input_file$V1)
           colnames(input_file) <- "mutation"
-          result <- predict_output(input_file)
+          result <- predict_output_for_known(input_file)
         }
       }
     }
