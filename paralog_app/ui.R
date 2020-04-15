@@ -50,79 +50,11 @@ fluidPage(
                                  # Here a new input method can be inserted eg. upload a file with variants
                                  # eg. choices = list("upload file"="upload",
                                  # fileInput("file", NULL,accept = c("text/csv","text/comma-separated-values,text/plain",".csv")))),
-                                 choices = list("Choose position"="pick","Paste variants"="paste", "Upload Variants"="upload"),
+                                 choices = list("Paste variants"="paste", "Upload Variants"="upload"),
                                  selected = NULL),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
                       p("e.g. 1:115256528:T:G, 3:38592567:T:A, or X:70443591:G:A"),
-                      conditionalPanel(
-                        condition="input.format=='pick'",
-                        ##Chromosome
-                        # selectInput(inputId = "chr",
-                        #             label = "Chromosome:",
-                        #             selected = "1",width = "80",multiple = F,selectize = F,
-                        #             choices = c(1:22,"x","Y")),
-                        selectizeInput(
-                          "chr", "Chromosome:",
-                          width = "200",
-                          choices = c(1:22,"X","Y"),
-                          multiple = TRUE,
-                          options = list(
-                            placeholder = "Select chromosome",
-                            onInitialize = I('function() { this.setValue(""); }'),
-                            maxItems = 1
-                          )
-                        ),
-                        
-                        ##Position
-                        textInput(inputId = "pos",
-                                  label = "Position:",
-                                  width = "140",
-                                  placeholder = "Type in position"
-                                  #c("114713907")
-                                  ),
-                        # selectizeInput(
-                        #   "pos", "Position",
-                        #   width = "220",
-                        #   options = list(
-                        #     placeholder = 'Please select Chromosome',
-                        #     onInitialize = I('function() { this.setValue(""); }')
-                        #   )
-                        # ),
-                        
-                        ##Ref
-                        # selectInput(inputId = "ref",
-                        #             label = "Reference:", 
-                        #             selected = "T",width = "80",multiple = F,selectize = F,
-                        #             choices = c("A","G","T","C")),
-                        selectizeInput(
-                          "ref", "Reference:",
-                          width = "200",
-                          choices = c("A","G","T","C"),
-                          multiple = TRUE,
-                          options = list(
-                            placeholder = "Select ref allele",
-                            onInitialize = I('function() { this.setValue(""); }'),
-                            maxItems = 1
-                          )
-                        ),
-                        
-                        ##Alt
-                        # selectInput(inputId = "alt",
-                        #             label = "Alternate:",
-                        #             selected = "A",width = "80",multiple = F,selectize = F,
-                        #             choices = c("A","G","T","C"))
-                        selectizeInput(
-                          "alt", "Alternate",
-                          width = "200",
-                          choices = c("A","G","T","C"),
-                          multiple = TRUE,
-                          options = list(
-                            placeholder = "Select alt allele",
-                            onInitialize = I('function() { this.setValue(""); }'),
-                            maxItems = 1
-                          )
-                        )
-                        ),
+
                       conditionalPanel(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "1:114713907:T:G")
