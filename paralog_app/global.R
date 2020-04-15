@@ -8,7 +8,7 @@ library(shinythemes)
 raw_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-  load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData"))
+  load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   if (is.null(raw_data)){
     Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
     Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
@@ -76,7 +76,7 @@ predict_output = function(input_data){
 }
 
 #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F)
+clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
 clinvar_P_LP = clinvar_P_LP[,1:5]
 colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
