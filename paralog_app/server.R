@@ -34,7 +34,7 @@ shinyServer(function(input, output){
         var<-unlist(strsplit(input$var,split="\n"))
         # print(var)
         var=var[nzchar(x=var)]
-        input_data<-data.frame(mutation=var)
+        input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
         input_data$mutation<-gsub(":","\t",input_data$mutation)
         colnames(input_data)<-"mutation"
         result<-predict_output(input_data)
@@ -86,7 +86,7 @@ shinyServer(function(input, output){
         req(input$var)
         var<-unlist(strsplit(input$var,split="\n"))
         var=var[nzchar(x=var)]
-        input_data<-data.frame(mutation=var)
+        input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
         input_data$mutation<-gsub(":","\t",input_data$mutation)
         colnames(input_data)<-"mutation"
         result<-predict_output_for_known(input_data)

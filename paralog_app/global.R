@@ -8,7 +8,8 @@ library(shinythemes)
 raw_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-  load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+  load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   if (is.null(raw_data)){
     Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
     Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
@@ -22,6 +23,14 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
 raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep="\t")
 raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
 
+#use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
+clinvar_P_LP = clinvar_P_LP[,1:5]
+colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
+clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
+clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
+
+test_data = dplyr::full_join(clinvar_P_LP,raw_data)
 
 predict_output = function(input_data){
   print(input_data)
@@ -74,13 +83,6 @@ predict_output = function(input_data){
   return(output)
   print(output)
 }
-
-#use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
-clinvar_P_LP = clinvar_P_LP[,1:5]
-colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
-clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
-clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
 predict_output_for_known = function(input_data){
   #print(input_data)
