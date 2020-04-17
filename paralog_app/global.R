@@ -92,19 +92,6 @@ predict_output = function(input_data){
   print(output)
 }
 
-#MAY NOT EVEN NEED THIS FUNCTION BELOW, COULD JUST INTEGRATE TO FUNCTION ABOVE
-check_if_known = function(chr,pos,ref,alt){
-  query_variant_ID = clinvar_P_LP[clinvar_P_LP$CHR == chr & clinvar_P_LP$POS == pos & clinvar_P_LP$REF == ref & clinvar_P_LP$ALT == alt,]
-  if (length(query_variant_ID)>0){
-    query_variant_ID = paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",query_variant_ID,"/"), "' target='_blank'>", query_variant_ID, "</a>")  
-  } else {
-    query_variant_ID = "Th"
-  }
-  return(query_variant_ID)
-}
-
-
-
 sketch = htmltools::withTags(table(
   class = 'display',
   thead(
