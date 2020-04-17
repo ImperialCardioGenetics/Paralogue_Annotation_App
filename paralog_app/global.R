@@ -92,21 +92,6 @@ predict_output = function(input_data){
   print(output)
 }
 
-predict_output_for_known = function(input_data){
-  #print(input_data)
-  output = clinvar_P_LP[clinvar_P_LP$var %in% input_data$mutation,]
-  output$CHR = sapply(strsplit(output$var, "\t"), "[", 1)
-  output$POS = sapply(strsplit(output$var, "\t"), "[", 2)
-  output$REF = sapply(strsplit(output$var, "\t"), "[", 3)
-  output$ALT = sapply(strsplit(output$var, "\t"), "[", 4)
-  output = subset(output,select=c(CHR, POS, ID, REF, ALT))
-  
-  output$ID<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",output$ID,"/"), "' target='_blank'>", output$ID, "</a>")  
-  
-  print(output)
-  return(output)
-}
-
 #MAY NOT EVEN NEED THIS FUNCTION BELOW, COULD JUST INTEGRATE TO FUNCTION ABOVE
 check_if_known = function(chr,pos,ref,alt){
   query_variant_ID = clinvar_P_LP[clinvar_P_LP$CHR == chr & clinvar_P_LP$POS == pos & clinvar_P_LP$REF == ref & clinvar_P_LP$ALT == alt,]
