@@ -30,7 +30,7 @@ colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
 clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
-test_data = dplyr::full_join(clinvar_P_LP,raw_data)
+raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = C("var"))
 
 predict_output = function(input_data){
   print(input_data)
@@ -65,11 +65,19 @@ predict_output = function(input_data){
   #                     raw_data$POS.x == as.numeric(input_data$pos) & 
   #                     raw_data$REF.x == input_data$ref &
   #                     raw_data$ALT.x == input_data$alt,]
-  output$CHROM.x = sapply(strsplit(output$var, "\t"), "[", 1)
-  output$POS.x = sapply(strsplit(output$var, "\t"), "[", 2)
-  output$REF.x = sapply(strsplit(output$var, "\t"), "[", 3)
-  output$ALT.x = sapply(strsplit(output$var, "\t"), "[", 4)
-  output = subset(output,select=c(CHROM.x, POS.x, REF.x, ALT.x, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
+  # output$CHROM.x = sapply(strsplit(output$var, "\t"), "[", 1)
+  # output$POS.x = sapply(strsplit(output$var, "\t"), "[", 2)
+  # output$REF.x = sapply(strsplit(output$var, "\t"), "[", 3)
+  # output$ALT.x = sapply(strsplit(output$var, "\t"), "[", 4)
+  output$ID<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",output$ID,"/"), "' target='_blank'>", output$ID, "</a>")
+  output = subset(output,select=c(
+    # CHROM.x, 
+    # POS.x, 
+    # REF.x, 
+    # ALT.x, 
+    var,
+    ID,
+    Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
   
   #in order to remove duplicated query rows
   # tmp_chrom = NULL
