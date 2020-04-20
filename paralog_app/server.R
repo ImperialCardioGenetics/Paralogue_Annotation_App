@@ -71,39 +71,6 @@ shinyServer(function(input, output){
     }
   }
   
-  get_known<-function(){
-    if(input$format=='pick'){
-      req(input$chr)
-      req(input$pos)
-      req(input$ref)
-      req(input$alt)
-      var = paste(input$chr,input$pos,input$ref,input$alt,sep = "\t")
-      var = var[nzchar(x=var)]
-      input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
-      result<-predict_output_for_known(input_data)
-    }else{
-      if(input$format=='paste'){
-        req(input$var)
-        var<-unlist(strsplit(input$var,split="\n"))
-        var=var[nzchar(x=var)]
-        input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-        input_data$mutation<-gsub(":","\t",input_data$mutation)
-        colnames(input_data)<-"mutation"
-        result<-predict_output_for_known(input_data)
-      }else{
-        if(input$format == 'upload') {
-          req(input$file)
-          inFile <- input$file
-          input_file = read.table(inFile$datapath)
-          input_file$V1<-gsub(":","\t",input_file$V1)
-          colnames(input_file) <- "mutation"
-          result <- predict_output_for_known(input_file)
-        }
-      }
-    }
-    return(result)
-  }
-  
   observeEvent(input$sumbit_button, {
     if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
       output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
