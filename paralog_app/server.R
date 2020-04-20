@@ -73,25 +73,36 @@ shinyServer(function(input, output){
   
   observeEvent(input$sumbit_button, {
     if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
-      output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
-                                                          escape = F,
-                                                          options = list(paging = FALSE,scrollX = TRUE),
-                                                          rownames = FALSE, 
-                                                          container = sketch2
-      ) %>%
-        formatStyle(c("CHR", "POS", "ID", "REF", "ALT"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
-      )
       
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
-                                                    escape = F, # escape text hyperlink to url instead of text
-                                                    options = list(paging = FALSE,scrollX = TRUE),# set options for table eg. per page lines
-                                                    rownames = FALSE,
-                                                    container = sketch,
-                                                    caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
-      ) %>%
-        formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
-        formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
-      )
+                                            escape = F, # escape text hyperlink to url instead of text
+                                            options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines
+                                            rownames = FALSE,
+                                            container = sketch
+                                            ) %>%
+                                formatStyle(c("var", "ID", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
+                                )
+      
+      # output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
+      #                                                     escape = F,
+      #                                                     options = list(paging = FALSE,scrollX = TRUE),
+      #                                                     rownames = FALSE, 
+      #                                                     container = sketch2
+      # ) %>%
+      #   formatStyle(c("CHR", "POS", "ID", "REF", "ALT"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold')
+      # )
+      
+      # output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
+      #                                               escape = F, # escape text hyperlink to url instead of text
+      #                                               options = list(paging = FALSE,scrollX = TRUE),# set options for table eg. per page lines
+      #                                               rownames = FALSE,
+      #                                               container = sketch,
+      #                                               caption = htmltools::tags$caption(style = 'caption-side: bottom; text-align: center;','Table 1 : ', htmltools::em('Paralogous Variants'))
+      # ) %>%
+      #   formatStyle(c("CHROM.x", "POS.x", "REF.x", "ALT.x", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+      #   formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
+      # )
       
     } else {
       #ERROR CATCHING FOR IF QUERY IS KNOWN

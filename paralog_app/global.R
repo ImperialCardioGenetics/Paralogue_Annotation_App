@@ -30,10 +30,11 @@ colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
 clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
-raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = C("var"))
+raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = c("var"))
 
 predict_output = function(input_data){
-  print(input_data)
+  print(input_data$mutation)
+  print(raw_data$var[1])
   # I opened formated and outputted again the RData odject from Nick to edit rownames and NAs 
   # This can be done here within a function
   # load the RData or rds file
@@ -60,7 +61,7 @@ predict_output = function(input_data){
   # colnames(raw_data)<-c("Variant ID","Query_Gene","Query_ClinVar", "Chr","Position","REF","ALT","ClinVar_ID","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score" )
 
   # select the vars ## this can be done first to reduce filtering time if final dataset is huge
-  output = raw_data[raw_data$var %in% input_data$mutation,]
+  output = raw_data[raw_data$var %in%  input_data$mutation,]
   # output = raw_data[raw_data$CHROM.x == as.numeric(input_data$chr) & 
   #                     raw_data$POS.x == as.numeric(input_data$pos) & 
   #                     raw_data$REF.x == input_data$ref &
@@ -96,14 +97,14 @@ sketch = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(colspan = 9, 'Query variant(s)', 
+      th(colspan = 7, 'Query variant(s)', 
          # bgcolor="#cbcbcd",
          # color = "#000000",
          style = "border-right: solid 2px;"),
       th(colspan = 11, 'Equivalent variant(s)')
     ),
     tr(
-      lapply(c("Chr", "Position", "REF", "ALT", "Gene", "Codons", "Protein position", "Amino acids"), th
+      lapply(c("Variant", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
              # bgcolor="#cbcbcd", color = "#000000"
              ),
       th("Para_Z score", style = "border-right: solid 2px;"),
