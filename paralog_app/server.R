@@ -125,12 +125,12 @@ shinyServer(function(input, output){
   })
   
   observe({
-    if (is.null(input$var) || input$var == "") {
-      shinyjs::disable("sumbit_button")
-      shinyjs::disable("reset_button")
-    } else {
+    if (!is.null(input$var) || input$var != "" || !is.null(input$file) || input$file != "") {
       shinyjs::enable("sumbit_button")
       shinyjs::enable("reset_button")
+    } else {
+      shinyjs::disable("sumbit_button")
+      shinyjs::disable("reset_button")
     }
   })
   
