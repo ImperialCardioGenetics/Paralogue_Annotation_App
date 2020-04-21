@@ -54,17 +54,18 @@ shinyServer(function(input, output){
       #add ClinVar IDs with URLs 
       #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
       if (nrow(result)!=0){ # that where the error was generated
-        result$ID.y<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.y,"/"), "' target='_blank'>", result$ID.y, "</a>")  
-      
-      #generate ensembl alignment URLs
-      # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-        result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene)],";g1=",map[unlist(result$SYMBOL)]), "' target='_blank'>alignment</a>")  
+        
+        #ClinVarID paralog URL
+        result$ID.paralog<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")
+        
+        #ClinVarID query URL
+        result$ID.query<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")
+        
+        #Ensembl alignment URL
+        # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
+        result$Ensembl_alignment_link<- paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")  
       }
-      #edit and add this later
-      # reorder_cols<-c("Variant_ID","Query_Gene","Query_ClinVar_link", "Chr","Position","REF","ALT","ClinVar_ID_link","Gene","Protein Position","Reference AA", "Alt AA","Codons","para_Z Score","Ensembl_alignment_link" )
-      # rename_cols<-c("Query Variant","Query Gene","Query ClinVar ID", "Chr","Position","REF","ALT","ClinVar ID","Gene","Protein Position","REF AA", "ALT AA","Codons","para_Z Score","Ensembl alignment" )
-      # result<- result[,reorder_cols]
-      # names(result)<-rename_cols
+
       
       return(result)
     } else {
@@ -82,8 +83,8 @@ shinyServer(function(input, output){
                                             class = "display nowrap",
                                             container = sketch
                                             ) %>%
-                                formatStyle(c("var", "ID", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
-                                formatStyle(c("Para_Z_score.x"), "border-right" = "solid 2px")
+                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
       
       # output$known_clinvar<-renderDataTable(DT::datatable(isolate(get_known()),
