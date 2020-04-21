@@ -31,7 +31,7 @@ shinyServer(function(input, output){
       #input$var<-data.frame(var="1\t114713907\tT\tG")
         req(input$var)
         # print(input$var)
-        var<-unlist(strsplit(input$var,split="\n"))
+        var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
         # print(var)
         var=var[nzchar(x=var)]
         input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
