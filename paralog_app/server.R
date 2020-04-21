@@ -20,7 +20,7 @@ shinyServer(function(input, output){
       req(input$pos)
       req(input$ref)
       req(input$alt)
-      var = paste(input$chr,input$pos,input$ref,input$alt,sep = "\t")
+      var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
       var = var[nzchar(x=var)]
       input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
       # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
@@ -35,7 +35,7 @@ shinyServer(function(input, output){
         # print(var)
         var=var[nzchar(x=var)]
         input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-        input_data$mutation<-gsub(":","\t",input_data$mutation)
+        input_data$mutation<-gsub(":"," ",input_data$mutation)
         colnames(input_data)<-"mutation"
         result<-predict_output(input_data)
     }else{
@@ -43,7 +43,7 @@ shinyServer(function(input, output){
         req(input$file)
         inFile <- input$file
         input_file = read.table(inFile$datapath)
-        input_file$V1<-gsub(":","\t",input_file$V1)
+        input_file$V1<-gsub(":"," ",input_file$V1)
         colnames(input_file) <- "mutation"
         result <- predict_output(input_file)
       }
@@ -78,6 +78,7 @@ shinyServer(function(input, output){
                                             escape = F, # escape text hyperlink to url instead of text
                                             options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines
                                             rownames = FALSE,
+                                            class = "display nowrap",
                                             container = sketch
                                             ) %>%
                                 formatStyle(c("var", "ID", "Gene", "Codons.x", "Protein_position.x", "Amino_acids.x", "Para_Z_score.x"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%

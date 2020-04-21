@@ -72,6 +72,7 @@ fluidPage(
                     actionButton("reset_button", "Reset form")
                       ),
                    mainPanel(
+                     width = 10,
                      tabsetPanel(
                        id = "All_results",
                        type = "tabs",

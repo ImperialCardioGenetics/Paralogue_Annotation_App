@@ -20,14 +20,15 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
     raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
   }
 }
-raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep="\t")
-raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
+raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=" ")
+raw_data$var2 = paste(raw_data$CHROM.y,raw_data$POS.y,raw_data$REF.y,raw_data$ALT.y,sep=" ")
+raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, var2, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
 
 #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
 clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
 clinvar_P_LP = clinvar_P_LP[,1:5]
 colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
-clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep="\t")
+clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep=" ")
 clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
 raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = c("var"))
@@ -78,7 +79,7 @@ predict_output = function(input_data){
     # ALT.x, 
     var,
     ID,
-    Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, CHROM.y, POS.y, REF.y, ALT.y, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
+    Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, var2, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
   
   #in order to remove duplicated query rows
   # tmp_chrom = NULL
@@ -104,11 +105,11 @@ sketch = htmltools::withTags(table(
       th(colspan = 11, 'Equivalent variant(s)')
     ),
     tr(
-      lapply(c("Variant", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
              # bgcolor="#cbcbcd", color = "#000000"
              ),
       th("Para_Z score", style = "border-right: solid 2px;"),
-      lapply(c("Chr", "Position", "REF", "ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
     )
   )
 ))
