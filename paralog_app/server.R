@@ -5,6 +5,7 @@ library(shinyjs)
 library(shinycssloaders)
 
 #library(tidyverse)
+options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 
 shinyServer(function(input, output){
   
