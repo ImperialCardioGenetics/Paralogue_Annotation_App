@@ -29,7 +29,7 @@ fluidPage(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
                     id = "myapp",
-                    
+                    width = 2,
                       #dont need below as now have shinycssloaders
 #                     tags$head(tags$style(type="text/css", "#loadmessage {
 # position: fixed;
@@ -53,11 +53,11 @@ fluidPage(
                                  choices = list("Paste variants"="paste", "Upload Variants"="upload"),
                                  selected = NULL),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
-                      p("e.g. 1:115256528:T:G, 3:38592567:T:A, or X:70443591:G:A"),
+                      HTML("e.g. <br> 1:115256528:T:G, <br> 3:38592567:T:A, <br> X:70443591:G:A, <br> ..."),
 
                       conditionalPanel(
                         condition="input.format=='paste'",
-                        textAreaInput("var",label=NULL,placeholder = "1:114713907:T:G")
+                        textAreaInput("var",label=NULL,placeholder = "1:115256528:T:G")
                         ),
                       conditionalPanel(
                         condition="input.format=='upload'",
