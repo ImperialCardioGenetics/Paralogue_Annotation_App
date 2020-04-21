@@ -53,11 +53,11 @@ fluidPage(
                                  choices = list("Paste variants"="paste", "Upload Variants"="upload"),
                                  selected = NULL),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
-                      HTML("e.g. <br> 1:115256528:T:G, <br> 3:38592567:T:A, <br> X:70443591:G:A, <br> ..."),
+                      HTML("e.g. <br> 1:115256528:T:G, <br> 3:38592567:T:A, <br> X:70443591:G:A..."),
 
                       conditionalPanel(
                         condition="input.format=='paste'",
-                        textAreaInput("var",label=NULL,placeholder = "1:115256528:T:G")
+                        textAreaInput("var",label=NULL,placeholder = "Paste variants here...")
                         ),
                       conditionalPanel(
                         condition="input.format=='upload'",
@@ -69,7 +69,7 @@ fluidPage(
                     # conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                     #                  tags$div("Loading...",id="loadmessage")),
                     actionButton("sumbit_button","Submit"),
-                    actionButton("reset", "Reset form")
+                    actionButton("reset_button", "Reset form")
                       ),
                    mainPanel(
                      tabsetPanel(

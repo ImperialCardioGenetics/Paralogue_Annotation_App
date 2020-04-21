@@ -123,6 +123,16 @@ shinyServer(function(input, output){
     
   })
   
+  observe({
+    if (is.null(input$var) || input$var == "") {
+      shinyjs::disable("sumbit_button")
+      shinyjs::disable("reset_button")
+    } else {
+      shinyjs::enable("sumbit_button")
+      shinyjs::enable("reset_button")
+    }
+  })
+  
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
     # output$paralog<-renderText(isolate({
