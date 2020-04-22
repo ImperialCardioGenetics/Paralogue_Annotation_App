@@ -152,7 +152,7 @@ shinyServer(function(input, output){
       paste("paralog_annotation", ".tsv",sep="") # need to give specific name?
     },
     content = function(file) {
-      write.table(get_paralog("YES"), file, row.names = FALSE,quote = F,sep="\t")
+      write.table(edit_output_columns(get_paralog("YES")), file, row.names = FALSE,quote = F,sep="\t")
     }
   )
   
