@@ -73,7 +73,7 @@ shinyServer(function(input, output){
     }
   }
   
-  observeEvent(input$sumbit_button, {
+  observeEvent(input$submit_button, {
     if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
       
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
@@ -126,15 +126,15 @@ shinyServer(function(input, output){
     
   })
   
-  observe({
-    if (!is.null(input$var) || input$var != "" || !is.null(input$file) || input$file != "") {
-      shinyjs::enable("sumbit_button")
-      shinyjs::enable("reset_button")
-    } else {
-      shinyjs::disable("sumbit_button")
-      shinyjs::disable("reset_button")
-    }
-  })
+  # observe({
+  #   if (!is.null(input$var) || input$var != "" || !is.null(input$file) || input$file != "") {
+  #     shinyjs::enable("submit_button")
+  #     shinyjs::enable("reset_button")
+  #   } else {
+  #     shinyjs::disable("submit_button")
+  #     shinyjs::disable("reset_button")
+  #   }
+  # })
   
   observeEvent(input$reset, {
     shinyjs::reset("myapp")

@@ -69,7 +69,7 @@ fluidPage(
                     #dont need below as now have shinycssloaders
                     # conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                     #                  tags$div("Loading...",id="loadmessage")),
-                    actionButton("sumbit_button","Submit"),
+                    actionButton("submit_button","Submit"),
                     actionButton("reset_button", "Reset form")
                       ),
                    mainPanel(
@@ -79,7 +79,7 @@ fluidPage(
                        type = "tabs",
                        tabPanel("Known pathogenic variants in paralogous positions",
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
-                                conditionalPanel(condition = "input.sumbit_button", withSpinner(dataTableOutput("paralog"))),
+                                conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
                        )#,
                        # tabPanel("Query Variant",
