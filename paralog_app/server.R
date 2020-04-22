@@ -126,15 +126,20 @@ shinyServer(function(input, output){
     
   })
   
-  # observe({
-  #   if (!is.null(input$var) || input$var != "" || !is.null(input$file) || input$file != "") {
-  #     shinyjs::enable("submit_button")
-  #     shinyjs::enable("reset_button")
-  #   } else {
-  #     shinyjs::disable("submit_button")
-  #     shinyjs::disable("reset_button")
-  #   }
-  # })
+  observe({
+    if (is.null(input$var) || input$var == ""){
+      if (is.null(input$file) || input$file == ""){
+        shinyjs::disable("submit_button")
+        shinyjs::disable("reset_button")
+      } else {
+        shinyjs::enable("submit_button")
+        shinyjs::enable("reset_button")
+      }
+    } else {
+      shinyjs::enable("submit_button")
+      shinyjs::enable("reset_button")
+    }
+  })
   
   observeEvent(input$reset, {
     shinyjs::reset("myapp")
