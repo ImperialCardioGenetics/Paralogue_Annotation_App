@@ -54,7 +54,7 @@ fluidPage(
                                  selected = NULL,
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
-                      HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A"),
+                      HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
 
                       conditionalPanel(
                         condition="input.format=='paste'",

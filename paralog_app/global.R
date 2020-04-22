@@ -43,7 +43,6 @@ predict_output = function(input_data){
   output = raw_data[raw_data$var %in%  input_data$mutation,]
   
   # will change subset to dplyr::select to change colnames at the same time
-  # output = subset(output,select=c(
   output = dplyr::select(output,
     var.query=var,
     ID.query=ID,
@@ -59,7 +58,9 @@ predict_output = function(input_data){
     Protein_position.paralog=Protein_position.y, 
     Amino_acids.paralog=Amino_acids.y, 
     Para_Z_score.paralog=Para_Z_score.y)
-  #)
+  
+  #convert numeric to character so as all output df columns left align when renderDataTable()
+  output = dplyr::mutate_if(output, is.numeric, as.character)
   
   return(output)
   print(output)
