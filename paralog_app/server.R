@@ -141,7 +141,7 @@ shinyServer(function(input, output){
     }
   })
   
-  observeEvent(input$reset, {
+  observeEvent(input$reset_button, {
     shinyjs::reset("myapp")
     # output$paralog<-renderText(isolate({
     #   
