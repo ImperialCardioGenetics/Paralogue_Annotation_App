@@ -33,12 +33,20 @@ clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
 raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = c("var"))
 
+Paraloc_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-
+  if (is.null(Paraloc_data)){
+    Paraloc_data = Paraloc
+  } else {
+    Paraloc_data = base::rbind(Paraloc_data, dplyr::setdiff(Paraloc, Paraloc_data))
+  }
 }
+#rm(Paraloc)
+Paraloc_data$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$ALT,sep=" ")
+Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
 
 predict_output = function(input_data){
   print(input_data$mutation)
@@ -48,6 +56,7 @@ predict_output = function(input_data){
 
   # select the vars ## this can be done first to reduce filtering time if final dataset is huge
   output = raw_data[raw_data$var %in%  input_data$mutation,]
+  paraloc_output = Paraloc_data[Paraloc_data$var %in% input_data$mutation,]
   
   # will change subset to dplyr::select to change colnames at the same time
   output = dplyr::select(output,
@@ -68,7 +77,6 @@ predict_output = function(input_data){
   
   #convert numeric to character so as all output df columns left align when renderDataTable()
   output = dplyr::mutate_if(output, is.numeric, as.character)
-  paraloc_output = 1 #placeholder for now
   return(list("output" = output, "paraloc_output" = paraloc_output))
   print(output)
 }
