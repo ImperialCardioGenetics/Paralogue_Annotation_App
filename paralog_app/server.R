@@ -37,16 +37,32 @@ shinyServer(function(input, output){
         var=var[nzchar(x=var)]
         input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
         input_data$mutation<-gsub(":"," ",input_data$mutation)
+        input_data$mutation<-gsub("^chr","",input_data$mutation)
         colnames(input_data)<-"mutation"
-        result<-predict_output(input_data)$output
+        result<-predict_output(input_data)
     }else{
       if(input$format == 'upload') {
         req(input$file)
         inFile <- input$file
-        input_file = read.table(inFile$datapath)
-        input_file$V1<-gsub(":"," ",input_file$V1)
+        
+        # very hacky way to read in vcf
+        # read 1st line only to get number of cols to check if its txt or vcf format
+        # when using colClasses in read.table the columns set to NULL are completely ignored
+        input_1row = ncol(read.table(inFile$datapath,nrows = 1 ))
+    
+        if (input_1row>=5) {
+          input = read.table(inFile$datapath, colClasses = c(rep("character", 5), rep("NULL",(input_1row-5))))
+          input_file <- data.frame(do.call(paste, c(input[,1:2],input[,4:5], sep=" ")))
+          
+        } else {
+          input = read.table(inFile$datapath, colClasses = "character")
+          input_file <- data.frame(do.call(paste, c(input[colnames(input)],sep=" ")))
+        }
+        
         colnames(input_file) <- "mutation"
-        result <- predict_output(input_file)$output
+        input_file$mutation<-gsub(":|\t"," ",input_file$mutation)
+        input_file$mutation<-gsub("^chr","",input_file$mutation)
+        result <- predict_output(input_file)
       }
     }
   #}
