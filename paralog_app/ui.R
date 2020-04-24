@@ -82,10 +82,11 @@ fluidPage(
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
                                 conditionalPanel("output.paralog",downloadButton("download","Download"))
                        )#,
-                       # tabPanel("Query Variant",
-                       #          
-                       #          
-                       # )
+                       # tabPanel("Paralogous Positions",
+                       #          h4("Equivalent positions identified by Paralogue Annotation"),
+                       #          conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paraloc"))),
+                       #          conditionalPanel("output.paraloc",downloadButton("download","Download"))
+                       #          )
                        )
                      )
                   )),
