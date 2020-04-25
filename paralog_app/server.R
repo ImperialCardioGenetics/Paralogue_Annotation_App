@@ -40,6 +40,7 @@ shinyServer(function(input, output){
         input_data$mutation<-gsub("^chr","",input_data$mutation)
         colnames(input_data)<-"mutation"
         result<-predict_output(input_data)$output
+        result_paraloc<-predict_output(input_data)$paraloc_output
     }else{
       if(input$format == 'upload') {
         req(input$file)
@@ -63,6 +64,7 @@ shinyServer(function(input, output){
         input_file$mutation<-gsub(":|\t"," ",input_file$mutation)
         input_file$mutation<-gsub("^chr","",input_file$mutation)
         result <- predict_output(input_file)$output
+        result_paraloc<-predict_output(input_data)$paraloc_output
       }
     }
   #}
@@ -83,16 +85,16 @@ shinyServer(function(input, output){
       }
 
       
-      return(result)
+      return(list("result" = result, "result_paraloc" = result_paraloc))
     } else {
-      return(result)
+      return(list("result" = result, "result_paraloc" = result_paraloc))
     }
   }
   
   observeEvent(input$submit_button, {
-    if (nrow(get_paralog("NO"))>=1){ # check if result table is empty
+    if (nrow(get_paralog("NO")$result)>=1){ # check if result table is empty
       
-      output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")),
+      output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result),
                                             escape = F, # escape text hyperlink to url instead of text
                                             options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines
                                             rownames = FALSE,
@@ -102,7 +104,9 @@ shinyServer(function(input, output){
                                 formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
-      
+      # output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
+      #                                               )
+      #                                 )
 
       
     } else {
@@ -144,7 +148,7 @@ shinyServer(function(input, output){
       paste("paralog_annotation", ".tsv",sep="") # need to give specific name?
     },
     content = function(file) {
-      write.table(edit_output_columns(get_paralog("YES")), file, row.names = FALSE,quote = F,sep="\t")
+      write.table(edit_output_columns(get_paralog("YES")$result), file, row.names = FALSE,quote = F,sep="\t")
     }
   )
   
