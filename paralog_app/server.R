@@ -112,11 +112,12 @@ shinyServer(function(input, output){
     } else {
     
       #Error catching for if query returns empty table
-      output$paralog<- showModal(modalDialog(
+      output$paralog<-showModal(modalDialog(
         title = "Paralog Annotator", # We can change the msg
         HTML("Your query returned no variants<br>Please try another input variant(s)<br>"), # and this msg
         easyClose = TRUE))
       shinyjs::reset("myapp") # we can delete this so the app does not restart every time
+      
       
     }
     
