@@ -39,7 +39,7 @@ shinyServer(function(input, output){
         input_data$mutation<-gsub(":"," ",input_data$mutation)
         input_data$mutation<-gsub("^chr","",input_data$mutation)
         colnames(input_data)<-"mutation"
-        result<-predict_output(input_data)
+        result<-predict_output(input_data)$output
     }else{
       if(input$format == 'upload') {
         req(input$file)
@@ -62,7 +62,7 @@ shinyServer(function(input, output){
         colnames(input_file) <- "mutation"
         input_file$mutation<-gsub(":|\t"," ",input_file$mutation)
         input_file$mutation<-gsub("^chr","",input_file$mutation)
-        result <- predict_output(input_file)
+        result <- predict_output(input_file)$output
       }
     }
   #}
