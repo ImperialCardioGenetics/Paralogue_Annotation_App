@@ -31,7 +31,7 @@ colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep=" ")
 clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 
-raw_data = dplyr::full_join(clinvar_P_LP,raw_data,by = c("var"))
+raw_data = dplyr::right_join(clinvar_P_LP,raw_data,by = c("var"))
 
 Paraloc_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
