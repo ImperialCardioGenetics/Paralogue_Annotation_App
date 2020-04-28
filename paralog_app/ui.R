@@ -65,7 +65,10 @@ fluidPage(
                         fileInput("file", NULL,accept = c(
                                       "text/csv",
                                       "text/comma-separated-values,text/plain",
-                                      ".csv"))),
+                                      ".csv",
+                                      ".txt",
+                                      ".vcf",
+                                      ".gz"))),
                     #dont need below as now have shinycssloaders
                     # conditionalPanel(condition="$('html').hasClass('shiny-busy')",
                     #                  tags$div("Loading...",id="loadmessage")),

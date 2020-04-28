@@ -121,6 +121,49 @@ edit_output_columns = function(df) {
   return(df)
 }
 
+# function to check if uploaded variants file is valid
+check_upload_file = function(inFile) {
+  #eg. msvcf
+  #input_1row = read.table("data/head200.vcf",nrows = 1, as.is =T)
+  
+  # check if upload file is gz
+  if (endsWith(inFile$datapath, ".gz")) {
+    input_1row = read.table(gzfile(inFile$datapath),nrows = 1, as.is =T)
+  } else {
+    input_1row = read.table(inFile$datapath,nrows = 1, as.is =T)
+  }
+  
+  # check if file is vcf
+  if (ncol(input_1row)>=8 & grepl("^chr|^[1-9]|^[XY]", input_1row$V1) & class(input_1row$V2)=="integer" & nchar(input_1row$V1,type = "chars")<=5) {
+    if (endsWith(inFile$datapath, ".gz")) {
+      input_vcf = read.table(gzfile(inFile$datapath), colClasses = c("character", "integer",rep("character", 3), rep("NULL",(ncol(input_1row)-5))))
+    } else {
+      input_vcf = read.table(inFile$datapath, colClasses = c("character", "integer",rep("character", 3), rep("NULL",(ncol(input_1row)-5))))
+    }
+    input_file <- data.frame(do.call(paste, c(input_vcf[,1:2],input_vcf[,4:5], sep=" ")),stringsAsFactors = F)
+    
+    # check if file is flat txt
+  } else if (ncol(input_1row)>=1 & ncol(input_1row)<=4 & grepl("^chr|^[1-9]|^[XY]", input_1row$V1)) {
+    if (endsWith(inFile$datapath, ".gz")) {
+      input_vcf = read.table(gzfile(inFile$datapath), colClasses = "character")
+    } else {
+      input_vcf = read.table(inFile$datapath, colClasses = "character")
+    }
+    input_file <- data.frame(do.call(paste, c(input_vcf[colnames(input_vcf)],sep=" ")),stringsAsFactors = F)
+    
+    # check if table if correct format
+    if (nchar(input_file[1,1],type = "chars")<10 | !grepl("[AGTC]$", input_file[1,1])) {
+      
+      # write NA table
+      input_file<- data.frame(col1=NA)
+    }
+  } else {
+    # write NA table
+    input_file<- data.frame(col1=NA)
+  }
+  
+  return(input_file)
+}
 
 
 
