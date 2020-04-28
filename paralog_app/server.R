@@ -58,7 +58,7 @@ shinyServer(function(input, output){
         input_file$mutation<-gsub(":|\t"," ",input_file$mutation)
         input_file$mutation<-gsub("^chr","",input_file$mutation)
         result <- predict_output(input_file)$output
-        result_paraloc<-predict_output(input_data)$paraloc_output
+        result_paraloc<-predict_output(input_file)$paraloc_output
       }
     }
   #}
