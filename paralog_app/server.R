@@ -92,7 +92,7 @@ shinyServer(function(input, output){
                                             escape = F, # escape text hyperlink to url instead of text
                                             options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines
                                             rownames = FALSE,
-                                            class = "display nowrap",
+                                            class = "display nowrap compact",
                                             container = sketch
                                             ) %>%
                                 formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%

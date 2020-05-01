@@ -39,15 +39,19 @@ Paraloc_data = NULL
 for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
+  #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
+  Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars))
+  Paraloc = distinct(Paraloc)
   if (is.null(Paraloc_data)){
     Paraloc_data = Paraloc
   } else {
     Paraloc_data = base::rbind(Paraloc_data, dplyr::setdiff(Paraloc, Paraloc_data))
   }
 }
-#rm(Paraloc)
-Paraloc_data$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$ALT,sep=" ")
-Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
+rm(Paraloc)
+# Paraloc_data$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$ALT,sep=" ")
+# Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace_all, "&", " ")
 
