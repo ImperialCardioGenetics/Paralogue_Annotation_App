@@ -41,7 +41,7 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
-  Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars))
+  Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
   Paraloc = distinct(Paraloc)
   if (is.null(Paraloc_data)){
     Paraloc_data = Paraloc
