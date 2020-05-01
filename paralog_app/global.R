@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(shinythemes)
+library(stringr)
 
 #library(tidyverse)
 
@@ -47,6 +48,8 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
 #rm(Paraloc)
 Paraloc_data$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$ALT,sep=" ")
 Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
+# Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
+# Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace_all, "&", " ")
 
 predict_output = function(input_data){
   print(input_data$mutation)

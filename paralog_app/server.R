@@ -98,9 +98,9 @@ shinyServer(function(input, output){
                                 formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
-      # output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
-      #                                               )
-      #                                 )
+      output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
+                                                    )
+                                      )
 
       
     } else {
