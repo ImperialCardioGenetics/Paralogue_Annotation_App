@@ -73,6 +73,7 @@ shinyServer(function(input, output){
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
         result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , NA) 
+        
       }
 
       

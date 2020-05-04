@@ -1,23 +1,21 @@
-AA	AA_3letter	AA_1letter
-alanine	ala	A
-arginine	arg	R
-asparagine	asn	N
-aspartic acid	asp	D
-asparagine or aspartic acid	asx	B
-cysteine	cys	C
-glutamic acid	glu	E
-glutamine	gln	Q
-glutamine or glutamic acid	glx	Z
-glycine	gly	G
-histidine	his	H
-isoleucine	ile	I
-leucine	leu	L
-lysine	lys	K
-methionine	met	M
-phenylalanine	phe	F
-proline	pro	P
-serine	ser	S
-threonine	thr	T
-tryptophan	trp	W
-tyrosine	tyr	Y
-valine	val	V
+AA_1letter	AA	AA_3letter
+G	Glycine	Gly
+P	Proline	Pro
+A	Alanine	Ala
+V	Valine	Val
+L	Leucine	Leu
+I	Isoleucine	Ile
+M	Methionine	Met
+C	Cysteine	Cys
+F	Phenylalanine	Phe
+Y	Tyrosine	Tyr
+W	Tryptophan	Trp
+H	Histidine	His
+K	Lysine	Lys
+R	Arginine	Arg
+Q	Glutamine	Gln
+N	Asparagine	Asn
+E	Glutamic Acid	Glu
+D	Aspartic Acid	Asp
+S	Serine	Ser
+T	Threonine	Thr
