@@ -29,8 +29,8 @@ raw_data = NULL
 for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 # for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-  #load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-  load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   
   if (is.null(raw_data)){
     Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
@@ -47,8 +47,8 @@ raw_data$var2 = paste(raw_data$CHROM.y,raw_data$POS.y,raw_data$REF.y,raw_data$AL
 raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, var2, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
 
 #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-# clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
-clinvar_P_LP = read.csv(file = paste0("data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
+clinvar_P_LP = read.csv(file = paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
+# clinvar_P_LP = read.csv(file = paste0("data/clinvar/clinvar_20190114_GRCh37_onlyPathogenic_and_Likely_pathogenic.vcf"), sep = "\t", comment.char = "#", stringsAsFactors = F, header = F) #load in clinvar data for query variant
 clinvar_P_LP = clinvar_P_LP[,1:5]
 colnames(clinvar_P_LP) = c("CHR", "POS", "ID", "REF", "ALT")
 clinvar_P_LP$var = paste(clinvar_P_LP$CHR,clinvar_P_LP$POS,clinvar_P_LP$REF,clinvar_P_LP$ALT,sep=" ")
@@ -63,8 +63,8 @@ raw_data <- format_protein_notation(raw_data, AA_map = AA_map)
 
 
 Paraloc_data = NULL
-for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-# for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1,"X","Y")){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
@@ -72,6 +72,7 @@ for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
   Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
   Paraloc = dplyr::distinct(Paraloc)
+  Paraloc$CHROM = as.character(Paraloc$CHROM)
   if (is.null(Paraloc_data)){
     Paraloc_data = Paraloc
   } else {
