@@ -6,9 +6,11 @@ library(stringr)
 #library(tidyverse)
 
 #read gene symbol/ENSG and write to dict
-mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=FALSE)
+mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
 map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
+AA_table <- read.delim("data/AA_table.txt", stringsAsFactors = F)
+AA_map=setNames(AA_table$AA_1letter, AA_table$AA_3letter)
 
 #PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
 raw_data = NULL
@@ -70,21 +72,41 @@ predict_output = function(input_data){
   output = raw_data[raw_data$var %in%  input_data$mutation,]
   paraloc_output = Paraloc_data[Paraloc_data$var %in% input_data$mutation,]
   
+  # function to format protein notation
+  format_protein_notation = function(df, AA_map) {
+    
+    df <- tidyr::separate(df, Amino_acids.x, into = c("refAA.x", "altAA.x") ,sep="/")
+    df <- tidyr::separate(df, Amino_acids.y, into = c("refAA.y", "altAA.y") ,sep="/")
+    
+    # df <- dplyr::mutate(df, Protein_dot.x = paste("p.",AA_map[unlist(raw_data$refAA.x)],raw_data$Protein_position.x,AA_map[unlist(raw_data$altAA.x)] ,sep = "") )
+    # df <- dplyr::mutate(df, Protein_dot.y= paste("p.",AA_map[unlist(raw_data$refAA.y)],raw_data$Protein_position.y,AA_map[unlist(raw_data$altAA.y)] ,sep = "") )
+    
+    df$Protein_dot.x <- paste("p.",AA_map[unlist(df$refAA.x)],raw_data$Protein_position.x,AA_map[unlist(df$altAA.x)] ,sep = "")
+    df$Protein_dot.y <- paste("p.",AA_map[unlist(df$refAA.y)],raw_data$Protein_position.y,AA_map[unlist(df$altAA.y)] ,sep = "")
+  
+    return(df)
+  }
+  
+  # apply protein notation change to output table only
+  output <- format_protein_notation(output, AA_map = AA_map)
+  
   # will change subset to dplyr::select to change colnames at the same time
   output = dplyr::select(output,
     var.query=var,
     ID.query=ID,
     Gene.query=Gene, 
     Codons.query=Codons.x, 
-    Protein_position.query=Protein_position.x, 
-    Amino_acids.query=Amino_acids.x, 
+    #Protein_position.query=Protein_position.x, 
+    #Amino_acids.query=Amino_acids.x, 
+    Protein_dot.query=Protein_dot.x,
     Para_Z_score.query=Para_Z_score.x, 
     var.paralog=var2, 
     ID.paralog=ID.y, 
     SYMBOL.paralog=SYMBOL, 
     Codons.paralog=Codons.y, 
-    Protein_position.paralog=Protein_position.y, 
-    Amino_acids.paralog=Amino_acids.y, 
+    #Protein_position.paralog=Protein_position.y, 
+    #Amino_acids.paralog=Amino_acids.y,
+    Protein_dot.paralog=Protein_dot.y,
     Para_Z_score.paralog=Para_Z_score.y)
   
   #convert numeric to character so as all output df columns left align when renderDataTable()
@@ -104,11 +126,13 @@ sketch = htmltools::withTags(table(
       th(colspan = 11, 'Equivalent variant(s)')
     ),
     tr(
-      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
+      # lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein"), th
              # bgcolor="#cbcbcd", color = "#000000"
              ),
       th("Para_Z score", style = "border-right: solid 2px;"),
-      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
+      # lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein", "Para_Z score", "Ensembl alignment"), th)
     )
   )
 ))
@@ -176,4 +200,22 @@ check_upload_file = function(inFile) {
   
   return(input_file)
 }
+
+
+# # function to format protein notation
+# format_protein_notation = function(df) {
+#   
+#     df2 <- tidyr::separate(df, Amino_acids.x, into = c("refAA.x", "altAA.x") )
+#     df2 <- tidyr::separate(df, Amino_acids.x, into = c("refAA.y", "altAA.y") )
+#     
+#     df2 <- dplyr::mutate(Protein_dot.x = paste("p.",map[unlist(raw_data$refAA.x)],raw_data$Protein_position.x,map[unlist(raw_data$altAA.x)] ,sep = "") )
+#     df2 <- dplyr::mutate(Protein_dot.y= paste("p.",map[unlist(raw_data$refAA.y)],raw_data$Protein_position.y,map[unlist(raw_data$altAA.y)] ,sep = "") )
+#     
+# }
+# 
+# 
+
+
+
+
 

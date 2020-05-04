@@ -92,7 +92,7 @@ shinyServer(function(input, output){
                                             class = "display nowrap compact",
                                             container = sketch
                                             ) %>%
-                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_dot.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
       output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
