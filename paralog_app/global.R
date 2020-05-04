@@ -7,8 +7,8 @@ library(stringr)
 
 #PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
 raw_data = NULL
-# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+# for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   if (is.null(raw_data)){
@@ -35,14 +35,15 @@ clinvar_P_LP = subset(clinvar_P_LP,select=c(var, ID))
 raw_data = dplyr::right_join(clinvar_P_LP,raw_data,by = c("var"))
 
 Paraloc_data = NULL
-# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+# for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+  print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
   Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
-  Paraloc = distinct(Paraloc)
+  Paraloc = dplyr::distinct(Paraloc)
   if (is.null(Paraloc_data)){
     Paraloc_data = Paraloc
   } else {
