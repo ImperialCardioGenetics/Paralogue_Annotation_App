@@ -9,9 +9,6 @@ options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 
 shinyServer(function(input, output){
   
-  #read gene symbol/ENSG and write to dict
-  mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=FALSE)
-  map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
   
   get_paralog<-function(savefile){
     
