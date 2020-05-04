@@ -9,9 +9,6 @@ options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 
 shinyServer(function(input, output){
   
-  #read gene symbol/ENSG and write to dict
-  mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=FALSE)
-  map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
   
   get_paralog<-function(savefile){
     
@@ -76,6 +73,7 @@ shinyServer(function(input, output){
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
         result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , NA) 
+        
       }
 
       
@@ -95,7 +93,7 @@ shinyServer(function(input, output){
                                             class = "display nowrap compact",
                                             container = sketch
                                             ) %>%
-                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_position.query", "Amino_acids.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_dot.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
       output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
