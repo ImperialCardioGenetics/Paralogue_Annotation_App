@@ -6,7 +6,7 @@ library(stringr)
 #library(tidyverse)
 
 #read gene symbol/ENSG and write to dict
-mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
+mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
 map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
 AA_table <- read.delim("data/AA_table.txt", stringsAsFactors = F)
@@ -26,8 +26,8 @@ format_protein_notation = function(df, AA_map) {
 
 #PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
 raw_data = NULL
-for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-# for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
@@ -64,7 +64,7 @@ raw_data <- format_protein_notation(raw_data, AA_map = AA_map)
 
 Paraloc_data = NULL
 # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-for (i in c(1,"X","Y")){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
+for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
