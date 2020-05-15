@@ -67,16 +67,16 @@ shinyServer(function(input, output){
         #ClinVarID paralog URL
         result$ID.paralog<- ifelse(!is.na(result$ID.paralog), 
                                    (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")),
-                                   NA)
+                                   "-")
         
         #ClinVarID query URL
         result$ID.query<- ifelse(!is.na(result$ID.query), 
                                  (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
-                                 NA)
+                                 "-")
         print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , NA) 
+        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , "-") 
         
       }
 
@@ -92,7 +92,7 @@ shinyServer(function(input, output){
       
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result),
                                             escape = F, # escape text hyperlink to url instead of text
-                                            options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines
+                                            options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                             rownames = FALSE,
                                             class = "display nowrap compact",
                                             container = sketch
