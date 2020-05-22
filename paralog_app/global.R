@@ -149,7 +149,7 @@ sketch2 = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      lapply(c("Chr", "Position", "ClinVar ID", "REF", "ALT"), th
+      lapply(c("Chrom Pos REF", "Gene", "Equiavlent Paralogous Locations"), th
              # bgcolor="#cbcbcd", color = "#000000"
       )
     )

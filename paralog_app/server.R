@@ -102,8 +102,14 @@ shinyServer(function(input, output){
                                 formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Protein_dot.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
-      output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc)
-                                                    )
+      output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
+                                                    escape = F, # escape text hyperlink to url instead of text
+                                                    options = list(paging = TRUE,scrollX = FALSE),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
+                                                    rownames = FALSE,
+                                                    class = "display compact",
+                                                    container = sketch2
+                                                    ) %>%
+                                        formatStyle("var", "white-space"="nowrap")
                                       )
 
       
