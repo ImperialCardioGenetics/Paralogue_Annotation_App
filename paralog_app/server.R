@@ -35,7 +35,9 @@ shinyServer(function(input, output){
         input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
         input_data$mutation<-gsub(":"," ",input_data$mutation)
         input_data$mutation<-gsub("^chr","",input_data$mutation)
-        colnames(input_data)<-"mutation"
+        input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
+        print(input_data)
+        # colnames(input_data)<-"mutation"
         result<-predict_output(input_data)$output
         result_paraloc<-predict_output(input_data)$paraloc_output
     }else{
