@@ -104,7 +104,11 @@ shinyServer(function(input, output){
                                 )
       output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
                                                     escape = F, # escape text hyperlink to url instead of text
-                                                    options = list(paging = TRUE,scrollX = FALSE),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
+                                                    options = list(
+                                                      paging = TRUE,
+                                                      scrollX = FALSE,
+                                                      #autoWidth = TRUE,
+                                                      columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                                     rownames = FALSE,
                                                     class = "display compact",
                                                     container = sketch2

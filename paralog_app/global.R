@@ -70,9 +70,9 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
-  Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
+  # Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
   Paraloc = dplyr::distinct(Paraloc)
-  Paraloc$CHROM = as.character(Paraloc$CHROM)
+  # Paraloc$CHROM = as.character(Paraloc$CHROM)
   if (is.null(Paraloc_data)){
     Paraloc_data = Paraloc
   } else {
@@ -80,8 +80,8 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   }
 }
 rm(Paraloc)
-Paraloc_data$var = paste(Paraloc_data$CHROM,Paraloc_data$POS,Paraloc_data$REF,sep=" ")
-Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
+# Paraloc_data$var = paste(Paraloc_data$CHROM,Paraloc_data$POS,Paraloc_data$REF,sep=" ")
+# Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace_all, "&", " ")
 
