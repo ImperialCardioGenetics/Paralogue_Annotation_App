@@ -6,9 +6,17 @@ library(shinycssloaders)
 
 #library(tidyverse)
 options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
-
-shinyServer(function(input, output){
+enableBookmarking("url")
+shinyServer(function(input, output, session){
   
+  # observe({
+  #   # Trigger this observer every time an input changes
+  #   reactiveValuesToList(input)
+  #   session$doBookmark()
+  # })
+  # onBookmarked(function(url) {
+  #   updateQueryString(url)
+  # })
   
   get_paralog<-function(savefile){
     
@@ -89,9 +97,16 @@ shinyServer(function(input, output){
     }
   }
   
+  # observe({
+  #   if (req(input$tabs) == "Known pathogenic variants in paralogous positions")
+  #     updateQueryString(paste0("?",input$mutation[1],"paralogs"), mode = "push")
+  #   if (req(input$tabs) == "Paralogous Positions")
+  #     updateQueryString(paste0("?",input$mutation[1],"paraloc"), mode = "push")
+  # })
+  
   observeEvent(input$submit_button, {
+    # updateQueryString(paste0("?",input$mutation[1]), mode = "push")
     if (nrow(get_paralog("NO")$result)>=1){ # check if result table is empty
-      
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result),
                                             escape = F, # escape text hyperlink to url instead of text
                                             options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
@@ -115,20 +130,14 @@ shinyServer(function(input, output){
                                                     ) %>%
                                         formatStyle("var", "white-space"="nowrap")
                                       )
-
-      
     } else {
-    
       #Error catching for if query returns empty table
       output$paralog<-showModal(modalDialog(
         title = "Paralog Annotator", # We can change the msg
         HTML("Your query returned no variants<br>Please try another input variant(s)<br>"), # and this msg
         easyClose = TRUE))
       shinyjs::reset("myapp") # we can delete this so the app does not restart every time
-      
-      
     }
-    
   })
   
   observe({

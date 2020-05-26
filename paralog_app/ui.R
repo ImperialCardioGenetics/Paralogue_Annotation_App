@@ -21,7 +21,8 @@ fluidPage(
   #   ),
   theme=shinytheme("cosmo"), # eg. lumen # https://rstudio.github.io/shinythemes/
     navbarPage(
-      "PARALOG Annotator",
+      title = "PARALOG Annotator",
+      id = "navbar",
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
                br(),
