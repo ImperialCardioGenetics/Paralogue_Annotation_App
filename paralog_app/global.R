@@ -106,6 +106,7 @@ predict_output = function(input_data){
     Codons.query=Codons.x, 
     #Protein_position.query=Protein_position.x, 
     #Amino_acids.query=Amino_acids.x, 
+    Transcript,
     Protein_dot.query=Protein_dot.x,
     Para_Z_score.query=Para_Z_score.x, 
     var.paralog=var2, 
@@ -127,7 +128,7 @@ sketch = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th(colspan = 6, 'Query variant(s)', 
+      th(colspan = 7, 'Query variant(s)', 
          # bgcolor="#cbcbcd",
          # color = "#000000",
          style = "border-right: solid 2px;"),
@@ -135,12 +136,12 @@ sketch = htmltools::withTags(table(
     ),
     tr(
       # lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids"), th
-      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein"), th
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Transcript", "Protein"), th
              # bgcolor="#cbcbcd", color = "#000000"
              ),
-      th("Para_Z score", style = "border-right: solid 2px;"),
+      th("Para_Z\nscore", style = "border-right: solid 2px;"),
       # lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein position", "Amino acids", "Para_Z score", "Ensembl alignment"), th)
-      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein", "Para_Z score", "Ensembl alignment"), th)
+      lapply(c("Chrom Pos REF ALT", "ClinVar ID", "Gene", "Codons", "Protein", "Para_Z\nscore", "Ensembl alignment"), th)
     )
   )
 ))
