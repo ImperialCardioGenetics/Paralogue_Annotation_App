@@ -111,7 +111,7 @@ predict_output = function(input_data){
     Codons.query=Codons.x, 
     #Protein_position.query=Protein_position.x, 
     #Amino_acids.query=Amino_acids.x, 
-    Transcript,
+    Transcript.query=Transcript,
     Protein_dot.query=Protein_dot.x,
     Para_Z_score.query=Para_Z_score.x, 
     var.paralog=var2, 

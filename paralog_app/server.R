@@ -83,10 +83,31 @@ shinyServer(function(input, output, session){
         result$ID.query<- ifelse(!is.na(result$ID.query), 
                                  (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
                                  "-")
-        print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
+        #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , "-") 
+        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), 
+                                               (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>alignment</a>")) , 
+                                               "-") 
+        
+        # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
+        #Ensembl Transcript.query
+        result$Transcript.query<- ifelse(!is.na(result$Transcript.query), 
+                                         (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",map[unlist(result$Gene.query)],";t=",result$Transcript.query), "' target='_blank'>", result$Transcript.query, "</a>")),
+                                         "-")
+        
+        # https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000213281
+        #Ensembl Gene.query
+        result$Gene.query<- ifelse(!is.na(result$Gene.query), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result$Gene.query)]), "' target='_blank'>", result$Gene.query, "</a>")),
+                                   "-")
+        
+        #Ensembl SYMBOL.paralog
+        result$SYMBOL.paralog<- ifelse(!is.na(result$SYMBOL.paralog), 
+                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>", result$SYMBOL.paralog, "</a>")),
+        
+                                                                      "-")
+
         
       }
 
@@ -109,12 +130,12 @@ shinyServer(function(input, output, session){
     if (nrow(get_paralog("NO")$result)>=1){ # check if result table is empty
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result),
                                             escape = F, # escape text hyperlink to url instead of text
-                                            options = list(paging = TRUE,scrollX = TRUE),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
+                                            options = list(paging = TRUE,scrollX = TRUE, columnDefs = list(list(className = 'dt-center',targets="_all"), list(colour = 'black'))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                             rownames = FALSE,
                                             class = "display nowrap compact",
                                             container = sketch
                                             ) %>%
-                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Transcript", "Protein_dot.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
+                                formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Transcript.query", "Protein_dot.query", "Para_Z_score.query", "Ensembl_alignment_link"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
                                 )
       output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
