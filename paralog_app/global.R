@@ -71,7 +71,7 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   
   print(paste0("/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
-  load(paste0(,"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  load(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   
   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
