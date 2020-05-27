@@ -7,7 +7,7 @@ library(stringr)
 
 #read gene symbol/ENSG and write to dict
 # mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
-mart_export <- read.delim("/data/mart_export.txt", quote="", stringsAsFactors=F)
+mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
 map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
 # AA_table <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/AA_table.txt"), stringsAsFactors = F)
