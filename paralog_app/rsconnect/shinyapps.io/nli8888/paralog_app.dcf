@@ -1,0 +1,12 @@
+name: paralog_app
+title: paralog_app
+username:
+account: nli8888
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2370907
+bundleId: 3200379
+url: https://nli8888.shinyapps.io/paralog_app/
+when: 1590673212.70926
+asMultiple: FALSE
+asStatic: FALSE

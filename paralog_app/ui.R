@@ -27,6 +27,7 @@ fluidPage(
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
                br(),
+               #"test",
                sidebarLayout(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
