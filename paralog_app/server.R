@@ -44,7 +44,7 @@ shinyServer(function(input, output, session){
         input_data$mutation = stringr::str_replace_all(input_data$mutation,":"," ")
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        print(input_data)
+        # print(input_data)
         # colnames(input_data)<-"mutation"
         result<-predict_output(input_data)$output
         result_paraloc<-predict_output(input_data)$paraloc_output
