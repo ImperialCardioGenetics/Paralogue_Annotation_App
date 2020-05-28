@@ -19,7 +19,8 @@ fluidPage(
   #   tags$style(css),
   #   tags$script(js)
   #   ),
-  theme=shinytheme("cosmo"), # eg. lumen # https://rstudio.github.io/shinythemes/
+  theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
+  #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
       title = "PARALOG Annotator",
       id = "navbar",
@@ -47,11 +48,19 @@ fluidPage(
 #              }")),
                     h3("Input your variant"),
                     br(),
-                    radioButtons("format",label=NULL,
+                    radioButtons("format",label=NULL, 
                                  # Here a new input method can be inserted eg. upload a file with variants
                                  # eg. choices = list("upload file"="upload",
                                  # fileInput("file", NULL,accept = c("text/csv","text/comma-separated-values,text/plain",".csv")))),
-                                 choices = list("Paste variants"="paste", "Upload Variants"="upload"),
+                                 #choices = list("Paste variants"="paste", "Upload Variants"="upload"),
+                                 choiceNames = list(
+                                   HTML("<div style='font-size:14px'>Paste Variants</div>"),
+                                   #h5("Upload Variants")
+                                   HTML("<div style='font-size:14px'>Upload Variants</div>")
+                                 ),
+                                 choiceValues = list(
+                                   "paste", "upload"
+                                 ),
                                  selected = NULL,
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD

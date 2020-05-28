@@ -87,7 +87,7 @@ shinyServer(function(input, output, session){
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
         result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), 
-                                               (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "'class='btn btn-primary active' target='_blank'>alignment</a>")) , 
+                                               (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
                                                "-") 
         
         # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
@@ -136,11 +136,13 @@ shinyServer(function(input, output, session){
                                             container = sketch
                                             ) %>%
                                 formatStyle(c("var.query", "ID.query", "Gene.query", "Codons.query", "Transcript.query", "Protein_dot.query", "Para_Z_score.query"),  color = 'black', backgroundColor = 'lightgrey', fontWeight = 'bold') %>%
-                                formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px")
+                                formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px") %>% 
+                                formatStyle(columns = colnames(.$x$data), `font-size` = "13px")
                                 )
       output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
                                                     escape = F, # escape text hyperlink to url instead of text
                                                     options = list(
+                                                      searchHighlight = TRUE,
                                                       paging = TRUE,
                                                       scrollX = FALSE,
                                                       #autoWidth = TRUE,
