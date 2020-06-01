@@ -26,25 +26,26 @@ map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 # }
 
 #PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
-# raw_data = NULL
-# # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+raw_data = NULL
+for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 # for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-#   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-#   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-#   # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-#   
-#   Total_annotations = readRDS(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RDS"))
-#   
-#   if (is.null(raw_data)){
-#     # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
-#     # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
-#     raw_data = Total_annotations
-#   } else {
-#     # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
-#     # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
-#     raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
-#   }
-# }
+  #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+  # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+  # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+
+  Total_annotations = readRDS(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RDS"))
+
+  if (is.null(raw_data)){
+    # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
+    # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
+    raw_data = Total_annotations
+  } else {
+    # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
+    # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
+    raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
+  }
+}
+rm(Total_annotations)
 # raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=" ")
 # raw_data$var2 = paste(raw_data$CHROM.y,raw_data$POS.y,raw_data$REF.y,raw_data$ALT.y,sep=" ")
 #raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, var2, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
@@ -65,30 +66,30 @@ map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
 
 
-# Paraloc_data = NULL
-# # for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
+Paraloc_data = NULL
+for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
 # for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-#   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-#   # print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
-#   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-#   
-#   # print(paste0("/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
-#   # load(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-#   
-#   Paraloc = readRDS(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RDS"))
-#   
-#   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
-#   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
-#   # Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
-#   Paraloc = dplyr::distinct(Paraloc)
-#   # Paraloc$CHROM = as.character(Paraloc$CHROM)
-#   if (is.null(Paraloc_data)){
-#     Paraloc_data = Paraloc
-#   } else {
-#     Paraloc_data = base::rbind(Paraloc_data, dplyr::setdiff(Paraloc, Paraloc_data))
-#   }
-# }
-# rm(Paraloc)
+  #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
+  # print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
+  # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+
+  # print(paste0("/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
+  # load(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
+
+  Paraloc = readRDS(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RDS"))
+
+  #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
+  #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
+  # Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
+  Paraloc = dplyr::distinct(Paraloc)
+  # Paraloc$CHROM = as.character(Paraloc$CHROM)
+  if (is.null(Paraloc_data)){
+    Paraloc_data = Paraloc
+  } else {
+    Paraloc_data = base::rbind(Paraloc_data, dplyr::setdiff(Paraloc, Paraloc_data))
+  }
+}
+rm(Paraloc)
 # Paraloc_data$var = paste(Paraloc_data$CHROM,Paraloc_data$POS,Paraloc_data$REF,sep=" ")
 # Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
@@ -96,9 +97,9 @@ map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
 ###LOAD DATABASE HERE
 # con <- RSQLite::dbConnect(RSQLite::SQLite(), "data/db.sqlite")
-###OR LOAD RDS OBJECTS HERE
-raw_data = readRDS("data/Total_annotations_all_chrom_noQC.RDS")
-Paraloc_data = readRDS("data/Para_locations_all_chrom_noQC.RDS")
+###OR LOAD WHOLE RDS OBJECTS HERE
+# raw_data = readRDS("data/Total_annotations_all_chrom_noQC.RDS")
+# Paraloc_data = readRDS("data/Para_locations_all_chrom_noQC.RDS")
 
 
 predict_output = function(input_data){
