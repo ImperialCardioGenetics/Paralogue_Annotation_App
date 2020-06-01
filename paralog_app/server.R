@@ -108,6 +108,10 @@ shinyServer(function(input, output, session){
         
                                                                       "-")
 
+        #Ensembl Paraloc_data$Gene
+        result_paraloc$Gene<- ifelse(!is.na(result_paraloc$Gene), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene)]), "' target='_blank'>", result_paraloc$Gene, "</a>")),
+                                   "-")
         
       }
 
