@@ -143,7 +143,7 @@ shinyServer(function(input, output, session){
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px") %>% 
                                 formatStyle(columns = colnames(.$x$data), `font-size` = "13px")
                                 )
-      output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
+      output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog("NO")$result_paraloc)),
                                                     escape = F, # escape text hyperlink to url instead of text
                                                     options = list(
                                                       searchHighlight = TRUE,
