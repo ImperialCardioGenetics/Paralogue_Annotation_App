@@ -238,3 +238,35 @@ check_upload_file = function(inFile) {
   return(input_file)
 }
 
+# function to add ensembl URL link
+add_URLs <- function(pos) {
+  
+  # split position string
+  line <- str_split(unlist(pos[1]) , pattern = " ", simplify = T)
+  # paste ensembl gene URL
+  line[1,1] <- paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(line[1])]), "' target='_blank'>", unlist(line[1]), "</a>")
+  # paste back to string
+  pos <- paste(line[1,],collapse = " ")
+  
+  return(pos)
+}
+
+# function to add ensembl URLs to paralg positions in genes
+add_paraloc_URL = function(result_paraloc) {
+  
+  # result_paraloc$Gene<- ifelse(!is.na(result_paraloc$Gene), 
+  #                             (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene)]), "' target='_blank'>", result_paraloc$Gene, "</a>")),
+  #                             "-")
+  
+  # split all positions into a vector/list
+  result_paraloc$Paralogue_Vars <- str_split(result_paraloc$Paralogue_Vars , pattern = ", ", simplify = F)
+  
+  for (i in c(1:nrow(result_paraloc))){ 
+    # get all positions from list and apply add_URLs function to every position
+    # then paste back as string
+    result_paraloc$Paralogue_Vars[i] <- paste(unlist(lapply(unlist(result_paraloc$Paralogue_Vars[i]), function(line) add_URLs(line))), collapse = ", ")
+    
+  }
+  
+  return(result_paraloc)
+}
