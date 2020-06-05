@@ -22,7 +22,7 @@ fluidPage(
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
-      title = "PARALOG Annotator",
+      title = "PARALOG Annotator DEMO version 0.2.1",
       id = "navbar",
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
@@ -66,7 +66,10 @@ fluidPage(
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
                       HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
-
+                      textOutput('text1'),
+                      tags$head(tags$style("#text1{color: red;
+                                                       font-size: 12px;
+                                                       }")), 
                       conditionalPanel(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "Paste variants here...")

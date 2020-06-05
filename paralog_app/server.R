@@ -8,7 +8,7 @@ library(shinycssloaders)
 options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 enableBookmarking("url")
 shinyServer(function(input, output, session){
-  
+  output$text1 <- renderText({ paste("WARNING: only Chromosome 1 available in current DEMO version",input$n) })
   # observe({
   #   # Trigger this observer every time an input changes
   #   reactiveValuesToList(input)
