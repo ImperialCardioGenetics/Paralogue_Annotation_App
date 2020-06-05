@@ -95,13 +95,17 @@ fluidPage(
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
-                                conditionalPanel("output.paralog",downloadButton("download","Download"))
+                                #conditionalPanel("output.paralog",downloadButton("download","Download"))
+                                br(),
+                                br()
                        ),
                        tabPanel("Paralogous Positions",
                                 h4("Equivalent positions identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paraloc"))),
-                                conditionalPanel("output.paraloc",downloadButton("download2","Download"))
+                                #conditionalPanel("output.paraloc",downloadButton("download2","Download"))
+                                br(),
+                                br()
                                 )
                        )
                      )
