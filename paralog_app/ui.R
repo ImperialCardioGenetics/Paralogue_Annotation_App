@@ -22,11 +22,12 @@ fluidPage(
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
-      title = "PARALOG Annotator",
+      title = "PARALOG Annotator DEMO version 0.2.1",
       id = "navbar",
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
                br(),
+               #"test",
                sidebarLayout(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
@@ -65,7 +66,10 @@ fluidPage(
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
                       HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
-
+                      textOutput('text1'),
+                      tags$head(tags$style("#text1{color: red;
+                                                       font-size: 12px;
+                                                       }")), 
                       conditionalPanel(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "Paste variants here...")
@@ -94,13 +98,17 @@ fluidPage(
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
-                                conditionalPanel("output.paralog",downloadButton("download","Download"))
+                                #conditionalPanel("output.paralog",downloadButton("download","Download"))
+                                br(),
+                                br()
                        ),
                        tabPanel("Paralogous Positions",
                                 h4("Equivalent positions identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paraloc"))),
-                                conditionalPanel("output.paraloc",downloadButton("download2","Download"))
+                                #conditionalPanel("output.paraloc",downloadButton("download2","Download"))
+                                br(),
+                                br()
                                 )
                        )
                      )

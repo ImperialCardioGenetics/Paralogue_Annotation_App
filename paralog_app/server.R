@@ -8,7 +8,7 @@ library(shinycssloaders)
 options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 enableBookmarking("url")
 shinyServer(function(input, output, session){
-  
+  output$text1 <- renderText({ paste("WARNING: only Chromosome 1 available in current DEMO version",input$n) })
   # observe({
   #   # Trigger this observer every time an input changes
   #   reactiveValuesToList(input)
@@ -44,7 +44,7 @@ shinyServer(function(input, output, session){
         input_data$mutation = stringr::str_replace_all(input_data$mutation,":"," ")
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        print(input_data)
+        # print(input_data)
         # colnames(input_data)<-"mutation"
         result<-predict_output(input_data)$output
         result_paraloc<-predict_output(input_data)$paraloc_output
@@ -108,6 +108,10 @@ shinyServer(function(input, output, session){
         
                                                                       "-")
 
+        #Ensembl Paraloc_data$Gene
+        result_paraloc$Gene<- ifelse(!is.na(result_paraloc$Gene), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene)]), "' target='_blank'>", result_paraloc$Gene, "</a>")),
+                                   "-")
         
       }
 
@@ -130,7 +134,25 @@ shinyServer(function(input, output, session){
     if (nrow(get_paralog("NO")$result)>=1){ # check if result table is empty
       output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result),
                                             escape = F, # escape text hyperlink to url instead of text
-                                            options = list(paging = TRUE,scrollX = TRUE, columnDefs = list(list(className = 'dt-center',targets="_all"), list(colour = 'black'))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
+                                            extensions = 'Buttons',
+                                            options = list(
+                                              dom = 'Bfrtip',
+                                              buttons = list('copy', list(extend = 'collection',buttons = list(list(extend = 'excel',
+                                                                                                                    filename = 'PARALOG_Annotator'),
+                                                                                                               list(extend = 'csv',
+                                                                                                                    fieldBoundary = '',
+                                                                                                                    text = 'TXT',
+                                                                                                                    fieldSeparator = '\t',
+                                                                                                                    filename = 'PARALOG_Annotator',
+                                                                                                                    extension = '.txt'),
+                                                                                                               list(extend = 'pdf',
+                                                                                                                    pageSize = 'A4',
+                                                                                                                    orientation = 'landscape',
+                                                                                                                    filename = 'PARALOG_Annotator')),
+                                                                          text = 'Download')),
+                                              paging = F, # True to activate pagination
+                                              scrollX = TRUE, 
+                                              columnDefs = list(list(className = 'dt-center',targets="_all"), list(colour = 'black'))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                             rownames = FALSE,
                                             class = "display nowrap compact",
                                             container = sketch
@@ -139,11 +161,26 @@ shinyServer(function(input, output, session){
                                 formatStyle(c("Para_Z_score.query"), "border-right" = "solid 2px") %>% 
                                 formatStyle(columns = colnames(.$x$data), `font-size` = "13px")
                                 )
-      output$paraloc<-renderDataTable(DT::datatable(isolate(get_paralog("NO")$result_paraloc),
+      output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog("NO")$result_paraloc)),
                                                     escape = F, # escape text hyperlink to url instead of text
+                                                    extensions = 'Buttons',
                                                     options = list(
+                                                      dom = 'Bfrtip',
+                                                      buttons = list('copy', list(extend = 'collection',buttons = list(list(extend = 'excel',
+                                                                                                                            filename = 'PARALOG_Annotator_locations'),
+                                                                                                                       list(extend = 'csv',
+                                                                                                                            fieldBoundary = '',
+                                                                                                                            text = 'TXT',
+                                                                                                                            fieldSeparator = '\t',
+                                                                                                                            filename = 'PARALOG_Annotator_locations',
+                                                                                                                            extension = '.txt'),
+                                                                                                                       list(extend = 'pdf',
+                                                                                                                            pageSize = 'A4',
+                                                                                                                            orientation = 'landscape',
+                                                                                                                            filename = 'PARALOG_Annotator_locations')),
+                                                                                  text = 'Download')),
                                                       searchHighlight = TRUE,
-                                                      paging = TRUE,
+                                                      paging = F, # True to activate pagination
                                                       scrollX = FALSE,
                                                       #autoWidth = TRUE,
                                                       columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
@@ -156,7 +193,7 @@ shinyServer(function(input, output, session){
     } else {
       #Error catching for if query returns empty table
       output$paralog<-showModal(modalDialog(
-        title = "Paralog Annotator", # We can change the msg
+        title = "PARALOG Annotator", # We can change the msg
         HTML("Your query returned no variants<br>Please try another input variant(s)<br>"), # and this msg
         easyClose = TRUE))
       shinyjs::reset("myapp") # we can delete this so the app does not restart every time

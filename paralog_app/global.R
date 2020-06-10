@@ -32,9 +32,9 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
   # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-  
+
   Total_annotations = readRDS(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RDS"))
-  
+
   if (is.null(raw_data)){
     # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
     # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
@@ -45,6 +45,7 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
     raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
   }
 }
+rm(Total_annotations)
 # raw_data$var = paste(raw_data$CHROM.x,raw_data$POS.x,raw_data$REF.x,raw_data$ALT.x,sep=" ")
 # raw_data$var2 = paste(raw_data$CHROM.y,raw_data$POS.y,raw_data$REF.y,raw_data$ALT.y,sep=" ")
 #raw_data = subset(raw_data,select=c(var, Gene, Codons.x, Protein_position.x, Amino_acids.x, Para_Z_score.x, var2, ID.y, SYMBOL, Codons.y, Protein_position.y, Amino_acids.y, Para_Z_score.y))
@@ -71,12 +72,12 @@ for (i in c(1)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
   # print(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-  
+
   # print(paste0("/data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData"))
   # load(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-  
+
   Paraloc = readRDS(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RDS"))
-  
+
   #Paraloc$var = paste(Paraloc$CHROM,Paraloc$POS,Paraloc$REF,Paraloc$Gene,sep=" ")
   #Paraloc = subset(Paraloc,select=c(var, Paralogue_Vars))
   # Paraloc = subset(Paraloc, select=c(CHROM,POS,REF,Gene,Paralogue_Vars)) #IF NOT COMBINING INTO VAR THEN NEED TO CHANGE HOW WE LOOK UP DATA
@@ -94,15 +95,33 @@ rm(Paraloc)
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
 # Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace_all, "&", " ")
 
+###LOAD DATABASE HERE
+# con <- RSQLite::dbConnect(RSQLite::SQLite(), "data/db.sqlite")
+###OR LOAD WHOLE RDS OBJECTS HERE
+# raw_data = readRDS("data/Total_annotations_all_chrom_noQC.RDS")
+# Paraloc_data = readRDS("data/Para_locations_all_chrom_noQC.RDS")
+
+
 predict_output = function(input_data){
-  print(paste0("1:", input_data))
+  # print(input_data)
+  # print(paste(input_data$mutation, collapse = '", "'))
+  # print(input_data$paraloc)
 
   #MOVED LOADING OF DATA TO ABOVE, OUTSIDE OF FUNCTION
 
-  # select the vars ## this can be done first to reduce filtering time if final dataset is huge
+  ### select the vars ## this can be done first to reduce filtering time if final dataset is huge
+  ### select through SQLDB 
+  # output = RSQLite::dbGetQuery(
+  #   con, paste0("SELECT * FROM raw_data WHERE var IN ('",paste(input_data$mutation, collapse = "','"),"')")
+  # )
+  # paraloc_output = RSQLite::dbGetQuery(
+  #   con, paste0("SELECT * FROM Paraloc_data WHERE var IN ('",paste(input_data$paraloc, collapse = "','"),"')")
+  # )
+  
+  ### select through RDS objects
   output = raw_data[raw_data$var %in%  input_data$mutation,]
   paraloc_output = Paraloc_data[Paraloc_data$var %in% input_data$paraloc,]
-  
+ 
 
   # apply protein notation change to output table only
   # output <- format_protein_notation(output, AA_map = AA_map)
@@ -130,7 +149,7 @@ predict_output = function(input_data){
   #convert numeric to character so as all output df columns left align when renderDataTable()
   output = dplyr::mutate_if(output, is.numeric, as.character)
   return(list("output" = output, "paraloc_output" = paraloc_output))
-  print(output)
+  # print(output)
 }
 
 sketch = htmltools::withTags(table(
@@ -159,7 +178,7 @@ sketch2 = htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      lapply(c("Chrom Pos REF", "Gene", "Equiavlent Paralogous Locations"), th
+      lapply(c("Chrom Pos REF", "Gene", "Equivalent Paralogous Locations"), th
              # bgcolor="#cbcbcd", color = "#000000"
       )
     )
@@ -219,3 +238,35 @@ check_upload_file = function(inFile) {
   return(input_file)
 }
 
+# function to add ensembl URL link
+add_URLs <- function(pos) {
+  
+  # split position string
+  line <- str_split(unlist(pos[1]) , pattern = " ", simplify = T)
+  # paste ensembl gene URL
+  line[1,1] <- paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(line[1])]), "' target='_blank'>", unlist(line[1]), "</a>")
+  # paste back to string
+  pos <- paste(line[1,],collapse = " ")
+  
+  return(pos)
+}
+
+# function to add ensembl URLs to paralg positions in genes
+add_paraloc_URL = function(result_paraloc) {
+  
+  # result_paraloc$Gene<- ifelse(!is.na(result_paraloc$Gene), 
+  #                             (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene)]), "' target='_blank'>", result_paraloc$Gene, "</a>")),
+  #                             "-")
+  
+  # split all positions into a vector/list
+  result_paraloc$Paralogue_Vars <- str_split(result_paraloc$Paralogue_Vars , pattern = ", ", simplify = F)
+  
+  for (i in c(1:nrow(result_paraloc))){ 
+    # get all positions from list and apply add_URLs function to every position
+    # then paste back as string
+    result_paraloc$Paralogue_Vars[i] <- paste(unlist(lapply(unlist(result_paraloc$Paralogue_Vars[i]), function(line) add_URLs(line))), collapse = ", ")
+    
+  }
+  
+  return(result_paraloc)
+}
