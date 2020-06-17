@@ -20,13 +20,14 @@ fluidPage(
   #   tags$script(js)
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
-  #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
+  shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
-      title = "PARALOG Annotator",
+      title = "PARALOG Annotator DEMO version 0.2.1",
       id = "navbar",
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
                br(),
+               #"test",
                sidebarLayout(
                   sidebarPanel(
                    # img(src = "paralogo2.png", width = "100%"),
@@ -47,6 +48,7 @@ fluidPage(
 # z-index: 105;
 #              }")),
                     h3("Input your variant"),
+                    h5("Genome build GRCh37"),
                     br(),
                     radioButtons("format",label=NULL, 
                                  # Here a new input method can be inserted eg. upload a file with variants
@@ -54,6 +56,7 @@ fluidPage(
                                  # fileInput("file", NULL,accept = c("text/csv","text/comma-separated-values,text/plain",".csv")))),
                                  #choices = list("Paste variants"="paste", "Upload Variants"="upload"),
                                  choiceNames = list(
+                                   #h5("Paste Variants"),
                                    HTML("<div style='font-size:14px'>Paste Variants</div>"),
                                    #h5("Upload Variants")
                                    HTML("<div style='font-size:14px'>Upload Variants</div>")
@@ -64,8 +67,13 @@ fluidPage(
                                  selected = NULL,
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
-                      HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
+                      #HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
+                      HTML("e.g. <br>21:15517053:T:A<br>21:42817954:A:T<br>21:44592214:C:T<br>21:47421902:G:A<br>1:115256528:T:C<br>"),
 
+                      textOutput('text1'),
+                      tags$head(tags$style("#text1{color: red;
+                                                       font-size: 12px;
+                                                       }")), 
                       conditionalPanel(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "Paste variants here...")
@@ -90,17 +98,27 @@ fluidPage(
                      tabsetPanel(
                        id = "All_results",
                        type = "tabs",
-                       tabPanel("Known pathogenic variants in paralogous positions",
+                       tabPanel(value = "tab1",
+                                title = h4("Paralogue Annotation"),
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
-                                conditionalPanel("output.paralog",downloadButton("download","Download"))
+                                br(),
+                                conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.tsv)"),downloadButton("download_paralog_excel","Download (.xslx)")),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
+                                br(),
+                                br()
                        ),
-                       tabPanel("Paralogous Positions",
+                       tabPanel(value = "tab2",
+                                title = h4("All Paralogous Positions"),
                                 h4("Equivalent positions identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paraloc"))),
-                                conditionalPanel("output.paraloc",downloadButton("download2","Download"))
+                                br(),
+                                conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.tsv"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
+                                #conditionalPanel("output.paraloc",downloadButton("download_paraloc_excel","Download (.xlsx)")),
+                                br(),
+                                br()
                                 )
                        )
                      )
