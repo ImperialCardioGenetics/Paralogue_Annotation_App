@@ -3,9 +3,10 @@ library(DT)
 library(shinythemes)
 library(shinyjs)
 library(shinycssloaders)
+#library(WriteXLS)
 library(writexl)
 #library(tidyverse)
-options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
+options(shiny.maxRequestSize=300*1024^2) #max upload size = 200 mb
 enableBookmarking("url")
 shinyServer(function(input, output, session){
   output$text1 <- renderText({ paste("WARNING: only Chromosome 21 available in current DEMO version",input$n) })
@@ -20,13 +21,19 @@ shinyServer(function(input, output, session){
   
   get_paralog<-function(savefile="NO"){
     
-    #input<-data.frame(chr="1",pos="114713907",ref="T",alt="A")
-    # if(input$format=='pick'){
-    #   req(input$chr)
-    #   req(input$pos)
-    #   req(input$ref)
-    #   req(input$alt)
-    #   var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+    # input<-data.frame(chr="1",pos="114713907",ref="T",alt="A")
+    # input2<-data.frame(chr="1",pos="879171",ref="C",alt="A")
+    # input3<-data.frame(chr="1",pos="898537",ref="C",alt="A")
+    # input4<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
+    # input5<-data.frame(chr="21",pos="47421902",ref="G",alt="A")
+    # input6<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
+    # input <- rbind(input,input2,input3,input4, input5, input6)
+    # 
+    # 
+    # var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+    # var = paste(input$chr,input$pos,input$ref,input$alt,sep = ":")
+    
+    
     #   var = var[nzchar(x=var)]
     #   input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
     #   # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
@@ -46,8 +53,13 @@ shinyServer(function(input, output, session){
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
         # print(input_data)
         # colnames(input_data)<-"mutation"
-        result<-predict_output(input_data)$output
-        result_paraloc<-predict_output(input_data)$paraloc_output
+        
+        #new tabix func
+        result<-predict_out(input_data)$output
+        result_paraloc<-predict_out(input_data)$paraloc_output
+        
+        # result<-predict_output(input_data)$output
+        # result_paraloc<-predict_output(input_data)$paraloc_output
     }else{
       if(input$format == 'upload') {
         #req(input$file)
@@ -65,8 +77,14 @@ shinyServer(function(input, output, session){
         input_file$mutation = stringr::str_replace_all(input_file$mutation,":"," ")
         input_file$mutation = stringr::str_replace_all(input_file$mutation,"^chr","")
         input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        result <- predict_output(input_file)$output
-        result_paraloc<-predict_output(input_file)$paraloc_output
+        
+        #new tabix func
+        result<-predict_out(input_file)$output
+        result_paraloc<-predict_out(input_file)$paraloc_output
+        
+        
+        # result <- predict_output(input_file)$output
+        # result_paraloc<-predict_output(input_file)$paraloc_output
       }
     }
   #}
@@ -76,18 +94,20 @@ shinyServer(function(input, output, session){
       if (nrow(result)!=0){ # that where the error was generated
         
         #ClinVarID paralog URL
-        result$ID.paralog<- ifelse(!is.na(result$ID.paralog), 
+        result$ID.paralog<- ifelse(#!is.na(result$ID.paralog),
+                                   result$ID.paralog!="NA",
                                    (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")),
                                    "-")
         
         #ClinVarID query URL
-        result$ID.query<- ifelse(!is.na(result$ID.query), 
+        result$ID.query<- ifelse(#!is.na(result$ID.query),
+                                 result$ID.query!="NA",
                                  (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
                                  "-")
         #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL), 
+        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL.paralog), 
                                                (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
                                                "-") 
         
@@ -109,22 +129,33 @@ shinyServer(function(input, output, session){
                                        
                                        "-")
         
-        
+        #Ensembl Gene.query for paraloc
+        result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                   "-")
+
+      } else {
+        #Ensembl Gene.query for paraloc
+        result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
+                                           (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                           "-")
       }
 
       
       return(list("result" = result, "result_paraloc" = result_paraloc))
     } else {
+      
+
+      
       return(list("result" = result, "result_paraloc" = result_paraloc))
     }
   }
-  
-  
-  
-   
-  #query_one <- reactive({get_paralog()$result})
 
+  
+  #query_one <- reactive({get_paralog()$result})
+  
   #query_positions <- reactive({get_paralog()$result_paraloc})
+  
   
   observeEvent(input$submit_button, {
     
@@ -132,11 +163,14 @@ shinyServer(function(input, output, session){
     
     # updateQueryString(paste0("?",input$mutation[1]), mode = "push")
     if (nrow(get_paralog()$result)>=1){ # check if result table is empty
-      output$paralog<-renderDataTable(DT::datatable(isolate(cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>',get_paralog()$result)),
+      output$paralog<-renderDataTable(DT::datatable(isolate(cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', get_paralog()$result)),
                                                     escape = F,
                                                     extensions = 'Buttons',
                                                     rownames = FALSE,
-                                                    colnames = c(' ' = 'var.query',
+                                                    colnames = c('Chr' = 'CHR.query',
+                                                                 'Pos' = 'POS.query',
+                                                                 'REF' = 'REF.query',
+                                                                 'ALT' = 'ALT.query',          
                                                                  'ClinVar ID' = 'ID.query',
                                                                  'Gene' = 'Gene.query',
                                                                  'Transcript' = 'Transcript.query', 
@@ -172,7 +206,7 @@ shinyServer(function(input, output, session){
                                                       paging = T,
                                                       scrollX = TRUE, 
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(2:7)),
+                                                        list(visible = FALSE, targets = c(1:10)), # was 2:7 with old_func
                                                         list(orderable = FALSE, className = 'details-control', targets = 0)
                                                       )
                                                     ),
@@ -195,11 +229,16 @@ shinyServer(function(input, output, session){
        '</thead>'+
        '<tbody>'+
         '<tr>'+
-            '<td>'+ d[1] +'</td>'+
-            '<td>'+ d[2] +'</td>'+
-            '<td>'+ d[4] + '(' + d[3] + ').cDNA (' + d[5] + ')' +'</td>'+
-            '<td>'+ d[6] +'</td>'+
+          //  '<td>'+ d[1] +'</td>'+
+          //  '<td>'+ d[2] +'</td>'+
+          //  '<td>'+ d[4] + '(' + d[3] + ').cDNA (' + d[5] + ')' +'</td>'+
+          //  '<td>'+ d[6] +'</td>'+
+          //  '<td>'+ d[7] +'</td>'+
+            '<td>'+ d[1] +' '+ d[2] + ' '+ d[3] + ' '+ d[4] +'</td>'+
+            '<td>'+ d[5] +'</td>'+
+            '<td>'+ d[8] + '(' + d[6] + ').cDNA (' + d[9] + ')' +'</td>'+
             '<td>'+ d[7] +'</td>'+
+            '<td>'+ d[10] +'</td>'+
         '</tr>'+
       '</tbody>'+
     '</table>';
@@ -241,16 +280,15 @@ shinyServer(function(input, output, session){
                                                       searchHighlight = TRUE,
                                                       paging = T, # True to activate pagination
                                                       scrollX = FALSE,
-                                                      #autoWidth = TRUE,
                                                       columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                                     rownames = FALSE,
-                                                    colnames = c('Query position' = 'var',
-                                                                 'Gene' = 'Gene',
-                                                                 'Paralogous positions' = 'Paralogue_Vars'),
-                                                    class = "display",
-                                                    #container = sketch2
-                                                    ) %>%
-                                        formatStyle('Query position', "white-space"="nowrap")
+                                                    colnames = c(#'Query position' = 'var',
+                                                                 'Chr' = 'CHR.query',
+                                                                 'Pos' = 'POS.query',
+                                                                 'REF'= 'REF.query',
+                                                                 'Gene' = 'Gene.query',
+                                                                 'Paralogous positions' = 'Positions.paralog'),
+                                                    class = "display")
                                       )
     } else {
       
@@ -269,10 +307,42 @@ shinyServer(function(input, output, session){
         #Error catching for if query returns empty table
         output$paralog<-showModal(modalDialog(
           title = "PARALOG Annotator", # We can change the msg
-          HTML("Your query returned no paralogue variants<br>Your query variant has returned paralogous positions"), # and this msg
+          HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), # and this msg
           easyClose = TRUE))
-       # updateTabsetPanel(session, "All_results", selected = "tab2",) # STARTED FIXING THIS , have not found a way to checnge to a conditional tab yet.
         
+       updateTabsetPanel(session, "All_results", selected = "tab2") # STARTED FIXING THIS , have not found a way to checnge to a conditional tab yet.
+       
+       output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog()$result_paraloc)),
+                                                     escape = F, # escape text hyperlink to url instead of text
+                                                     extensions = 'Buttons',
+                                                     options = list(
+                                                       dom = 'lfrti',
+                                                       buttons = list('copy', list(extend = 'collection',buttons = list(list(extend = 'excel',
+                                                                                                                             filename = 'PARALOG_Annotator_locations'),
+                                                                                                                        list(extend = 'csv',
+                                                                                                                             fieldBoundary = '',
+                                                                                                                             text = 'TXT',
+                                                                                                                             fieldSeparator = '\t',
+                                                                                                                             filename = 'PARALOG_Annotator_locations',
+                                                                                                                             extension = '.txt'),
+                                                                                                                        list(extend = 'pdf',
+                                                                                                                             pageSize = 'A4',
+                                                                                                                             orientation = 'landscape',
+                                                                                                                             filename = 'PARALOG_Annotator_locations')),
+                                                                                   text = 'Download')),
+                                                       searchHighlight = TRUE,
+                                                       paging = T, # True to activate pagination
+                                                       scrollX = FALSE,
+                                                       columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
+                                                     rownames = FALSE,
+                                                     colnames = c(#'Query position' = 'var',
+                                                       'Chr' = 'CHR.query',
+                                                       'Pos' = 'POS.query',
+                                                       'REF'= 'REF.query',
+                                                       'Gene' = 'Gene.query',
+                                                       'Paralogous positions' = 'Positions.paralog'),
+                                                     class = "display")
+                                       )
       }
     }
   })
@@ -301,7 +371,7 @@ shinyServer(function(input, output, session){
   
   output$download_paralog <- downloadHandler(
     filename = function() {
-      paste0("paralogue_annotation", Sys.Date(),".tsv") # need to give specific name?
+      paste0("paralogue_annotation_", Sys.Date(),".tsv") # need to give specific name?
     },
     content = function(file) {
       write.table(edit_download_cols(get_paralog(savefile = "YES")$result), file, row.names = FALSE,quote = F,sep="\t")
@@ -310,28 +380,34 @@ shinyServer(function(input, output, session){
   
   output$download_paralog_excel <- downloadHandler(
     filename = function() {
-      paste0("paralogue_annotation", Sys.Date(),".xlsx") # need to give specific name?
+      paste0("paralogue_annotation_", Sys.Date(),".xlsx") # need to give specific name?
     },
     content = function(file) {
-      write_xlsx(edit_download_cols(get_paralog(savefile = "YES")$result), file)
+      #WriteXLS(x = (edit_download_cols(get_paralog(savefile = "YES")$result)), ExcelFileName = file, SheetNames = "1" )
+      write_xlsx(x = edit_download_cols(get_paralog(savefile = "YES")$result), file)
+      
     }
   )
   
   output$download_paraloc <- downloadHandler(
     filename = function() {
-      paste0("paralogue_positions", Sys.Date(), ".tsv") # need to give specific name?
+      paste0("paralogue_positions_", Sys.Date(), ".tsv") # need to give specific name?
     },
     content = function(file) {
-      write.table(edit_download_cols_paraloc(get_paralog(savefile = "YES")$result_paraloc), file, row.names = FALSE,quote = F,sep="\t")
+      #write.table(edit_download_cols_paraloc(get_paralog(savefile = "YES")$result_paraloc), file, row.names = FALSE,quote = F,sep="\t")
+      write.table(get_paralog(savefile = "YES")$result_paraloc, file, row.names = FALSE,quote = F,sep="\t")
+      
     }
   )
   
   output$download_paraloc_excel <- downloadHandler(
     filename = function() {
-      paste0("paralogue_positions", Sys.Date(),".xlsx") # need to give specific name?
+      paste0("paralogue_positions_", Sys.Date(),".xlsx") # need to give specific name?
     },
     content = function(file) {
-      write_xlsx(edit_download_cols_paraloc(get_paralog(savefile = "YES")$result_paraloc), file)
+      #WriteXLS(x = (get_paralog(savefile = "YES")$result_paraloc), ExcelFileName = file, SheetNames = "1")
+      write_xlsx(x = get_paralog(savefile = "YES")$result_paraloc, file)
+      
     }
   )
   

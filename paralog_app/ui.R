@@ -20,9 +20,11 @@ fluidPage(
   #   tags$script(js)
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
-  shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
+  #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
-      title = "PARALOG Annotator DEMO version 0.2.1",
+      #title = "PARALOG Annotator DEMO version 0.2.1",
+      title = "PARALOG Annotator DEMO version 0.2.2",
+      
       id = "navbar",
       tabPanel("Search",
                #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
@@ -70,10 +72,8 @@ fluidPage(
                       #HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
                       HTML("e.g. <br>21:15517053:T:A<br>21:42817954:A:T<br>21:44592214:C:T<br>21:47421902:G:A<br>1:115256528:T:C<br>"),
 
-                      textOutput('text1'),
-                      tags$head(tags$style("#text1{color: red;
-                                                       font-size: 12px;
-                                                       }")), 
+                      #textOutput('text1'),
+                      #tags$head(tags$style("#text1{color: red; font-size: 12px; }")), 
                       conditionalPanel(
                         condition="input.format=='paste'",
                         textAreaInput("var",label=NULL,placeholder = "Paste variants here...")

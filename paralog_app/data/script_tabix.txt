@@ -1,0 +1,60 @@
+
+# split/separate query column in R
+raw_data <- tidyr::separate(raw_data, var, into = c("CHR.query", "POS.query", "REF.query", "ALT.query") )
+
+# write raw_data from R
+# use library readr
+write_tsv(raw_data, "./data/raw_data.txt")
+
+# sort raw_data.txt
+sort -V -k1,1 -k2,2 raw_data.txt > raw_data_sorted.txt
+
+# fix header issues MANUALLY
+
+# bgzip raw_data_sorted.txt
+bgzip -c raw_data_sorted.txt > raw_data_sorted.txt.gz
+
+# generate tabix index raw_data_sorted.txt.gx
+tabix -s1 -b2 -e2 raw_data_sorted.txt.gz 
+
+# query file
+tabix raw_data_sorted2.txt.gz 1:879171-879171
+
+
+
+
+/home/pt1915/Research/git_test1/Paralogue_Annotation_App/paralog_app/data/paraloc_data_sorted_fix_header.txt
+
+# split/separate query column in R
+Paraloc_data <- tidyr::separate(raw_data, var, into = c("CHR.query", "POS.query", "REF.query") )
+
+# write paraloc_data from R
+# use library readr
+write_tsv(Paraloc_data, "./data/paraloc_data.txt")
+
+# sort paraloc_data.txt
+sort -V -k1,1 -k2,2 paraloc_data.txt > paraloc_data_sorted.txt
+
+
+# fix header issues
+awk 'NR==20196292' paraloc_data_sorted.txt > header1.txt
+# add '#' as first character of header1.txt
+sed '20196292d' paraloc_data_sorted.txt > paraloc_data_sorted_fix.txt
+cat header1.txt paraloc_data_sorted_fix.txt > paraloc_data_sorted_fix_header.txt
+
+
+# bgzip paraloc_data_sorted_fix_header.txt
+bgzip -c paraloc_data_sorted_fix_header.txt > paraloc_data_sorted_fix_header.txt.gz
+
+# generate tabix index paraloc_data_sorted_fix_header.txt.gx
+tabix -s1 -b2 -e2 paraloc_data_sorted_fix_header.txt.gz 
+
+# query file
+tabix paraloc_data_sorted_fix_header.txt.gz 1:879171-879171
+
+
+
+
+
+
+
