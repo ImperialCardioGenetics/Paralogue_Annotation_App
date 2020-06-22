@@ -3,11 +3,37 @@ library(DT)
 library(shinythemes)
 library(stringr)
 library(tidyr)
-# library(readr)
-# library(tidyverse)
+library(tidyverse)
 # library(microbenchmark)
 
-#library(tidyverse)
+
+generate_test_data <- function() {
+  
+  # generate random input data for testing
+  input1<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
+  input2<-data.frame(chr="1",pos="115256528",ref="T",alt="G")
+  input3<-data.frame(chr="3",pos="38592567",ref="T",alt="A")
+  input4<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
+  input5<-data.frame(chr="21",pos="47421902",ref="G",alt="A")
+  input6<-data.frame(chr="X",pos="70443591",ref="G",alt="A")
+
+  
+  input <- rbind(input1,input2,input3,input4,input5,input6)
+  
+  var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+  var = paste(input$chr,input$pos,input$ref,input$alt,sep = ":")
+  #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
+  var=var[nzchar(x=var)]
+  input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,":"," ")
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
+  input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
+  
+  return(input_data)
+}
+
+input_data <- generate_test_data()
+
 
 #read gene symbol/ENSG and write to dict
 # mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
@@ -18,98 +44,23 @@ map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 #raw_data = readRDS("./data/raw_data_paralog.Rds")
 #Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
 
-#PRELOAD DATA ON SERVER STARTUP - THIS TAKES A WHILE - FOR TESTING BEST USE SMALLER DATASET
-# raw_data = NULL
-# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-# # for (i in c(21)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-#   #use dirname(rstudioapi::getActiveDocumentContext()$path) to get relative path of this (global.R) file
-#   # load(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-#   # load(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RData")) #load in paralogous variant data
-# 
-#   Total_annotations = readRDS(paste0("data/chrom_",i,"/Total_annotations_chrom_",i,"_noQC.RDS"))
-# 
-#   if (is.null(raw_data)){
-#     # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
-#     # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
-#     raw_data = Total_annotations
-#   } else {
-#     # Total_annotations$CHROM.x = as.character(Total_annotations$CHROM.x)
-#     # Total_annotations$CHROM.y = as.character(Total_annotations$CHROM.y)
-#     raw_data = base::rbind(raw_data, dplyr::setdiff(Total_annotations, raw_data))
-#   }
-# }
-#
-# saveRDS(raw_data, file = "./data/raw_data_paralog.Rds")
-# raw_data = readRDS("./data/raw_data_paralog.Rds")
-
-# prepare/write files to use with tabix
-# raw_data <- tidyr::separate(raw_data, var, into = c("CHR.query", "POS.query", "REF.query", "ALT.query") )
-# write_tsv(raw_data, "./data/raw_data.txt")
-
-#rm(Total_annotations)
-
-
-
-# Paraloc_data = NULL
-# for (i in c(1:22,"X","Y")){ #FOR FULL DATASET UNCOMMENT AND USE THIS LINE
-# # for (i in c(21)){ #FOR TEST DATASET UNCOMMENT AND USE THIS LINE
-# 
-#   Paraloc = readRDS(paste0("data/chrom_",i,"/Para_locations_chrom_",i,"_noQC.RDS"))
-# 
-# 
-#   Paraloc = dplyr::distinct(Paraloc)
-#   # Paraloc$CHROM = as.character(Paraloc$CHROM)
-#   if (is.null(Paraloc_data)){
-#     Paraloc_data = Paraloc
-#   } else {
-#     Paraloc_data = base::rbind(Paraloc_data, dplyr::setdiff(Paraloc, Paraloc_data))
-#   }
-# }
-# 
-# saveRDS(Paraloc_data, file = "./data/Paraloc_data_paraloc.Rds")
-# Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
-
-# prepare/write files to use with tabix
-# Paraloc_data <- tidyr::separate(Paraloc_data, var, into = c("CHR.query", "POS.query", "REF.query") )
-# write_tsv(Paraloc_data, "./data/paraloc_data.txt")
-
-
-#rm(Paraloc)
-
-
-# Paraloc_data$var = paste(Paraloc_data$CHROM,Paraloc_data$POS,Paraloc_data$REF,sep=" ")
-# Paraloc_data = subset(Paraloc_data,select=c(var, Gene, Paralogue_Vars))
-# Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace, "&", "") #PROBABLY A GOOD IDEA TO DO THIS IN POST-PROCESSING BEFORE LOADING DATA IN 
-# Paraloc_data$Paralogue_Vars = sapply(Paraloc_data$Paralogue_Vars, stringr::str_replace_all, "&", " ")
-
-###LOAD DATABASE HERE
-# con <- RSQLite::dbConnect(RSQLite::SQLite(), "data/db.sqlite")
-###OR LOAD WHOLE RDS OBJECTS HERE
-# raw_data = readRDS("data/Total_annotations_all_chrom_noQC.RDS")
-# Paraloc_data = readRDS("data/Para_locations_all_chrom_noQC.RDS")
-
-#MOVED LOADING OF DATA TO ABOVE, OUTSIDE OF FUNCTION
-
-### select the vars ## this can be done first to reduce filtering time if final dataset is huge
-### select through SQLDB 
-# output = RSQLite::dbGetQuery(
-#   con, paste0("SELECT * FROM raw_data WHERE var IN ('",paste(input_data$mutation, collapse = "','"),"')")
-# )
-# paraloc_output = RSQLite::dbGetQuery(
-#   con, paste0("SELECT * FROM Paraloc_data WHERE var IN ('",paste(input_data$paraloc, collapse = "','"),"')")
-# )
 
 paralog_colnames <- c(
   "CHR.query",
   "POS.query",
   "REF.query",
   "ALT.query",
+  "var.query",
   "ID.query",
   "Gene.query",
   "Codons.query",
   "Transcript.query",
   "Protein_dot.query",
   "Para_Z_score.query",
+  "CHR.paralog",
+  "POS.paralog",
+  "REF.paralog",
+  "ALT.paralog",
   "var.paralog",
   "ID.paralog",
   "SYMBOL.paralog",
@@ -121,6 +72,7 @@ paraloc_colnames<- c(
   "CHR.query",
   "POS.query",
   "REF.query",
+  "var.query",
   "Gene.query",
   "Positions.paralog")
 
@@ -138,11 +90,10 @@ lookup_paralog <- function(input_data){
     
     # maybe need to set tbaxi dir
     # tabix <- paste("")
-    tabix_paralog <- system(command = paste0("tabix data/raw_data_sorted.txt.gz ", query), intern = T,wait = T)
+    tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
     
     #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
     #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
-    
     
     pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
     #colnames(pg1) <- paralog_colnames
@@ -183,7 +134,7 @@ lookup_paraloc <- function(input_data){
     query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
     #CMD_paraloc<- paste0("tabix ", paraloc_data, " ", query)
     #tabix_paraloc <- system(command =  paste0("tabix ", paraloc_data, " ", query), intern = T, wait = T)
-    tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted_fix_header.txt.gz " , query), intern = T, wait = T)
+    tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
     
     #pc1 <- as.data.frame(t(unlist(strsplit(tabix_paraloc,split="\t"))),stringsAsFactors = F)
     pc1<- as.data.frame(stringr::str_split_fixed(tabix_paraloc, pattern = "\t", n = length(paraloc_colnames)), stringsAsFactors = F)
@@ -200,23 +151,16 @@ lookup_paraloc <- function(input_data){
   #paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
   
   colnames(paraloc_out) <- paraloc_colnames
-  # if (nrow(paraloc_out)!=0) {
-  #   paraloc_out <- dplyr::na_if(paraloc_out, "NA")
-  #   return(paraloc_out)
-  # } else {
-  #   return(paraloc_out)
-  # }
-  return(paraloc_out)
+
+  return(unique(paraloc_out))
   
 }
 
 
 
 
-predict_out = function(input_data){
+predict_output_tabix = function(input_data){
 
-
-  #paralog_out <- read.csv(text = paste(paralog_colnames,collapse = ","))
 
   input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
 
@@ -230,7 +174,7 @@ predict_out = function(input_data){
 }  
 
 
-#result <- predict_out(input_data = input_data)
+result <- predict_output_tabix(input_data = input_data)
 
   
 predict_output = function(input_data){

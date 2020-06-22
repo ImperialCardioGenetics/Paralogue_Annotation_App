@@ -20,25 +20,7 @@ shinyServer(function(input, output, session){
   # })
   
   get_paralog<-function(savefile="NO"){
-    
-    # input<-data.frame(chr="1",pos="114713907",ref="T",alt="A")
-    # input2<-data.frame(chr="1",pos="879171",ref="C",alt="A")
-    # input3<-data.frame(chr="1",pos="898537",ref="C",alt="A")
-    # input4<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
-    # input5<-data.frame(chr="21",pos="47421902",ref="G",alt="A")
-    # input6<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
-    # input <- rbind(input,input2,input3,input4, input5, input6)
-    # 
-    # 
-    # var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
-    # var = paste(input$chr,input$pos,input$ref,input$alt,sep = ":")
-    
-    
-    #   var = var[nzchar(x=var)]
-    #   input_data = data.frame(mutation=var, stringsAsFactors = FALSE)
-    #   # input_data = data.frame(chr = input$chr, pos = input$pos, ref = input$ref, alt = input$alt) #not needed
-    #   result<-predict_output(input_data)
-    # }else{
+
       if(input$format=='paste'){
       #input<-data.frame(var="1:114713907:T:G",stringsAsFactors = F)  
       #input$var<-data.frame(var="1\t114713907\tT\tG")
@@ -51,12 +33,10 @@ shinyServer(function(input, output, session){
         input_data$mutation = stringr::str_replace_all(input_data$mutation,":"," ")
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        # print(input_data)
-        # colnames(input_data)<-"mutation"
-        
+  
         #new tabix func
-        result<-predict_out(input_data)$output
-        result_paraloc<-predict_out(input_data)$paraloc_output
+        result<-predict_output_tabix(input_data)$output
+        result_paraloc<-predict_output_tabix(input_data)$paraloc_output
         
         # result<-predict_output(input_data)$output
         # result_paraloc<-predict_output(input_data)$paraloc_output
@@ -79,8 +59,8 @@ shinyServer(function(input, output, session){
         input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
         
         #new tabix func
-        result<-predict_out(input_file)$output
-        result_paraloc<-predict_out(input_file)$paraloc_output
+        result<-predict_output_tabix(input_file)$output
+        result_paraloc<-predict_output_tabix(input_file)$paraloc_output
         
         
         # result <- predict_output(input_file)$output
@@ -170,13 +150,18 @@ shinyServer(function(input, output, session){
                                                     colnames = c('Chr' = 'CHR.query',
                                                                  'Pos' = 'POS.query',
                                                                  'REF' = 'REF.query',
-                                                                 'ALT' = 'ALT.query',          
+                                                                 'ALT' = 'ALT.query',
+                                                                 ' ' = 'var.query',
                                                                  'ClinVar ID' = 'ID.query',
                                                                  'Gene' = 'Gene.query',
                                                                  'Transcript' = 'Transcript.query', 
                                                                  'Protein' = 'Protein_dot.query', 
                                                                  'Codons' = 'Codons.query',
                                                                  'Para_Z Score'='Para_Z_score.query',
+                                                                 'Chr' = 'CHR.paralog',
+                                                                 'Pos' = 'POS.paralog',
+                                                                 'REF' = 'REF.paralog',
+                                                                 'ALT' = 'ALT.paralog',
                                                                  'Paralogue variant' = 'var.paralog',
                                                                  'ClinVar ID' = 'ID.paralog',
                                                                  'Gene' = 'SYMBOL.paralog',
@@ -206,7 +191,7 @@ shinyServer(function(input, output, session){
                                                       paging = T,
                                                       scrollX = TRUE, 
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:10)), # was 2:7 with old_func
+                                                        list(visible = FALSE, targets = c(1:4,6:15)), # was 2:7 with old_func
                                                         list(orderable = FALSE, className = 'details-control', targets = 0)
                                                       )
                                                     ),
@@ -235,10 +220,10 @@ shinyServer(function(input, output, session){
           //  '<td>'+ d[6] +'</td>'+
           //  '<td>'+ d[7] +'</td>'+
             '<td>'+ d[1] +' '+ d[2] + ' '+ d[3] + ' '+ d[4] +'</td>'+
-            '<td>'+ d[5] +'</td>'+
-            '<td>'+ d[8] + '(' + d[6] + ').cDNA (' + d[9] + ')' +'</td>'+
-            '<td>'+ d[7] +'</td>'+
-            '<td>'+ d[10] +'</td>'+
+            '<td>'+ d[6] +'</td>'+
+            '<td>'+ d[9] + '(' + d[7] + ').cDNA (' + d[10] + ')' +'</td>'+
+            '<td>'+ d[8] +'</td>'+
+            '<td>'+ d[11] +'</td>'+
         '</tr>'+
       '</tbody>'+
     '</table>';
@@ -259,7 +244,7 @@ shinyServer(function(input, output, session){
                                       )
  
 
-      output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog()$result_paraloc)),
+      output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog()$result_paraloc[,-c(1:3)])),
                                                     escape = F, # escape text hyperlink to url instead of text
                                                     extensions = 'Buttons',
                                                     options = list(
@@ -283,11 +268,12 @@ shinyServer(function(input, output, session){
                                                       columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                                     rownames = FALSE,
                                                     colnames = c(#'Query position' = 'var',
-                                                                 'Chr' = 'CHR.query',
-                                                                 'Pos' = 'POS.query',
-                                                                 'REF'= 'REF.query',
-                                                                 'Gene' = 'Gene.query',
-                                                                 'Paralogous positions' = 'Positions.paralog'),
+                                                      #'Chr' = 'CHR.query',
+                                                      #'Pos' = 'POS.query',
+                                                      #'REF'= 'REF.query',
+                                                      'Query variant' = 'var.query',
+                                                      'Gene' = 'Gene.query',
+                                                      'Paralogous positions' = 'Positions.paralog'),
                                                     class = "display")
                                       )
     } else {
@@ -312,7 +298,7 @@ shinyServer(function(input, output, session){
         
        updateTabsetPanel(session, "All_results", selected = "tab2") # STARTED FIXING THIS , have not found a way to checnge to a conditional tab yet.
        
-       output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog()$result_paraloc)),
+       output$paraloc<-renderDataTable(DT::datatable(isolate(add_paraloc_URL(get_paralog()$result_paraloc[,-c(1:3)])),
                                                      escape = F, # escape text hyperlink to url instead of text
                                                      extensions = 'Buttons',
                                                      options = list(
@@ -336,9 +322,10 @@ shinyServer(function(input, output, session){
                                                        columnDefs = list(list(width = "100px",targets = c(0)))),# set options for table eg. per page lines #,columnDefs = list(list(className = 'dt-right', targets = c(1,5,7,11)))
                                                      rownames = FALSE,
                                                      colnames = c(#'Query position' = 'var',
-                                                       'Chr' = 'CHR.query',
-                                                       'Pos' = 'POS.query',
-                                                       'REF'= 'REF.query',
+                                                       #'Chr' = 'CHR.query',
+                                                       #'Pos' = 'POS.query',
+                                                       #'REF'= 'REF.query',
+                                                       'Query variant' = 'var.query',
                                                        'Gene' = 'Gene.query',
                                                        'Paralogous positions' = 'Positions.paralog'),
                                                      class = "display")
