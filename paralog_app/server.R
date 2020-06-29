@@ -151,7 +151,7 @@ shinyServer(function(input, output, session){
                                                                  'Pos' = 'POS.query',
                                                                  'REF' = 'REF.query',
                                                                  'ALT' = 'ALT.query',
-                                                                 ' ' = 'var.query',
+                                                                 'Query Variant' = 'var.query',
                                                                  'ClinVar ID' = 'ID.query',
                                                                  'Gene' = 'Gene.query',
                                                                  'Transcript' = 'Transcript.query', 
@@ -192,7 +192,7 @@ shinyServer(function(input, output, session){
                                                       scrollX = TRUE, 
                                                       columnDefs = list(
                                                         list(visible = FALSE, targets = c(1:4,6:15)), # was 2:7 with old_func
-                                                        list(orderable = FALSE, className = 'details-control', targets = 0)
+                                                        list(orderable = FALSE, className = 'details-control', targets = c(0))
                                                       )
                                                     ),
                                                     callback = JS("
@@ -214,11 +214,6 @@ shinyServer(function(input, output, session){
        '</thead>'+
        '<tbody>'+
         '<tr>'+
-          //  '<td>'+ d[1] +'</td>'+
-          //  '<td>'+ d[2] +'</td>'+
-          //  '<td>'+ d[4] + '(' + d[3] + ').cDNA (' + d[5] + ')' +'</td>'+
-          //  '<td>'+ d[6] +'</td>'+
-          //  '<td>'+ d[7] +'</td>'+
             '<td>'+ d[1] +' '+ d[2] + ' '+ d[3] + ' '+ d[4] +'</td>'+
             '<td>'+ d[6] +'</td>'+
             '<td>'+ d[9] + '(' + d[7] + ').cDNA (' + d[10] + ')' +'</td>'+
