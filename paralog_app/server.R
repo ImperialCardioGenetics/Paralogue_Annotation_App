@@ -30,7 +30,7 @@ shinyServer(function(input, output, session){
         # print(var)
         var=var[nzchar(x=var)]
         input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-        input_data$mutation = stringr::str_replace_all(input_data$mutation,":"," ")
+        input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
   
@@ -54,7 +54,7 @@ shinyServer(function(input, output, session){
         
         
         colnames(input_file) <- "mutation"
-        input_file$mutation = stringr::str_replace_all(input_file$mutation,":"," ")
+        input_file$mutation = stringr::str_replace_all(input_file$mutation,"[[:punct:][:space:]]","-")
         input_file$mutation = stringr::str_replace_all(input_file$mutation,"^chr","")
         input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
         
@@ -69,58 +69,83 @@ shinyServer(function(input, output, session){
     }
   #}
     if (savefile=="NO"){
-      #add ClinVar IDs with URLs 
-      #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
+      # #add ClinVar IDs with URLs 
+      # #result$Query_ClinVar_link<- paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$Query_ClinVar,"/"), "' target='_blank'>", result$Query_ClinVar, "</a>")  #Not possible for custom_ids; Can add feature to check P/LP tableized file
       if (nrow(result)!=0){ # that where the error was generated
         
         #ClinVarID paralog URL
         result$ID.paralog<- ifelse(#!is.na(result$ID.paralog),
-                                   result$ID.paralog!="NA",
-                                   (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")),
-                                   "-")
+          result$ID.paralog!="NA",
+          (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")),
+          "-")
         
         #ClinVarID query URL
         result$ID.query<- ifelse(#!is.na(result$ID.query),
-                                 result$ID.query!="NA",
-                                 (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
-                                 "-")
-        #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
+          result$ID.query!="NA",
+          (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
+          "-")
+
         #Ensembl alignment URL
         # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-        result$Ensembl_alignment_link<- ifelse(!is.na(result$SYMBOL.paralog), 
-                                               (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
+        result$Ensembl_alignment_link<- ifelse(!is.na(result$ENSG.paralog), 
+                                               (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",result$ENSG.query,";g1=",result$ENSG.paralog), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
                                                "-") 
         
         # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
-        #Ensembl Transcript.query
-        result$Transcript.query<- ifelse(!is.na(result$Transcript.query), 
-                                         (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",map[unlist(result$Gene.query)],";t=",result$Transcript.query), "' target='_blank'>", result$Transcript.query, "</a>")),
-                                         "-")
+        #Ensembl ENST.query
+        result$ENST.query<- ifelse(!is.na(result$ENST.query), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.query,";t=",result$ENST.query), "' target='_blank'>", result$ENST.query, "</a>")),
+                                   "-")
+        
+        #Ensembl ENST.paralog
+        result$ENST.paralog<- ifelse(!is.na(result$ENST.paralog), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.paralog,";t=",result$ENST.paralog), "' target='_blank'>", result$ENST.paralog, "</a>")),
+                                   "-")
         
         # https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000213281
-        #Ensembl Gene.query
+        #Ensembl ENSG.query
+        result$ENSG.query<- ifelse(!is.na(result$ENSG.query), 
+                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$ENSG.query, "</a>")),
+                                   "-")
+        
+        #Ensembl ENSG.paralog
+        result$ENSG.paralog<- ifelse(!is.na(result$ENSG.paralog), 
+                                     (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$ENSG.paralog, "</a>")),
+                                     
+                                     "-")
+        
+        #HGNC Gene.query
         result$Gene.query<- ifelse(!is.na(result$Gene.query), 
-                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result$Gene.query)]), "' target='_blank'>", result$Gene.query, "</a>")),
+                                   (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result$Gene.query)]), "' target='_blank'>", result$Gene.query, "</a>")),
                                    "-")
         
-        #Ensembl SYMBOL.paralog
-        result$SYMBOL.paralog<- ifelse(!is.na(result$SYMBOL.paralog), 
-                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result$SYMBOL.paralog)]), "' target='_blank'>", result$SYMBOL.paralog, "</a>")),
-                                       
-                                       "-")
+        #HGNC Gene.paralog
+        result$Gene.paralog<- ifelse(!is.na(result$Gene.paralog), 
+                                     (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result$Gene.paralog)]), "' target='_blank'>", result$Gene.paralog, "</a>")),
+                                     "-")
         
-        #Ensembl Gene.query for paraloc
+        #HGNC Gene.query for paraloc
         result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                   (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
-                                   "-")
+                                           (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                           "-")
+        #Ensembl ENSG.query for paraloc
+        result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$ENSG.query),
+                                            (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result_paraloc$ENSG.query), "' target='_blank'>", result_paraloc$ENSG.query, "</a>")),
+                                            "-")
+        
 
       } else {
         #Ensembl Gene.query for paraloc
         result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                           (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                           (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
                                            "-")
+        #Ensembl ENSG.query for paraloc
+        result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$ENSG.query),
+                                            (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result_paraloc$ENSG.query), "' target='_blank'>", result_paraloc$ENSG.query, "</a>")),
+                                            "-")
       }
 
+      #result <- result[,c()]
       
       return(list("result" = result, "result_paraloc" = result_paraloc))
     } else {
@@ -144,6 +169,7 @@ shinyServer(function(input, output, session){
     # updateQueryString(paste0("?",input$mutation[1]), mode = "push")
     if (nrow(get_paralog()$result)>=1){ # check if result table is empty
       output$paralog<-renderDataTable(DT::datatable(isolate(cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', get_paralog()$result)),
+      #output$paralog<-renderDataTable(DT::datatable(isolate(get_paralog()$result),
                                                     escape = F,
                                                     extensions = 'Buttons',
                                                     rownames = FALSE,
@@ -154,8 +180,13 @@ shinyServer(function(input, output, session){
                                                                  'Query Variant' = 'var.query',
                                                                  'ClinVar ID' = 'ID.query',
                                                                  'Gene' = 'Gene.query',
-                                                                 'Transcript' = 'Transcript.query', 
-                                                                 'Protein' = 'Protein_dot.query', 
+                                                                 'ENSG' = 'ENSG.query',
+                                                                 'ENST' = 'ENST.query',
+                                                                 'cDNA' = 'cDNA.query',
+                                                                 'Protein' = 'Protein.query', 
+                                                                 'cDNA position' = 'cDNA_position.query',
+                                                                 'Protein position' = 'Protein_position.query',
+                                                                 'AA' = 'AA.query',
                                                                  'Codons' = 'Codons.query',
                                                                  'Para_Z Score'='Para_Z_score.query',
                                                                  'Chr' = 'CHR.paralog',
@@ -164,9 +195,15 @@ shinyServer(function(input, output, session){
                                                                  'ALT' = 'ALT.paralog',
                                                                  'Paralogue variant' = 'var.paralog',
                                                                  'ClinVar ID' = 'ID.paralog',
-                                                                 'Gene' = 'SYMBOL.paralog',
-                                                                 'Protein' = 'Protein_dot.paralog',
-                                                                 'Codon' = 'Codons.paralog',
+                                                                 'Gene' = 'Gene.paralog',
+                                                                 'ENSG' = 'ENSG.paralog',
+                                                                 'ENST' = 'ENST.paralog',
+                                                                 'cDNA' = 'cDNA.paralog',
+                                                                 'Protein' = 'Protein.paralog', 
+                                                                 'cDNA position' = 'cDNA_position.paralog',
+                                                                 'Protein position' = 'Protein_position.paralog',
+                                                                 'AA' = 'AA.paralog', 
+                                                                 'Codons' = 'Codons.paralog',
                                                                  'Para_Z Score' = 'Para_Z_score.paralog',
                                                                  'Ensembl alignment' = 'Ensembl_alignment_link'
                                                                  ),
@@ -191,8 +228,8 @@ shinyServer(function(input, output, session){
                                                       paging = T,
                                                       scrollX = TRUE, 
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:15)), # was 2:7 with old_func
-                                                        list(orderable = FALSE, className = 'details-control', targets = c(0))
+                                                        list(visible = FALSE, targets = c(1:4,6:20, 28:30)), # was 2:7 with old_func
+                                                        list(orderable = FALSE, className = 'details-control', targets = 0)
                                                       )
                                                     ),
                                                     callback = JS("
@@ -203,34 +240,59 @@ shinyServer(function(input, output, session){
     //  '<tr>'+
     //        '<th colspan=\"4\">Query variant</td>'+
     //  '</tr>'+
+    //    '<tr>'+
+    //        '<th>Query variant</th>'+
+    //        '<th>ClinVar ID</th>'+
+    //        '<th>Gene</th>'+
+    //        '<th>HGVS</th>'+
+    //        '<th>Codons</th>'+
+    //        '<th>Para_Z Score</th>'+
+    //    '</tr>'+
+    //   '</thead>'+
+    //   '<tbody>'+
+    //    '<tr>'+
+    //        '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
+    //        '<td>'+ d[6] +'</td>'+
+    //        '<td>'+ d[7] +'</td>'+
+    //        '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+    //        '<td>'+ d[15] +'</td>'+
+    //        '<td>'+ d[16] +'</td>'+
+    //    '</tr>'+
+    //  '</tbody>'+
         '<tr>'+
-    //      '<th>Chr Pos REF ALT</th>'+
             '<th>Query variant</th>'+
-            '<th>ClinVar ID</th>'+
-            '<th>HGVS</th>'+
-            '<th>Codons</th>'+
-            '<th>Para_Z Score</th>'+
+            '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
         '</tr>'+
-       '</thead>'+
-       '<tbody>'+
         '<tr>'+
-            '<td>'+ d[1] +' '+ d[2] + ' '+ d[3] + ' '+ d[4] +'</td>'+
+            '<th>ClinVar ID</th>'+
             '<td>'+ d[6] +'</td>'+
-            '<td>'+ d[9] + '(' + d[7] + ').cDNA (' + d[10] + ')' +'</td>'+
-            '<td>'+ d[8] +'</td>'+
-            '<td>'+ d[11] +'</td>'+
         '</tr>'+
-      '</tbody>'+
+        '<tr>'+
+            '<th>Gene</th>'+
+            '<td>'+ d[7] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>HGVS</th>'+
+            '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Codons</th>'+
+            '<td>'+ d[15] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Para_Z Score</th>'+
+            '<td>'+ d[16] +'</td>'+
+        '</tr>'+
     '</table>';
   };
   table.on('click', 'td.details-control', function() {
     var td = $(this), row = table.row(td.closest('tr'));
     if (row.child.isShown()) {
       row.child.hide();
-      td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
     } else {
       row.child(format(row.data())).show();
-      td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
     }
   }
 );"
@@ -268,6 +330,7 @@ shinyServer(function(input, output, session){
                                                       #'REF'= 'REF.query',
                                                       'Query variant' = 'var.query',
                                                       'Gene' = 'Gene.query',
+                                                      'ENSG' = 'ENSG.query',
                                                       'Paralogous positions' = 'Positions.paralog'),
                                                     class = "display")
                                       )
@@ -322,6 +385,7 @@ shinyServer(function(input, output, session){
                                                        #'REF'= 'REF.query',
                                                        'Query variant' = 'var.query',
                                                        'Gene' = 'Gene.query',
+                                                       'ENSG' = 'ENSG.query',
                                                        'Paralogous positions' = 'Positions.paralog'),
                                                      class = "display")
                                        )
