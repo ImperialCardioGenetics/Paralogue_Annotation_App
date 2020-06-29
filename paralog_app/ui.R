@@ -23,7 +23,7 @@ fluidPage(
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(
       #title = "PARALOG Annotator DEMO version 0.2.1",
-      title = "PARALOG Annotator DEMO version 0.2.2",
+      title = "PARALOG Annotator DEMO version 0.2.3",
       
       id = "navbar",
       tabPanel("Search",
