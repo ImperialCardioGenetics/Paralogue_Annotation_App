@@ -6,7 +6,7 @@ library(shinycssloaders)
 #library(WriteXLS)
 library(writexl)
 #library(tidyverse)
-options(shiny.maxRequestSize=300*1024^2) #max upload size = 200 mb
+options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
 enableBookmarking("url")
 shinyServer(function(input, output, session){
   output$text1 <- renderText({ paste("WARNING: only Chromosome 21 available in current DEMO version",input$n) })

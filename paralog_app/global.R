@@ -128,7 +128,7 @@ lookup_paralog <- function(input_data){
     #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
 
     #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
-    tabix_paralog_extra <- system(command = paste0("tabix data/paralog_data_extra_sorted.txt.gz ", query), intern = T,wait = T)
+    tabix_paralog_extra <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
     
     #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
     #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
