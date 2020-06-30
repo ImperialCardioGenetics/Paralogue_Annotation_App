@@ -70,7 +70,7 @@ fluidPage(
                                  width = "100%"),
                       #NOTE EXAMPLES BELOW NO LONGER WORK AS REAL DATA USES DIF BUILD
                       #HTML("e.g. <br>1:115256528:T:G<br>3:38592567:T:A<br>X:70443591:G:A<br>"),
-                      HTML("e.g. <br>1:115256528:T:C<br>1:115256528:T:G<br>3:38592567:T:A<br>21:44592214:C:T<br>21:47421902:G:A<br>X:70443591:G:A<br>"),
+                      HTML("e.g. <br>1-115256528-T-C<br>1:115256528-T-G<br>3-38592567-T-A<br>21-44592214-C-T<br>21-47421902-G-A<br>X-70443591-G-A<br>"),
 
                       #textOutput('text1'),
                       #tags$head(tags$style("#text1{color: red; font-size: 12px; }")), 
