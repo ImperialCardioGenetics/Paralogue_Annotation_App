@@ -21,34 +21,54 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(
-      #title = "PARALOG Annotator DEMO version 0.2.1",
-      title = "PARALOG Annotator DEMO version 0.2.3",
-      
-      id = "navbar",
-      tabPanel("Search",
-               #h2("Missense Variant Annotation for Inherited Cardiac Conditions",align="center"),
+    navbarPage(title = "PARALOG Annotator DEMO version 0.2.3", id = "navbar",selected = "tab1",
+               
+               # Main box search and description -----------------------------------------
+               tabPanel(title = "Home", value = "tab1",
+                        br(),br(),
+                        h2("PARALOG Annotator", align = "center"),
+                        br(),br(),
+                        fluidRow(
+                          column(width = 6, offset = 3, align = "center",
+                                 wellPanel("Type variant ID",
+                                           style = "background-color: #333333;
+                                         color: white;
+                                         border-top-color: #333333;
+                                         border-left-color: #333333;
+                                         border-right-color: #333333;
+                                         box-shadow: 3px 3px 3px #d8d8d8;
+                                         margin-bottom: 0px;
+                                         padding:5px"), 
+                                 wellPanel(br(),br(),
+                                           textInput(inputId = "line", label = NULL),#, value = "clinvar"),
+                                           HTML("e.g. <br>1-115256528-T-C<br>"),
+                                           
+                                           br(),
+                                           actionButton(inputId ="search_button", label = "Search"
+                                                        #, class = "btn-primary"
+                                                        ), 
+                                           style = "background-color: #ffffff;
+                                         border-bottom-color: #333333;
+                                         border-left-color: #333333;
+                                         border-right-color: #333333;
+                                         box-shadow: 3px 3px 3px #d8d8d8;
+                                         margin-top: 0px")
+                          ) # WellPanel
+                        ), #Fluid row
+                        fluidRow(column(width = 6, offset = 3, br(), br(), p("From ClinVar.",
+                                                                             align = "center"), p(""), style = "background-color: #ffffff")
+                        )
+               ),
+               
+               
+               # Results - search "left" side -------------------------------------------------------------
+               tabPanel(title = "Results", value = "tab2",
                br(),
-               #"test",
                sidebarLayout(
                   sidebarPanel(
-                   # img(src = "paralogo2.png", width = "100%"),
-                    id = "myapp",
+                    id = "tab2_search",
                     width = 2,
-                      #dont need below as now have shinycssloaders
-#                     tags$head(tags$style(type="text/css", "#loadmessage {
-# position: fixed;
-# top: 100px;
-# left: 100px;
-# width: 100%;
-# padding: 5px 0px 5px 0px;
-# text-align: center;
-# font-weight: bold;
-# font-size: 100%;
-# color: #000000;
-# background-color: #CCFF66;
-# z-index: 105;
-#              }")),
+
                     h3("Input your variant"),
                     h5("Genome build GRCh37"),
                     br(),
@@ -93,7 +113,9 @@ fluidPage(
                     actionButton("submit_button","Submit"),
                     actionButton("reset_button", "Reset form")
                       ),
-                   mainPanel(
+                  
+                  # Results - tables "right" side -------------------------------------------------------------
+                  mainPanel(
                      width = 10,
                      tabsetPanel(
                        id = "All_results",
@@ -102,7 +124,8 @@ fluidPage(
                                 title = h4("Paralogue Annotation"),
                                 h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
-                                conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paralog"))),
+                                conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paralog"))),
+                                                 #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),
                                 br(),
                                 conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.tsv)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
@@ -113,7 +136,7 @@ fluidPage(
                                 title = h4("All Paralogous Positions"),
                                 h4("Equivalent positions identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
-                                conditionalPanel(condition = "input.submit_button", withSpinner(dataTableOutput("paraloc"))),
+                                conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paraloc"))),
                                 br(),
                                 conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.tsv"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
                                 #conditionalPanel("output.paraloc",downloadButton("download_paraloc_excel","Download (.xlsx)")),
@@ -123,7 +146,7 @@ fluidPage(
                        )
                      )
                   )),
-      tabPanel("About",
+      tabPanel(title = "About", value = "tab3",
       style = "width:80%; margin-right:auto; margin-left:auto", 
       includeHTML("about.html"), # This is an HTML page that is read in from dir 
       br()

@@ -219,7 +219,7 @@ predict_output_tabix = function(input_data){
 }  
 
 
-result <- predict_output_tabix(input_data = input_data)
+#result <- predict_output_tabix(input_data = input_data)
 
   
 predict_output = function(input_data){
@@ -293,8 +293,16 @@ edit_download_cols = function(df) {
 #   return(df)
 # }
 
+
+
+
 # function to check if uploaded variants file is valid
 check_upload_file = function(inFile) {
+  # very hacky way to read in vcf
+  # read 1st line only to get number of cols to check if its txt or vcf format
+  # when using colClasses in read.table the columns set to NULL are completely ignored
+  # input_1row = ncol(read.table(inFile$datapath,nrows = 1 ))
+  
   #eg. msvcf
   #input_1row = read.table("data/head200.vcf",nrows = 1, as.is =T)
   
@@ -370,6 +378,19 @@ add_paraloc_URL = function(result_paraloc) {
   if (nrow(result_paraloc)!=0){
     result_paraloc$Positions.paralog <- str_split(result_paraloc$Positions.paralog , pattern = ", ", simplify = F)
     
+    
+    #Ensembl ENSG.query for paraloc
+    result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
+                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
+                                        "-")
+    
+    #Ensembl Gene.query for paraloc
+    result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
+                                       (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                       "-")
+    
+    
+    
     for (i in c(1:nrow(result_paraloc))){ 
       # get all positions from list and apply add_URLs function to every position
       # then paste back as string
@@ -377,10 +398,10 @@ add_paraloc_URL = function(result_paraloc) {
       
     }
   } else { 
-    #shiny::showNotification("No data", type = "error")
     result_paraloc <- NULL
-    return(result_paraloc)    
-    }
+  }
+  
+
 
   return(result_paraloc)
 }
@@ -390,10 +411,9 @@ add_paraloc_URL = function(result_paraloc) {
 
 
 # function to add ensembl URLs to paralg positions in genes
-add_paralog_URL = function(result, result_paraloc) {
+add_paralog_URL = function(result) {
   
-  if (nrow(result)!=0){ # that where the error was generated
-    
+
     #ClinVarID paralog URL
     result$ID.paralog<- ifelse(#!is.na(result$ID.paralog),
       result$ID.paralog!="NA",
@@ -440,30 +460,117 @@ add_paralog_URL = function(result, result_paraloc) {
                                  (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result$Gene.paralog)]), "' target='_blank'>", result$Gene.paralog, "</a>")),
                                  "-")
     
-    #HGNC Gene.query for paraloc
-    result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                       (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
-                                       "-")
-    #Ensembl ENSG.query for paraloc
-    result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
-                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
-                                        "-")
     
-  } else {
-    #Ensembl Gene.query for paraloc
-    result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
-                                       "-")
+    return(result)
     
-    #Ensembl ENSG.query for paraloc
-    result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
-                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
-                                        "-")
+} 
+
+
+paralog_DT_colnames <- c('Chr' = 'CHR.query',
+             'Pos' = 'POS.query',
+             'REF' = 'REF.query',
+             'ALT' = 'ALT.query',
+             'Query Variant' = 'var.query',
+             'ClinVar ID' = 'ID.query',
+             'Gene' = 'Gene.query',
+             'ENSG' = 'ENSG.query',
+             'ENST' = 'ENST.query',
+             'cDNA' = 'cDNA.query',
+             'Protein' = 'Protein.query',
+             'cDNA position' = 'cDNA_position.query',
+             'Protein position' = 'Protein_position.query',
+             'AA' = 'AA.query',
+             'Codons' = 'Codons.query',
+             'Para_Z Score'='Para_Z_score.query',
+             'Chr' = 'CHR.paralog',
+             'Pos' = 'POS.paralog',
+             'REF' = 'REF.paralog',
+             'ALT' = 'ALT.paralog',
+             'Paralogue variant' = 'var.paralog',
+             'ClinVar ID' = 'ID.paralog',
+             'Gene' = 'Gene.paralog',
+             'ENSG' = 'ENSG.paralog',
+             'ENST' = 'ENST.paralog',
+             'cDNA' = 'cDNA.paralog',
+             'Protein' = 'Protein.paralog',
+             'cDNA position' = 'cDNA_position.paralog',
+             'Protein position' = 'Protein_position.paralog',
+             'AA' = 'AA.paralog',
+             'Codons' = 'Codons.paralog',
+             'Para_Z Score' = 'Para_Z_score.paralog',
+             'Ensembl alignment' = 'Ensembl_alignment_link')
+
+paraloc_DT_colnames <- c(
+  'Query variant' = 'var.query',
+  'Gene' = 'Gene.query',
+  'ENSG' = 'ENSG.query',
+  'Paralogous positions' = 'Positions.paralog')
+
+
+childrow_JS_callback <- c("
+  table.column(1).nodes().to$().css({cursor: 'pointer'});
+  var format = function(d) {
+    return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
+      '<thead>'+
+    //  '<tr>'+
+    //        '<th colspan=\"4\">Query variant</td>'+
+    //  '</tr>'+
+    //    '<tr>'+
+    //        '<th>Query variant</th>'+
+    //        '<th>ClinVar ID</th>'+
+    //        '<th>Gene</th>'+
+    //        '<th>HGVS</th>'+
+    //        '<th>Codons</th>'+
+    //        '<th>Para_Z Score</th>'+
+    //    '</tr>'+
+    //   '</thead>'+
+    //   '<tbody>'+
+    //    '<tr>'+
+    //        '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
+    //        '<td>'+ d[6] +'</td>'+
+    //        '<td>'+ d[7] +'</td>'+
+    //        '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+    //        '<td>'+ d[15] +'</td>'+
+    //        '<td>'+ d[16] +'</td>'+
+    //    '</tr>'+
+    //  '</tbody>'+
+        '<tr>'+
+            '<th>Query variant</th>'+
+            '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>ClinVar ID</th>'+
+            '<td>'+ d[6] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Gene</th>'+
+            '<td>'+ d[7] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>HGVS</th>'+
+            '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Codons</th>'+
+            '<td>'+ d[15] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Para_Z Score</th>'+
+            '<td>'+ d[16] +'</td>'+
+        '</tr>'+
+    '</table>';
+  };
+  table.on('click', 'td.details-control', function() {
+    var td = $(this), row = table.row(td.closest('tr'));
+    if (row.child.isShown()) {
+      row.child.hide();
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
+    } else {
+      row.child(format(row.data())).show();
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
+    }
   }
-  
-  return(result, result_paraloc)
-  
-}
+);")
 
 
 
