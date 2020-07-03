@@ -277,13 +277,13 @@ predict_output = function(input_data){
 
 
 # use tidyr::separate to split var.query and var.paralog columns for downloaded
-edit_download_cols = function(df) {
-  
-  #df <- tidyr::separate(df, var.query, into = c("CHR.query", "POS.query", "REF.query", "ALT.query") )
-  df <- tidyr::separate(df, var.paralog, into = c("CHR.paralog", "POS.paralog", "REF.paralog", "ALT.paralog") )
-  
-  return(df)
-}
+# edit_download_cols = function(df) {
+#   
+#   #df <- tidyr::separate(df, var.query, into = c("CHR.query", "POS.query", "REF.query", "ALT.query") )
+#   df <- tidyr::separate(df, var.paralog, into = c("CHR.paralog", "POS.paralog", "REF.paralog", "ALT.paralog") )
+#   
+#   return(df)
+# }
 
 # edit_download_cols_paraloc = function(df) {
 #   

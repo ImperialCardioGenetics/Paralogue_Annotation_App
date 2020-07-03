@@ -41,7 +41,7 @@ fluidPage(
                                          padding:5px"), 
                                  wellPanel(br(),br(),
                                            textInput(inputId = "line", label = NULL),#, value = "clinvar"),
-                                           HTML("e.g. <br>1-115256528-T-C<br>"),
+                                           HTML("e.g. <br>1-115256528-T-G<br>"),
                                            
                                            br(),
                                            actionButton(inputId ="search_button", label = "Search"
