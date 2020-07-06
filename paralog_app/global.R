@@ -209,13 +209,11 @@ predict_output_tabix = function(input_data){
 
   input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
 
-  
-  
-  # call lookup function 
-  # paraloc_out <- lookup_paraloc(input_data)
-  
-  return(list("output" = lookup_paralog(input_data), "paraloc_output" = lookup_paraloc(input_data)))
-  
+    paralog <- lookup_paralog(input_data)
+    paraloc <- lookup_paraloc(input_data)
+
+  return(list("paralog" = paralog, "paraloc" = paraloc))
+
 }  
 
 
@@ -352,7 +350,7 @@ check_upload_file = function(inFile) {
 }
 
 # function to add ensembl URL link
-add_URLs <- function(pos) {
+add_paraloc_gene_URLs <- function(pos) {
   
   # split position string
   line <- str_split(unlist(pos[1]) , pattern = " ", simplify = T)
@@ -394,7 +392,7 @@ add_paraloc_URL = function(result_paraloc) {
     for (i in c(1:nrow(result_paraloc))){ 
       # get all positions from list and apply add_URLs function to every position
       # then paste back as string
-      result_paraloc$Positions.paralog[i] <- paste(unlist(lapply(unlist(result_paraloc$Positions.paralog[i]), function(line) add_URLs(line))), collapse = ", ")
+      result_paraloc$Positions.paralog[i] <- paste(unlist(lapply(unlist(result_paraloc$Positions.paralog[i]), function(line) add_paraloc_gene_URLs(line))), collapse = ", ")
       
     }
   } else { 
