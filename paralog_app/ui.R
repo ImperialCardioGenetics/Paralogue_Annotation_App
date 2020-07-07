@@ -30,7 +30,8 @@ fluidPage(
                         br(),br(),
                         fluidRow(
                           column(width = 6, offset = 3, align = "center",
-                                 wellPanel("Type variant ID",
+                                 wellPanel(
+                                   #"Type a variant ID",
                                            style = "background-color: #333333;
                                          color: white;
                                          border-top-color: #333333;
@@ -39,10 +40,15 @@ fluidPage(
                                          box-shadow: 3px 3px 3px #d8d8d8;
                                          margin-bottom: 0px;
                                          padding:5px"), 
-                                 wellPanel(br(),br(),
+                                
+                                 wellPanel(br(),
+                                           HTML( "Input a query variant bellow or click"),
+                                           actionLink("link_to_tabpanel_b", "here"),
+                                           HTML("to upload a list or variants or a vcf file."),
+                                           br(),br(),
                                            textInput(inputId = "line", label = NULL),#, value = "clinvar"),
                                            HTML("e.g. <br>1-115256528-T-G<br>"),
-                                           
+
                                            br(),
                                            actionButton(inputId ="search_button", label = "Search"
                                                         #, class = "btn-primary"
@@ -55,9 +61,16 @@ fluidPage(
                                          margin-top: 0px")
                           ) # WellPanel
                         ), #Fluid row
-                        fluidRow(column(width = 6, offset = 3, br(), br(), p("From ClinVar.",
-                                                                             align = "center"), p(""), style = "background-color: #ffffff")
-                        )
+                        fluidRow(column(width = 6, offset = 3, br(), br(), p("Paralogue Annotation utilizes information from evolutionarily related proteins, specifically paralogues, to help inform the clinical significance of missense variants associated with human diseases.",
+                                                                             align = "center"), p(""), style = "background-color: #ffffff"),
+                                 ),
+                        fluidRow(column(12, align="center",br(), br(),
+                                 #img(src='./data/Logo_for_Imperial_College_London.svg.png', align = "center"),
+                                 #titlePanel(title=div(img(src="nhl.jpg")))
+                                 
+                                 tags$a(href='https://www.imperial.ac.uk/',tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200', ))
+                                 ))
+                                 
                ),
                
                
@@ -69,7 +82,7 @@ fluidPage(
                     id = "tab2_search",
                     width = 2,
 
-                    h3("Input your variant"),
+                    h3("Input your variants"),
                     h5("Genome build GRCh37"),
                     br(),
                     radioButtons("format",label=NULL, 

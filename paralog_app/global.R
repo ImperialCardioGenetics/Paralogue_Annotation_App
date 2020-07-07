@@ -193,7 +193,7 @@ lookup_paraloc <- function(input_data){
   #paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
   
   colnames(paraloc_out) <- paraloc_colnames
-  paraloc_out$var.query <- stringr::str_replace_all(paraloc_out$var.query," ","-")
+  #paraloc_out$var.query <- stringr::str_replace_all(paraloc_out$var.query," ","-")
   paraloc_out$ENSG.query <- map[unlist(paraloc_out$Gene.query)]
   paraloc_out <- paraloc_out[,c(1:5,7,6)]
   

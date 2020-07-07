@@ -305,7 +305,10 @@ shinyServer(function(input, output, session){
     
   })
 
-  
+  # homepage click link to tab2
+  observeEvent(input$link_to_tabpanel_b, {
+    updateTabsetPanel(session, "navbar", selected = "tab2")
+  })
   
   
   
@@ -352,6 +355,7 @@ shinyServer(function(input, output, session){
       
     }
   )
+  
   
   
 })
