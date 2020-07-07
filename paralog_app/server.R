@@ -18,7 +18,7 @@ shinyServer(function(input, output, session){
     input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
     input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
     input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-    print(input_data)
+    #print(input_data)
 
     #new tabix func
     result<-predict_output_tabix(input_data)
@@ -52,7 +52,7 @@ shinyServer(function(input, output, session){
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
         input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        print(input_data)
+        #print(input_data)
         
         
         #new tabix func
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session){
         result<-predict_output_tabix(input_file)
 
     }
-        print(input$format)
+        #print(input$format)
         return(result)
     #}
   }
