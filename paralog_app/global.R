@@ -184,7 +184,10 @@ lookup_paraloc <- function(input_data){
     query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
     #CMD_paraloc<- paste0("tabix ", paraloc_data, " ", query)
     #tabix_paraloc <- system(command =  paste0("tabix ", paraloc_data, " ", query), intern = T, wait = T)
-    tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
+    
+    # tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
+    tabix_paraloc <- system(command =  paste0("tabix data/paraloc_chr/paraloc_data_sorted_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)
+    
     
     #pc1 <- as.data.frame(t(unlist(strsplit(tabix_paraloc,split="\t"))),stringsAsFactors = F)
     pc1<- as.data.frame(stringr::str_split_fixed(tabix_paraloc, pattern = "\t", n = length(paraloc_colnames)), stringsAsFactors = F)
