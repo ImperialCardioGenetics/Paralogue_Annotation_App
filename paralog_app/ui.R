@@ -21,7 +21,7 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.2.3", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator DEMO version 0.2.4", id = "navbar",selected = "tab1",
                
                # Main box search and description -----------------------------------------
                tabPanel(title = "Home", value = "tab1",
@@ -44,7 +44,7 @@ fluidPage(
                                  wellPanel(br(),
                                            HTML( "Input a query variant bellow or click"),
                                            actionLink("link_to_tabpanel_b", "here"),
-                                           HTML("to upload a list or variants or a vcf file."),
+                                           HTML("to input a list or variants or upload a vcf file. All variants in Genome build GRCh37 coordinates"),
                                            br(),br(),
                                            textInput(inputId = "line", label = NULL),#, value = "clinvar"),
                                            HTML("e.g. <br>1-115256528-T-G<br>"),
@@ -68,7 +68,7 @@ fluidPage(
                                  #img(src='./data/Logo_for_Imperial_College_London.svg.png', align = "center"),
                                  #titlePanel(title=div(img(src="nhl.jpg")))
                                  
-                                 tags$a(href='https://www.imperial.ac.uk/',tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200', ))
+                                 tags$a(href='https://www.imperial.ac.uk/', target="_blank",tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200' ))
                                  ))
                                  
                ),
@@ -140,7 +140,7 @@ fluidPage(
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paralog"))),
                                                  #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),
                                 br(),
-                                conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.tsv)"),downloadButton("download_paralog_excel","Download (.xslx)")),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
                                 br(),
                                 br()
@@ -151,7 +151,7 @@ fluidPage(
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paraloc"))),
                                 br(),
-                                conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.tsv"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
+                               # conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.txt"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
                                 #conditionalPanel("output.paraloc",downloadButton("download_paraloc_excel","Download (.xlsx)")),
                                 br(),
                                 br()
@@ -161,7 +161,8 @@ fluidPage(
                   )),
       tabPanel(title = "About", value = "tab3",
       style = "width:80%; margin-right:auto; margin-left:auto", 
-      includeHTML("about.html"), # This is an HTML page that is read in from dir 
+      #includeHTML("about.html"), # This is an HTML file that is read in from dir 
+      includeMarkdown("about.md"), # This is an md file  page that is read in from dir 
       br()
       )
       

@@ -40,13 +40,20 @@ input_data <- generate_test_data()
 mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
 map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
 
-HGNC_export <- read.delim("data/HGNC_all_genes.txt", quote="", stringsAsFactors=F)
-#HGNC_export <- tidyr::separate(HGNC_export,HGNC_ID, into = c("HGNC", "ID"), remove = T)
-map_HGNC = setNames(HGNC_export$HGNC_ID, HGNC_export$Approved_symbol)
+# HGNC_export <- read.delim("data/HGNC_all_genes.txt", quote="", stringsAsFactors=F)
+# #HGNC_export <- tidyr::separate(HGNC_export,HGNC_ID, into = c("HGNC", "ID"), remove = T)
+# map_HGNC = setNames(HGNC_export$HGNC_ID, HGNC_export$Approved_symbol)
 
 # Load all data as Rds data
 #raw_data = readRDS("./data/raw_data_paralog.Rds")
 #Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
+
+
+
+
+#paralog_index<- read.delim("data/paralog_data_index.txt", stringsAsFactors = F)
+#saveRDS(paralog_index, "data/paralog_data_index.Rds")
+#paralog_index <- readRDS("data/paralog_data_index.Rds")
 
 
 paralog_colnames <- c(
@@ -150,14 +157,15 @@ lookup_paralog <- function(input_data){
   #colnames(paralog_out) <- paralog_colnames
   colnames(paralog_out) <- paralog_extra_colnames
   
+  #paralog_out <- paralog_out[,c(1:7,9:32)]
   #paralog_out <- dplyr::na_if(paralog_out, "NA")
   
   
   # if (nrow(paralog_out)!=0) {
-  #   paralog_out <- dplyr::na_if(paralog_out, "NA")
+  #   #paralog_out <- dplyr::na_if(paralog_out, "NA")
   #   return(paralog_out)
   # } else {
-  #   paralog_out <- NULL
+  #   paralog_out <- NA
   #   return(paralog_out)
   # }
   return(paralog_out)
@@ -193,10 +201,13 @@ lookup_paraloc <- function(input_data){
   #paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
   
   colnames(paraloc_out) <- paraloc_colnames
-  #paraloc_out$var.query <- stringr::str_replace_all(paraloc_out$var.query," ","-")
-  paraloc_out$ENSG.query <- map[unlist(paraloc_out$Gene.query)]
-  paraloc_out <- paraloc_out[,c(1:5,7,6)]
-  
+  # if (nrow(paraloc_out)!=0) {
+  #   #paralog_out <- dplyr::na_if(paralog_out, "NA")
+  #   return(unique(paraloc_out))
+  # } else {
+  #   paraloc_out <- NA
+  #   return(paraloc_out)
+  # }
   return(unique(paraloc_out))
   
 }
@@ -377,14 +388,14 @@ add_paraloc_URL = function(result_paraloc) {
     result_paraloc$Positions.paralog <- str_split(result_paraloc$Positions.paralog , pattern = ", ", simplify = F)
     
     
-    #Ensembl ENSG.query for paraloc
-    result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
-                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
-                                        "-")
+    # #Ensembl ENSG.query for paraloc
+    # result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
+    #                                     (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
+    #                                     "-")
     
     #Ensembl Gene.query for paraloc
     result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                       (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
+                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
                                        "-")
     
     
@@ -436,50 +447,55 @@ add_paralog_URL = function(result) {
                                (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.query,";t=",result$ENST.query), "' target='_blank'>", result$ENST.query, "</a>")),
                                "-")
     
-    # https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000213281
-    #Ensembl ENSG.query
-    result$ENSG.query<- ifelse(!is.na(result$ENSG.query), 
-                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$ENSG.query, "</a>")),
+    #Ensembl ENST.paralog
+    result$ENST.paralog<- ifelse(!is.na(result$ENST.paralog), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.paralog,";t=",result$ENST.paralog), "' target='_blank'>", result$ENST.paralog, "</a>")),
                                "-")
     
+    # https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000213281
+    #Ensembl ENSG.query
+    # result$ENSG.query<- ifelse(!is.na(result$ENSG.query), 
+    #                            (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$ENSG.query, "</a>")),
+    #                            "-")
+    # 
     #Ensembl ENSG.paralog
-    result$ENSG.paralog<- ifelse(!is.na(result$ENSG.paralog), 
-                                 (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$ENSG.paralog, "</a>")),
-                                 
-                                 "-")
-    
+    # result$ENSG.paralog<- ifelse(!is.na(result$ENSG.paralog), 
+    #                              (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$ENSG.paralog, "</a>")),
+    #                              
+    #                              "-")
+    # 
     #HGNC Gene.query
     result$Gene.query<- ifelse(!is.na(result$Gene.query), 
-                               (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result$Gene.query)]), "' target='_blank'>", result$Gene.query, "</a>")),
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$Gene.query, "</a>")),
                                "-")
     
     #HGNC Gene.paralog
     result$Gene.paralog<- ifelse(!is.na(result$Gene.paralog), 
-                                 (paste0("<a href='", paste0("https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",map_HGNC[unlist(result$Gene.paralog)]), "' target='_blank'>", result$Gene.paralog, "</a>")),
+                                 (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$Gene.paralog, "</a>")),
                                  "-")
     
-    
+    result <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', result )
     return(result)
     
 } 
 
 
-paralog_DT_colnames <- c('Chr' = 'CHR.query',
-             'Pos' = 'POS.query',
-             'REF' = 'REF.query',
-             'ALT' = 'ALT.query',
-             'Query Variant' = 'var.query',
-             'ClinVar ID' = 'ID.query',
-             'Gene' = 'Gene.query',
-             'ENSG' = 'ENSG.query',
-             'ENST' = 'ENST.query',
-             'cDNA' = 'cDNA.query',
-             'Protein' = 'Protein.query',
-             'cDNA position' = 'cDNA_position.query',
-             'Protein position' = 'Protein_position.query',
-             'AA' = 'AA.query',
-             'Codons' = 'Codons.query',
-             'Para_Z Score'='Para_Z_score.query',
+paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
+             'Pos.query' = 'POS.query',
+             'REF.query' = 'REF.query',
+             'ALT.query' = 'ALT.query',
+             'Query variant' = 'var.query',
+             'ClinVar.query' = 'ID.query',
+             'Gene.query' = 'Gene.query',
+             'ENST.query' = 'ENST.query',
+             'ENSG.query' = 'ENSG.query',
+             'cDNA.query' = 'cDNA.query',
+             'Protein.query' = 'Protein.query',
+             'cDNA position.query' = 'cDNA_position.query',
+             'Protein position.query' = 'Protein_position.query',
+             'AA.query' = 'AA.query',
+             'Codons.query' = 'Codons.query',
+             'Para_Z Score.query'='Para_Z_score.query',
              'Chr' = 'CHR.paralog',
              'Pos' = 'POS.paralog',
              'REF' = 'REF.paralog',
@@ -501,7 +517,7 @@ paralog_DT_colnames <- c('Chr' = 'CHR.query',
 paraloc_DT_colnames <- c(
   'Query variant' = 'var.query',
   'Gene' = 'Gene.query',
-  'ENSG' = 'ENSG.query',
+  # 'ENSG' = 'ENSG.query',
   'Paralogous positions' = 'Positions.paralog')
 
 
@@ -546,7 +562,8 @@ childrow_JS_callback <- c("
         '</tr>'+
         '<tr>'+
             '<th>HGVS</th>'+
-            '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+    //      '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+            '<td>'+ d[9] + ':' + d[10] + ' (' + d[11] + ')' +'</td>'+
         '</tr>'+
         '<tr>'+
             '<th>Codons</th>'+
