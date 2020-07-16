@@ -169,24 +169,30 @@ shinyServer(function(input, output, session){
       
       
       if (nrow(isolate(get_paralog_search()$paraloc))==0) {
-      # if (is.na(get_paralog_search()$paraloc)) {  
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE)))
+          easyClose = TRUE))
+        )
+        
+        # show NULL tables
+        output$paralog<-isolate(NULL)
+        output$paraloc<-isolate(NULL)
         
         shinyjs::reset("tab2_search") 
         shinyjs::reset("All_results")
+        
       } else {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        updateTabsetPanel(session, "All_results", selected = "tab2")
+        
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
           easyClose = TRUE)))
-        
-        updateTabsetPanel(session, "All_results", selected = "tab2")
-        
+      
+        output$paralog<-isolate(NULL)
         
         output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
                                                       escape = F,
@@ -304,25 +310,31 @@ shinyServer(function(input, output, session){
                                       )
     } else {
       
-      if (nrow(get_paralog_search()$paralog)>=1){ # check if result table is empty
-      # if (is.na(get_paralog()$paraloc)) {
-        
+      if (nrow(isolate(get_paralog()$paraloc))==0) {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE)))
+          easyClose = TRUE))
+        )
+        
+        # show NULL tables
+        output$paralog<-isolate(NULL)
+        output$paraloc<-isolate(NULL)
         
         shinyjs::reset("tab2_search") 
-      
+        shinyjs::reset("All_results")
+        
       } else {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        updateTabsetPanel(session, "All_results", selected = "tab2")
+        
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
           easyClose = TRUE)))
         
-       updateTabsetPanel(session, "All_results", selected = "tab2")
+        output$paralog<-isolate(NULL)
        
        
        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
