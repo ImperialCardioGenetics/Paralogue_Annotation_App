@@ -22,9 +22,11 @@ shinyServer(function(input, output, session){
     input_line$mutation = stringr::str_replace_all(input_line$mutation,"^chr","")
     input_line$paraloc = substr(input_line$mutation, 1, nchar(input_line$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
     #print(input_data)
-
+    
+    #input_line <- tidyr::separate(input_line,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+    
     #new tabix func
-    result<-predict_output_tabix(input_line)
+    result<-predict_output_tabix(validate_input(input_line))
     return(result)
 
   }
@@ -63,8 +65,10 @@ shinyServer(function(input, output, session){
         input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
         #print(input_data)
         
+        #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+        
         #new tabix func
-        result<-predict_output_tabix(input_data)
+        result<-predict_output_tabix(validate_input(input_data))
 
     }else 
 
@@ -79,8 +83,11 @@ shinyServer(function(input, output, session){
         input_file$mutation = stringr::str_replace_all(input_file$mutation,"^chr","")
         input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
         
+        #input_file <- tidyr::separate(input_file,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+        
+        
         #new tabix func
-        result<-predict_output_tabix(input_file)
+        result<-predict_output_tabix(validate_input(input_file))
 
     }
         #print(input$format)
@@ -91,10 +98,6 @@ shinyServer(function(input, output, session){
   
 
 
-  
-  
-  
-  
   
   
   
@@ -169,24 +172,30 @@ shinyServer(function(input, output, session){
       
       
       if (nrow(isolate(get_paralog_search()$paraloc))==0) {
-      # if (is.na(get_paralog_search()$paraloc)) {  
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE)))
+          easyClose = TRUE))
+        )
+        
+        # show NULL tables
+        output$paralog<-isolate(NULL)
+        output$paraloc<-isolate(NULL)
         
         shinyjs::reset("tab2_search") 
         shinyjs::reset("All_results")
+        
       } else {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        updateTabsetPanel(session, "All_results", selected = "tab2")
+        
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
           easyClose = TRUE)))
-        
-        updateTabsetPanel(session, "All_results", selected = "tab2")
-        
+      
+        output$paralog<-isolate(NULL)
         
         output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
                                                       escape = F,
@@ -224,15 +233,7 @@ shinyServer(function(input, output, session){
     
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     
   observeEvent((input$submit_button), {
     
@@ -304,25 +305,31 @@ shinyServer(function(input, output, session){
                                       )
     } else {
       
-      if (nrow(get_paralog_search()$paralog)>=1){ # check if result table is empty
-      # if (is.na(get_paralog()$paraloc)) {
-        
+      if (nrow(isolate(get_paralog()$paraloc))==0) {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE)))
+          easyClose = TRUE))
+        )
+        
+        # show NULL tables
+        output$paralog<-isolate(NULL)
+        output$paraloc<-isolate(NULL)
         
         shinyjs::reset("tab2_search") 
-      
+        shinyjs::reset("All_results")
+        
       } else {
         #Error catching for if query returns empty table
-        output$paralog<-isolate(showModal(modalDialog(
+        updateTabsetPanel(session, "All_results", selected = "tab2")
+        
+        isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
           HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
           easyClose = TRUE)))
         
-       updateTabsetPanel(session, "All_results", selected = "tab2")
+        output$paralog<-isolate(NULL)
        
        
        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
