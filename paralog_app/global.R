@@ -3,19 +3,21 @@ library(DT)
 library(shinythemes)
 library(stringr)
 library(tidyr)
-# library(tidyverse)
-# library(microbenchmark)
+
+#library(tidyverse)
+#library(microbenchmark)
 
 
 generate_test_data <- function() {
   
   # generate random input data for testing
+  input<-data.frame(chr="1",pos="115256528",ref="T")
   input1<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
-  input2<-data.frame(chr="1",pos="115256528",ref="T",alt="G")
-  input3<-data.frame(chr="3",pos="38592567",ref="T",alt="A")
-  input4<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
-  input5<-data.frame(chr="21",pos="47421902",ref="G",alt="A")
-  input6<-data.frame(chr="X",pos="70443591",ref="G",alt="A")
+  input2<-data.frame(chr="1",pos="115256528DD",ref="T",alt="G")
+  input3<-data.frame(chr="3",pos="38592567",ref="TA",alt="B")
+  input4<-data.frame(chr="21",pos="44592214",ref="WC",alt="T")
+  input5<-data.frame(chr="21B",pos="47421902",ref="G",alt="A")
+  input6<-data.frame(chr="XB",pos="70443591",ref="G",alt="A")
 
   
   input <- rbind(input1,input2,input3,input4,input5,input6)
@@ -29,10 +31,56 @@ generate_test_data <- function() {
   input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
   input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
   
+  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+  
+  
   return(input_data)
 }
 
-input_data <- generate_test_data()
+generate_test_data_1 <- function() {
+  
+  # generate random input data for testing
+  input<-data.frame(chr="1",pos="115256528",ref="T")
+
+  #var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+  var = paste(input$chr,input$pos,input$ref,sep = " ")
+  #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
+  var=var[nzchar(x=var)]
+  input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
+  input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
+  
+  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+  
+  
+  return(input_data)
+}
+
+# input_data <- generate_test_data()
+# input_line <- generate_test_data_1()
+
+# function to test/validate variant input
+validate_input <- function(input_data) {
+  
+  input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
+  
+  #chr = c(as.character(1:22),'x','X','y','Y')
+  input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
+  
+}
+
+# mb3 <- microbenchmark(out_new = (input_data$REF.query %in% c("A","C", "T", "G")),
+#                       output_old = (grepl("[ATGC]", input_data$REF.query)  & nchar(input_data$REF.query)==1))
+#  
+# autoplot(mb3)
+
+# input_line2 <- validate_input(input_line)
+# 
+# input_data2 <- validate_input(input_data)
+# 
+
+
 
 
 #read gene symbol/ENSG and write to dict
@@ -121,6 +169,7 @@ paralog_extra_colnames <- c(
   "Codons.paralog",
   "Para_Z_score.paralog")
 
+
 lookup_paralog <- function(input_data){
   
   paralog_out <- NULL
@@ -130,27 +179,30 @@ lookup_paralog <- function(input_data){
   for (i in 1:nrow(input_data)) {
     
     #i=1
-    query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
-    #CMD_paralog<- paste0("tabix ", paralog_data, " ", query)
-    #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
-
-    #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
-    tabix_paralog_extra <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
-    
-    #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
-    #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
-    
-    #pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
-    pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog_extra, pattern = "\t", length(paralog_extra_colnames)), stringsAsFactors = F)
-    
-    #colnames(pg1) <- paralog_colnames
-    
-    
-    if (is.null(paralog_out)){
-      paralog_out = pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),]
-    } else {
-      paralog_out = rbind(paralog_out, pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),])
-    }
+    # check if ALT.query exists, if not skip and show only paraloc 
+    #if (!is.na(input_data$ALT.query[i])) {
+      query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
+      #CMD_paralog<- paste0("tabix ", paralog_data, " ", query)
+      #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
+  
+      #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
+      tabix_paralog_extra <- suppressWarnings(system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T))
+      
+      #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
+      #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
+      
+      #pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
+      pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog_extra, pattern = "\t", length(paralog_extra_colnames)), stringsAsFactors = F)
+      
+      #colnames(pg1) <- paralog_colnames
+      
+      
+      if (is.null(paralog_out)){
+        paralog_out = pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),]
+      } else {
+        paralog_out = rbind(paralog_out, pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),])
+      }
+    #}
   }
   #paralog_out = rbind(paralog_out, pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),])
   
@@ -186,7 +238,7 @@ lookup_paraloc <- function(input_data){
     #tabix_paraloc <- system(command =  paste0("tabix ", paraloc_data, " ", query), intern = T, wait = T)
     
     # tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
-    tabix_paraloc <- system(command =  paste0("tabix data/paraloc_chr/paraloc_data_sorted_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)
+    tabix_paraloc <-suppressMessages(suppressWarnings(system(command =  paste0("tabix data/paraloc_chr/paraloc_data_sorted_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)))
     
     
     #pc1 <- as.data.frame(t(unlist(strsplit(tabix_paraloc,split="\t"))),stringsAsFactors = F)
@@ -221,7 +273,7 @@ lookup_paraloc <- function(input_data){
 predict_output_tabix = function(input_data){
 
 
-  input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
+  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
 
     paralog <- lookup_paralog(input_data)
     paraloc <- lookup_paraloc(input_data)

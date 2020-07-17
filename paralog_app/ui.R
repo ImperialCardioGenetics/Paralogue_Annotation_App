@@ -21,7 +21,7 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.2.4", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator DEMO version 0.2.5", id = "navbar",selected = "tab1",
                
                # Main box search and description -----------------------------------------
                tabPanel(title = "Home", value = "tab1",
