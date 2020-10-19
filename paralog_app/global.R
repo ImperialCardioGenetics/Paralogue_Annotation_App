@@ -1,7 +1,6 @@
 library(shiny)
 library(DT)
 library(shinythemes)
-
 library(tidyverse)
 #library(microbenchmark)
 #library(drawProteins)
@@ -81,6 +80,29 @@ generate_test_data_1 <- function() {
   
   return(input_data)
 }
+
+# input_data <- generate_test_data()
+# input_line <- generate_test_data_1()
+
+# function to test/validate variant input
+validate_input <- function(input_data) {
+  
+  input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
+  
+  #chr = c(as.character(1:22),'x','X','y','Y')
+  input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
+  
+}
+
+# mb3 <- microbenchmark(out_new = (input_data$REF.query %in% c("A","C", "T", "G")),
+#                       output_old = (grepl("[ATGC]", input_data$REF.query)  & nchar(input_data$REF.query)==1))
+#  
+# autoplot(mb3)
+
+# input_line2 <- validate_input(input_line)
+# 
+# input_data2 <- validate_input(input_data)
+# 
 
 
 generate_test_data_2 <- function(var=NULL) {
@@ -230,7 +252,8 @@ lookup_paralog <- function(input_data){
       #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
   
       #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
-      tabix_paralog_extra <- suppressWarnings(system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T))
+      tabix_paralog_extra <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)))
+
       
       #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
       #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]

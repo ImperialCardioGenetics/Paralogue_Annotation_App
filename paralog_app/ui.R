@@ -31,7 +31,8 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.2.6", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator DEMO version 0.2.7", id = "navbar",selected = "tab1",
+
                
                # Main box search and description -----------------------------------------
                tabPanel(title = "Home", value = "tab1",
@@ -54,7 +55,7 @@ fluidPage(
                                  wellPanel(br(),
                                            HTML( "Input a query variant bellow or click"),
                                            actionLink("link_to_tabpanel_b", "here"),
-                                           HTML("to input a list or variants or upload a vcf file. All variants in Genome build GRCh37 coordinates"),
+                                           HTML("to input a list or variants or upload a vcf file. All variants in Genome build GRCh37 coordinates."),
                                            br(),br(),
                                            textInput(inputId = "line", label = NULL),#, value = "clinvar"),
                                            HTML("e.g. <br>1-115256528-T-G<br>"),
@@ -169,6 +170,7 @@ fluidPage(
                        tabPanel(value = "tab3",
                                 title = h4("Domain Annotation"),
                                 h4("Paralogous variant and protein domain alignment"),
+                                br(),
                                 #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
                                 #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),

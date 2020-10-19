@@ -316,6 +316,7 @@ shinyServer(function(input, output, session){
                                         formatStyle( "Query variant", backgroundColor = '#f0f0f0')
                                       )
       
+
       
       # draw protein ----
       output$draw_prot <- renderUI({
@@ -328,7 +329,6 @@ shinyServer(function(input, output, session){
       
       
     } else {
-      
       if (nrow(isolate(get_paralog()$paraloc))==0) {
         #Error catching for if query returns empty table
         isolate(showModal(modalDialog(
@@ -357,6 +357,7 @@ shinyServer(function(input, output, session){
         output$paralog<-isolate(NULL)
         output$draw_prot<-isolate(NULL)
         
+
        
        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
                                                      escape = F,
