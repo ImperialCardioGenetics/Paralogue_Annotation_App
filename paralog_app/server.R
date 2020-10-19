@@ -171,8 +171,10 @@ shinyServer(function(input, output, session){
       
       # draw protein ----
       output$draw_prot <- renderUI({
+
+          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
         
-          fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
+          fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))
       })
       
     } else {
@@ -318,8 +320,11 @@ shinyServer(function(input, output, session){
       # draw protein ----
       output$draw_prot <- renderUI({
         
-        fluidRow(isolate(draw_prot_data(get_paralog()$paralog)))
-      })
+          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
+          
+          fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))
+          
+        })
       
       
     } else {

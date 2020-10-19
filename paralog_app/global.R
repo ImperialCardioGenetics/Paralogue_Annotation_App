@@ -1,11 +1,6 @@
 library(shiny)
 library(DT)
 library(shinythemes)
-#library(stringr)
-#library(tidyr)
-#library(ggplot2)
-#library(dplyr)
-#library(readr)
 
 library(tidyverse)
 #library(microbenchmark)
@@ -773,377 +768,28 @@ get_prot_data <- function(result) {
   
   prot_data <- separate(data = prot_data,col = description, into = "description", extra = "drop", sep = ";")
   
+  #list("prot_data" = prot_data, "query_HGVS" = query_HGVS)
+  #return(list("prot_data" = prot_data, "query_HGVS" = query_HGVS))
+  
   return(prot_data)
 }
 #####
 
-#######
-
-# chains ####
-draw_chains_P <- function (data = data, outline = "black", fill = "grey", label_chains = FALSE, 
-          labels = data[data$type == "CHAIN", ]$Gene, size = 0, 
-          label_size = 4) 
-{
-  begin = end = NULL
-  
-  # draw canvas
-  p <- ggplot2::ggplot()
-  
-  # draw chains
-  p <- p + ggplot2::geom_rect(data = data[data$type == "CHAIN", 
-                                          ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                      0.02, ymax = order + 0.02), colour = outline, fill = fill, size = size)
-  
-  if (label_chains == TRUE) {
-    p <- p + ggplot2::annotate("text", x = -(max(data$Protein_position, na.rm = TRUE)+ifelse(max(data$Protein_position, na.rm = TRUE)>=1500,40,10)
-                                             ), y = data[data$type == 
-                                                           "CHAIN", ]$order, label = labels, hjust = 1, size = label_size)
-  }
-  return(p)
-}
-
-# folding -----
-
-draw_folding_P <- function (p, data = data, show.legend = FALSE, show_strand = TRUE, 
-                            show_helix = TRUE, show_turn = TRUE) 
-{
-  begin = end = description = type = NULL
-  if (show_strand == TRUE) {
-    p <- p + ggplot2::geom_rect(data = dplyr::filter(data, 
-                                                     grepl("STRAND", type)), mapping = ggplot2::aes(xmin = begin-Protein_position, 
-                                                                                                    xmax = end-Protein_position, ymin = order - 0.35, ymax = order + 0.35, 
-                                                                                                    fill = type), show.legend = show.legend, alpha = 0.1)
-  }
-  if (show_helix == TRUE) {
-    p <- p + ggplot2::geom_rect(data = data[data$type == 
-                                              "HELIX", ], mapping = ggplot2::aes(xmin = begin-Protein_position, 
-                                                                                 xmax = end-Protein_position, ymin = order - 0.35, ymax = order + 0.35, 
-                                                                                 fill = type), show.legend = show.legend , alpha = 0.1)
-  }
-  if (show_turn == TRUE) {
-    p <- p + ggplot2::geom_rect(data = data[data$type == 
-                                              "TURN", ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, 
-                                                                                ymin = order - 0.35, ymax = order + 0.35, fill = type , alpha = 0.1), 
-                                show.legend = show.legend)
-  }
-  return(p)
-}
-
-
-# regions ####
-draw_regions_P <- function (p, data = data, show.legend = F) 
-{
-  if ("REGION" %in% data$type ) {
-    
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "REGION", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.2, ymax = order + 0.2, fill = description), show.legend = show.legend)
-    return(p)
-  } else {
-    return(p)
-  }
-}
-
-####
-
-
-# domains ####
-draw_domains_P <- function (p, data = data, label_domains = FALSE, label_size = 4, 
-                            show.legend = F) 
-{
-  if ("DOMAIN" %in% data$type ) {
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "DOMAIN", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.2, ymax = order + 0.2, fill = description), show.legend = show.legend)
-    # if (label_domains == TRUE) {
-    #   p <- p + ggplot2::geom_label(data = data[data$type == 
-    #                                              "DOMAIN", ], ggplot2::aes(x = begin + (end - begin)/2, 
-    #                                                                        y = order, label = description), size = label_size)
-    # }
-    return(p)
-  } else {
-    return(p)
-  }
-}
-
-####
-
-# topo_dom  ####
-draw_topo_dom_P <- function (p, data = data, label_domains = FALSE, label_size = 4, 
-          show.legend = F) 
-{
-  if ("TOPO_DOM" %in% data$type ) {
-  begin = end = description = NULL
-  p <- p + ggplot2::geom_rect(data = data[data$type == "TOPO_DOM", 
-                                          ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                      0.2, ymax = order + 0.2, fill = description), show.legend = show.legend)
-  if (label_domains == TRUE) {
-    p <- p + ggplot2::geom_label(data = data[data$type == 
-                                               "TOPO_DOM", ], ggplot2::aes(x = begin + (end - begin)/2, 
-                                                                           y = order, label = description), size = label_size)
-  }
-  return(p)
-  } else {
-    return(p)
-  }
-}
-
-####
-
-# trans_dom  ####
-draw_trans_dom_P <- function (p, data = data, label_domains = FALSE, label_size = 4, 
-                               show.legend = F) 
-{
-  if ("TRANSMEM" %in% data$type ) {
-    
-  begin = end = description = NULL
-  p <- p + ggplot2::geom_rect(data = data[data$type == "TRANSMEM", 
-                                          ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                      0.2, ymax = order + 0.2, fill = description), show.legend = show.legend)
-  if (label_domains == TRUE) {
-    p <- p + ggplot2::geom_label(data = data[data$type == 
-                                               "TRANSMEM", ], ggplot2::aes(x = begin + (end - begin)/2, 
-                                                                           y = order, label = "TM"), size = label_size)
-  }
-  return(p)
-} else {
-  return(p)
-}
-}
-
-####
-
-# repeat ####
-draw_repeat_P <- function (p, data = data, label_size = 2, outline = "dimgrey", 
-                          fill = "dimgrey", label_repeats = T, show.legend = F) 
-{
-  if ("REPEAT" %in% data$type ) {
-    
-  begin = end = description = NULL
-  p <- p + ggplot2::geom_rect(data = data[data$type == "REPEAT", 
-                                          ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                      0.10, ymax = order + 0.10), colour = outline, fill = fill, alpha = 0.3, 
-                              show.legend = show.legend)
-  if (label_repeats == TRUE) {
-    p <- p + ggplot2::geom_text(data = data[data$type == 
-                                              "REPEAT", ], ggplot2::aes(x = begin + (end - begin)/2, 
-                                                                        y = order, label = gsub("\\d", "", description)), 
-                                size = label_size)
-  }
-  return(p)
-  } else {
-    return(p)
-  }
-}
-
-####
-
-# motif ####
-draw_motif_P <-  function (p, data = data, show.legend = F)
-  {
-    if ("MOTIF" %in% data$type ) {
-      
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "MOTIF", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.2, ymax = order + 0.2, fill = description), show.legend = show.legend)
-  }
-  return(p)
-  }
-####
-
-# pfam ####
-draw_pfam_P <-  function (p, data = data, show.legend = F)
-{
-  if ("PFAM" %in% data$type ) {
-    
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "PFAM", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.2, ymax = order + 0.2, fill = description), show.legend = show.legend )
-  }
-  return(p)
-}
-####
-
-# phospho ####
-draw_phospho_P <-  function (p, data = data, size = 1, fill = "yellow", show.legend = F) 
-  {
-  #if ("MOD_RES" %in% data$type & description) {
-    
-  begin = end = description = NULL
-  p <- p + ggplot2::geom_point(data = phospho_site_info(data), 
-                               mapping = ggplot2::aes(x = begin-Protein_position, y = order), shape = 21, 
-                               colour = "grey", fill = fill, size = size, stroke = 0, alpha = 2 , show.legend = show.legend) 
- # }
-  #return(p)
-  }
-
-####
-
-
-# vline  ####
-draw_vline_P <- function (p, data = data )
-{
-  #maxy = max(data$order)
-  #p <- p + geom_vline(xintercept = 0, size = 1)
-  p <- p + geom_segment(aes(x=0, y=max(data$order) + 0.5, xend = 0, yend = 0  ), arrow=arrow(), size=1 )
-  return(p)
-  
-  
-}
-
-####
-
-
-# theme ####
-draw_theme_P <- function (p, data = data, base_size = 16 )
-{
-  p <- p + theme_bw(base_size = 16) + # white backgnd & change GLOBAL text size
-    theme(panel.grid.minor=element_blank(),
-          panel.grid.major=element_blank()) +
-    theme(axis.ticks = element_blank(),
-          axis.text.y = element_blank(),
-          axis.text.x = element_blank(),
-          axis.title.x = element_text(size = 14)) +
-    theme(panel.border = element_blank()) + 
-    theme(legend.position="right") 
-  # add xlab
-  p <- p + ggplot2::labs(y = "", 
-                         x = paste0(unique(data$HGVS.query)),
-                         fill = "")
-  return(p)
-}
-
-####
-
-# test entire protain plot ######
-draw_entire_protein <- function (data = data, show.legend = F ,
-                                 label_chains = FALSE, chain_size = 0.5,chain_label_size = 4, 
-                                 label_domains = FALSE , domain_label_size = 4, 
-                                 label_repeats = FALSE , repeat_label_size = 2,
-                                 phospho_fill = "yellow", phospho_size = 4) {
-  # set begin end 
-  begin = end = NULL
-  
-  # canvas
-  p <- ggplot2::ggplot()
-  p <- p + ggplot2::ylim(0.5, max(data$order) + 0.5)
-  p <- p + ggplot2::xlim(-((max(data$end, na.rm = TRUE) * 0.2)+max(data$Protein_position, na.rm = TRUE)), (max(data$end, na.rm = TRUE)) + (max(data$end, na.rm = TRUE) * 0.1) -(max(data$Protein_position, na.rm = TRUE)))
-  # p <- p + ggplot2::labs(x = "Amino acid number")
-  p <- p + ggplot2::labs(y = "")
-  
-
-    labels = data[data$type == "CHAIN", ]$Gene
-  p <- p + ggplot2::geom_rect(data = data[data$type == "CHAIN", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.2, ymax = order + 0.2), colour = "black", fill = "grey", size = chain_size)
-    if (label_chains == TRUE) {
-      p <- p + ggplot2::annotate("text", x = -(max(data$Protein_position, na.rm = TRUE)+10), y = data[data$type == "CHAIN", ]$order, label = labels, hjust = 1, size = chain_label_size)
-    }
-
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "DOMAIN", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.25, ymax = order + 0.25, fill = description), show.legend = show.legend)
-    # if (label_domains == TRUE) {
-    #   p <- p + ggplot2::geom_label(data = data[data$type ==
-    #                                              "DOMAIN", ], ggplot2::aes(x = begin + (end - begin)/2,
-    #                                                                        y = order, label = description), size = domain_label_size)
-    #   }
-
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "TOPO_DOM", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.25, ymax = order + 0.25, fill = description), show.legend = show.legend)
-    # if (label_domains == TRUE) {
-    #   p <- p + ggplot2::geom_label(data = data[data$type == 
-    #                                              "TOPO_DOM", ], ggplot2::aes(x = begin + (end - begin)/2, 
-    #                                                                          y = order, label = description), size = domain_label_size)
-    # }
-
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "TRANSMEM", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.25, ymax = order + 0.25, fill = description), show.legend = show.legend)
-    # if (label_domains == TRUE) {
-    #   p <- p + ggplot2::geom_label(data = data[data$type == 
-    #                                              "TRANSMEM", ], ggplot2::aes(x = begin + (end - begin)/2, 
-    #                                                                          y = order, label = "TM"), size = domain_label_size)
-    # }
-
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "REPEAT", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.25, ymax = order + 0.25), colour = "dimgrey", fill = "dimgrey", show.legend = show.legend)
-    # if (label_repeats == TRUE) {
-    #   p <- p + ggplot2::geom_text(data = data[data$type ==
-    #                                             "REPEAT", ], ggplot2::aes(x = begin + (end - begin)/2,
-    #                                                                       y = order, label = gsub("\\d", "", description)), size = repeat_label_size)
-    # }
-
-    begin = end = description = NULL
-    p <- p + ggplot2::geom_rect(data = data[data$type == "MOTIF", 
-                                            ], mapping = ggplot2::aes(xmin = begin-Protein_position, xmax = end-Protein_position, ymin = order - 
-                                                                        0.25, ymax = order + 0.25, fill = description), show.legend = show.legend)
-
-  p <- p + ggplot2::geom_point(data = phospho_site_info(data), 
-                               ggplot2::aes(x = begin-Protein_position, y = order + 0.25), shape = 21, 
-                               colour = "black", fill = phospho_fill, size = phospho_size, show.legend = show.legend)
-  return(p)
-
-}
-
-
-
-# g2 <- draw_entire_protein(data = prot_data, label_chains = T, label_domains = T, label_repeats = T, show.legend = T, chain_label_size = 6)
-# g2
-# 
-# plotly::ggplotly(g2)
-
-#####
 
 # draw the prot graph ----
-draw_prot_data <- function(input_data) {
+draw_prot_data_plotly <- function(input_data) {
   
-
-# get prot data
-prot_data <- get_prot_data( input_data)
-
-# uncomment and run for test data (1,2,3,4)
-#prot_data <- get_prot_data( predict_output_tabix(validate_input(generate_test_data_2(2)))$paralog)
-
   
-#g <- draw_canvas_P(data = prot_data)
-g <- draw_chains_P(data = prot_data, label_chains = T)
-g <- draw_folding_P(g, prot_data)
-g <- draw_regions_P(g, prot_data)
-g <- draw_domains_P(g, prot_data)
-g <- draw_topo_dom_P(g, prot_data)
-g <- draw_trans_dom_P(g, prot_data)
-g <- draw_repeat_P(g, prot_data, label_repeats = F)
-g <- draw_motif_P(g, prot_data) 
-g <- draw_phospho_P(g, prot_data, size = 1.5)
-g <- draw_pfam_P(g, prot_data)
-g <- draw_theme_P(g, prot_data, base_size = base_size)
-g <- draw_vline_P(g, prot_data)
+  # get prot data
+  prot_data <- get_prot_data( input_data)
+  
+  # uncomment and run for test data (1,2,3,4)
+  #prot_data <- get_prot_data( predict_output_tabix(validate_input(generate_test_data_2(4)))$paralog)
+  
+  fig <- draw_plotly_graph(prot_data = prot_data)
 
 
-
-
-g <- plotly::ggplotly(g, tooltip = "text") %>% layout(xaxis = list(autorange = TRUE), 
-                                                      yaxis = list(autorange = TRUE)) %>% config(displayModeBar = T,
-                                                                                                 modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d", "resetScale2d",
-                                                                                                                               "hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d","toggleHover", "resetViews", "toggleSpikelines"),
-                                                                                                 toImageButtonOptions = list(format = "png",
-                                                                                                                             width = "1800", height = "800"), 
-                                                                                                 displaylogo = F )
-
-
-# print test plot
-#g
+  #fig_test <- subplot(draw_plotly_graph(prot_data = prot_data, showlegend = T), draw_plotly_graph(prot_data = prot_data_test, showlegend = F), nrows = 2, shareX = T) %>% layout(showlegend = T)
 
 
 }
@@ -1151,11 +797,109 @@ g <- plotly::ggplotly(g, tooltip = "text") %>% layout(xaxis = list(autorange = T
 #####
 
 
-##### explore Pfam domains
+# draw plotly graph ----
 
-# proteins_acc <- "P51787 O43526 O43525 P56696 Q9NR82"
-# proteins_acc <- paste(unique(prot_data$accession), collapse = " ")
+draw_plotly_graph <- function(prot_data, showlegend = T) {
+  
+  fig <- plot_ly(prot_data)
+  
+  # Chains
+  if ("CHAIN" %in% prot_data$type ) {
+    fig <- add_bars(fig, data = prot_data[prot_data$type == "CHAIN",],x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position),
+                    width = 0.02, orientation = 'h', showlegend = F , legendgroup = "Chains", # yaxis = ~Gene,  #xaxis = Gene
+                    marker = list(color = toRGB("gray50")), name = ~Gene, hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
+  }
+  
+  
+  # Folding
+  if ("HELIX" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type, legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  if ("STRAND" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  if ("TURN" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  # Repeat
+  if ("REPEAT" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.15, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
+                     opacity = 0.2, marker = list(color = toRGB("gray50"),
+                                                  line = list(color = toRGB("gray20"), width = 2)),
+                     hoverinfo = "name+text")
+  }
+  
+  # Region
+  if ("REGION" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Region', 
+                     hoverinfo = "name+text")
+  }
+  # Domain
+  if ("DOMAIN" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Domain', 
+                     hoverinfo = "name+text")
+  }
+  
+  # Topo_Domain
+  if ( ("TOPO_DOM" %in% prot_data$type ) | ("TRANSMEM" %in% prot_data$type)) {
+    fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Topo Domain', 
+                     hoverinfo = "name+text")
+  }
+  
+  
+  # Motif
+  if ("MOTIF" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Motif', 
+                     hoverinfo = "name+text")
+  }
+  
+  
+  # PFam
+  if ("PFAM" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  # legendgroup = 'PFam', 
+                     hoverinfo = "name+text") 
+  }
+  
+  # # Phosphorilation NOT WORKING
+  # if ("MOD_RES" %in% prot_data$type) {
+  #   fig <- add_trace(fig, data = phospho_site_info(prot_data), x = ~c((begin)-(end)), y = ~Gene,type = 'scatter', base = ~(end-Protein_position),
+  #                    width = 0.04, orientation = 'h', showlegend = T, name = "Phosphorilation",  # legendgroup = 'PFam', 
+  #                    hoverinfo = "name+text") 
+  # }
+  
+  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 14),
+                         text = paste0(unique(prot_data$HGVS.query)) )  
+  
+  fig <- layout(fig, yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T),  # , domain= c(0, 0.85) will set the total height of the plot 
+                xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3),
+                barmode = 'overlay', showlegend = showlegend,legend = list(traceorder = "grouped", itemdoubleclick = "toggle", tracegroupgap = 20,
+                                                   title = list(text = "Grouped Domain Annotations",font = list(size = 14)))) 
+  fig <- config(fig, displayModeBar = T,
+                modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d",
+                                              "hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"),
+                toImageButtonOptions = list(format = "png",
+                                            width = "1800", height = "800"), displaylogo = F )
+  
+  
+  return(fig)
+}
 
+######
 
 # get pfam data ----
 get_Pfam <- function (proteins_acc) 
@@ -1222,7 +966,7 @@ get_features <- function (proteins_acc)
   prots_feat <- httr::GET(url, httr::accept_json())
   code <- httr::status_code(prots_feat)
   if (code == 200) {
-    print("Download has worked")
+    print("UniProt download has worked")
   }
   else {
     print(paste("An error has occured. Code:", code))
