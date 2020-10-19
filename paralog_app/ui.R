@@ -3,6 +3,16 @@ library(shinythemes)
 library(shinyjs)
 library(shinycssloaders)
 
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
+# BiocManager::install("drawProteins")
+#library(drawProteins)
+
+
+# Install specific packages, e.g., “GenomicFeatures” and “AnnotationDbi”, with
+
+
+
 # css <- HTML(".pull-left{float: left !important;}
 #               .pull-right{float: right !important;}")
 # 
@@ -21,7 +31,8 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.2.5", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator DEMO version 0.2.7", id = "navbar",selected = "tab1",
+
                
                # Main box search and description -----------------------------------------
                tabPanel(title = "Home", value = "tab1",
@@ -144,18 +155,31 @@ fluidPage(
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
                                 br(),
                                 br()
-                       ),
+                                ),
                        tabPanel(value = "tab2",
                                 title = h4("All Paralogous Positions"),
                                 h4("Equivalent positions identified by Paralogue Annotation"),
                                 #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paraloc"))),
                                 br(),
-                               # conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.txt"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
+                                # conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.txt"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
                                 #conditionalPanel("output.paraloc",downloadButton("download_paraloc_excel","Download (.xlsx)")),
                                 br(),
                                 br()
-                                )
+                                ),
+                       tabPanel(value = "tab3",
+                                title = h4("Domain Annotation"),
+                                h4("Paralogous variant and protein domain alignment"),
+                                br(),
+                                #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
+                                conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
+                                #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),
+                                br(),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
+                                br(),
+                                br()
+                       )
                        )
                      )
                   )),

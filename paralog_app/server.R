@@ -168,6 +168,15 @@ shinyServer(function(input, output, session){
       ) %>%
         formatStyle( "Query variant", backgroundColor = '#f0f0f0')
       )
+      
+      # draw protein ----
+      output$draw_prot <- renderUI({
+
+          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
+        
+          fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))
+      })
+      
     } else {
       
       
@@ -182,6 +191,8 @@ shinyServer(function(input, output, session){
         # show NULL tables
         output$paralog<-isolate(NULL)
         output$paraloc<-isolate(NULL)
+        output$draw_prot<-isolate(NULL)
+        
         
         shinyjs::reset("tab2_search") 
         shinyjs::reset("All_results")
@@ -196,6 +207,7 @@ shinyServer(function(input, output, session){
           easyClose = TRUE)))
       
         output$paralog<-isolate(NULL)
+        output$draw_prot<-isolate(NULL)
         
         output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
                                                       escape = F,
@@ -303,8 +315,20 @@ shinyServer(function(input, output, session){
                                                     ) %>%
                                         formatStyle( "Query variant", backgroundColor = '#f0f0f0')
                                       )
-    } else {
       
+
+      
+      # draw protein ----
+      output$draw_prot <- renderUI({
+        
+          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
+          
+          fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))
+          
+        })
+      
+      
+    } else {
       if (nrow(isolate(get_paralog()$paraloc))==0) {
         #Error catching for if query returns empty table
         isolate(showModal(modalDialog(
@@ -316,6 +340,7 @@ shinyServer(function(input, output, session){
         # show NULL tables
         output$paralog<-isolate(NULL)
         output$paraloc<-isolate(NULL)
+        output$draw_prot<-isolate(NULL)
         
         shinyjs::reset("tab2_search") 
         shinyjs::reset("All_results")
@@ -330,7 +355,9 @@ shinyServer(function(input, output, session){
           easyClose = TRUE)))
         
         output$paralog<-isolate(NULL)
-       
+        output$draw_prot<-isolate(NULL)
+        
+
        
        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
                                                      escape = F,

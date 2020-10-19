@@ -1,12 +1,36 @@
 library(shiny)
 library(DT)
 library(shinythemes)
-library(stringr)
-library(tidyr)
-
-#library(tidyverse)
+library(tidyverse)
 #library(microbenchmark)
+#library(drawProteins)
+library(plotly)
+library(grid)
 
+
+
+
+#read gene symbol/ENSG and write to dict
+# mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
+mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
+map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
+
+HGNC_export <- read.delim("data/HGNC_all_genes.txt", quote="", stringsAsFactors=F)
+# HGNC_export <- tidyr::separate(HGNC_export,HGNC_ID, into = c("HGNC", "ID"), remove = T)
+map_HGNC = setNames(HGNC_export$UniProt_ID, HGNC_export$Approved_symbol)
+
+# Load all data as Rds data
+#raw_data = readRDS("./data/raw_data_paralog.Rds")
+#Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
+
+
+
+
+#paralog_index<- read.delim("data/paralog_data_index.txt", stringsAsFactors = F)
+#saveRDS(paralog_index, "data/paralog_data_index.Rds")
+#paralog_index <- readRDS("data/paralog_data_index.Rds")
+
+# generate_test_data ----
 
 generate_test_data <- function() {
   
@@ -81,28 +105,68 @@ validate_input <- function(input_data) {
 # 
 
 
+generate_test_data_2 <- function(var=NULL) {
+  
+  if (var==1){
+  input<-data.frame(chr="1",pos="115256528",ref="T",alt="G")
+  
+  } else if (var==2){
+    #3-38592567-T-A
+    input<-data.frame(chr="3",pos="38592567",ref="T",alt="A")
+    
+    
+  } else if (var==3){
+    #21-44592214-C-T
+    input<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
+    
+  } else if (var==4){
+    #X-70443591-G-A
+    input<-data.frame(chr="X",pos="70443591",ref="G",alt="A")
+
+  } else if (var==5){
+    
+    input1<-data.frame(chr="1",pos="115256528",ref="T",alt="G")
+    input2<-data.frame(chr="3",pos="38592567",ref="T",alt="A")
+    input3<-data.frame(chr="21",pos="44592214",ref="C",alt="T")
+    input4<-data.frame(chr="X",pos="70443591",ref="G",alt="A")
+
+    input <- rbind(input1,input2,input3,input4)
+  }
+  
+
+  #var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+  var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+  #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
+  var=var[nzchar(x=var)]
+  input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
+  input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
+  input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
+  
+  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+  
+  
+  return(input_data)
+}
+
+# input_data <- generate_test_data()
+# input_line <- generate_test_data_1()
+# input_data_2 <- generate_test_data_2()
+
+# validate_input ----
+
+# function to test/validate variant input
+validate_input <- function(input_data) {
+  
+  input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
+  
+  #chr = c(as.character(1:22),'x','X','y','Y')
+  input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
+  
+}
 
 
-#read gene symbol/ENSG and write to dict
-# mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
-mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
-map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
-
-# HGNC_export <- read.delim("data/HGNC_all_genes.txt", quote="", stringsAsFactors=F)
-# #HGNC_export <- tidyr::separate(HGNC_export,HGNC_ID, into = c("HGNC", "ID"), remove = T)
-# map_HGNC = setNames(HGNC_export$HGNC_ID, HGNC_export$Approved_symbol)
-
-# Load all data as Rds data
-#raw_data = readRDS("./data/raw_data_paralog.Rds")
-#Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
-
-
-
-
-#paralog_index<- read.delim("data/paralog_data_index.txt", stringsAsFactors = F)
-#saveRDS(paralog_index, "data/paralog_data_index.Rds")
-#paralog_index <- readRDS("data/paralog_data_index.Rds")
-
+# edit_paralog_colnames ----
 
 paralog_colnames <- c(
   "CHR.query",
@@ -170,6 +234,8 @@ paralog_extra_colnames <- c(
   "Para_Z_score.paralog")
 
 
+# lookup_vars ----
+
 lookup_paralog <- function(input_data){
   
   paralog_out <- NULL
@@ -187,6 +253,7 @@ lookup_paralog <- function(input_data){
   
       #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
       tabix_paralog_extra <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)))
+
       
       #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
       #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
@@ -267,6 +334,7 @@ lookup_paraloc <- function(input_data){
   
 }
 
+# predict_output ----
 
 
 
@@ -283,7 +351,7 @@ predict_output_tabix = function(input_data){
 }  
 
 
-#result <- predict_output_tabix(input_data = input_data)
+# result <- predict_output_tabix(input_data = input_line)
 
   
 predict_output = function(input_data){
@@ -339,6 +407,7 @@ predict_output = function(input_data){
 # autoplot(mb2)
 # 
 
+# edit_download_colnames ----
 
 # use tidyr::separate to split var.query and var.paralog columns for downloaded
 # edit_download_cols = function(df) {
@@ -357,7 +426,7 @@ predict_output = function(input_data){
 #   return(df)
 # }
 
-
+# check_upload_file ----
 
 
 # function to check if uploaded variants file is valid
@@ -414,6 +483,8 @@ check_upload_file = function(inFile) {
   
   return(input_file)
 }
+
+# add_URLs ---- 
 
 # function to add ensembl URL link
 add_paraloc_gene_URLs <- function(pos) {
@@ -535,6 +606,8 @@ add_paralog_URL = function(result) {
 } 
 
 
+# DT_colnames ----
+
 paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
              'Pos.query' = 'POS.query',
              'REF.query' = 'REF.query',
@@ -575,6 +648,10 @@ paraloc_DT_colnames <- c(
   # 'ENSG' = 'ENSG.query',
   'Paralogous positions' = 'Positions.paralog')
 
+
+
+
+# childrow_JS_callback ----
 
 childrow_JS_callback <- c("
   table.column(1).nodes().to$().css({cursor: 'pointer'});
@@ -644,3 +721,334 @@ childrow_JS_callback <- c("
 
 
 
+
+
+####### draw proteins example ######
+
+# "P51787 O43526 O43525 P56696 Q9NR82"
+
+# data("five_rel_data")
+# prot_data_example <- get_features("five_rel_data")
+# # prot_data_example <- get_features("Q04206 Q01201 Q04864 P19838 Q00653")
+# prot_data_example <- feature_to_dataframe(prot_data_example)
+
+
+####################################
+
+# example data
+#input_data_2 <- generate_test_data_2(2) 
+#result <- predict_output_tabix(validate_input(input_data_2))$paralog
+
+# prepare draw protein dataframe ----
+
+get_prot_data <- function(result) {
+  
+  # check number of input data vars
+  if (length(unique(result$var.query))!=1) {
+    result <- result[result$var.query == result$var.query[1],]
+  }
+  
+  #paste(map_HGNC[unlist("KCNQ2")],collapse = " ")
+  
+  result$UniProt_ID.paralog <- map_HGNC[unlist(result$Gene.paralog)]
+  result$UniProt_ID.query <- map_HGNC[unlist(result$Gene.query)]
+  
+  #query_proteins_rev <- paste(paste(rev(unique(result$UniProt_ID.paralog)),collapse = " "), map_HGNC[unlist(unique(result$Gene.query))],collapse = " ")
+  
+  query_proteins <- paste(map_HGNC[unlist(unique(result$Gene.query))], paste(unique(result$UniProt_ID.paralog),collapse = " "))
+  query_HGVS <- paste(unique(result$ENST.query),"(", unique(result$Gene.query),"):",unique(result$cDNA.query), " (",unique(result$Protein.query),")", sep = "")
+  
+  prot_data <- feature_to_dataframe(get_features(query_proteins))
+  
+  
+  # get pfam data
+  pfam_data <- get_Pfam(query_proteins)
+  # left join protein data
+  pfam_data <- pfam_data %>% left_join(prot_data %>% select(accession, taxid, order) %>% unique.array(),
+                                       by = "accession")
+  pfam_data$begin <- as.numeric(pfam_data$begin)
+  
+  
+  # jon Uniprot and Pfam data
+  prot_data <- rbind(prot_data, pfam_data)
+  
+  
+  # left join protein data
+  prot_data <- prot_data %>% left_join(rbind(result %>% select("UniProt_ID" = UniProt_ID.query, "Gene" = Gene.query, "ENSG" = ENSG.query, "Protein_position" = Protein_position.query) %>% unique.array(),
+                                             result %>% select("UniProt_ID" = UniProt_ID.paralog, "Gene" = Gene.paralog, "ENSG" = ENSG.paralog, "Protein_position" = Protein_position.paralog) %>% unique.array()),
+                                       by = c("accession"= "UniProt_ID"))
+    
+  prot_data$Protein_position <- as.numeric(prot_data$Protein_position)
+  prot_data$HGVS.query <- query_HGVS
+  #prot_data$description <- 
+  
+  #Add Gene URL
+  prot_data$Gene<- ifelse(
+    prot_data$Gene!="NA",
+    (paste0("<a href='", paste0("http://pfam.xfam.org/protein/",prot_data$accession,"/"), "' target='_blank'>", prot_data$Gene, "</a>")),
+    prot_data$Gene)
+  
+  
+  prot_data <- separate(data = prot_data,col = description, into = "description", extra = "drop", sep = ";")
+  
+  #list("prot_data" = prot_data, "query_HGVS" = query_HGVS)
+  #return(list("prot_data" = prot_data, "query_HGVS" = query_HGVS))
+  
+  return(prot_data)
+}
+#####
+
+
+# draw the prot graph ----
+draw_prot_data_plotly <- function(input_data) {
+  
+  
+  # get prot data
+  prot_data <- get_prot_data( input_data)
+  
+  # uncomment and run for test data (1,2,3,4)
+  #prot_data <- get_prot_data( predict_output_tabix(validate_input(generate_test_data_2(4)))$paralog)
+  
+  fig <- draw_plotly_graph(prot_data = prot_data)
+
+
+  #fig_test <- subplot(draw_plotly_graph(prot_data = prot_data, showlegend = T), draw_plotly_graph(prot_data = prot_data_test, showlegend = F), nrows = 2, shareX = T) %>% layout(showlegend = T)
+
+
+}
+
+#####
+
+
+# draw plotly graph ----
+
+draw_plotly_graph <- function(prot_data, showlegend = T) {
+  
+  fig <- plot_ly(prot_data)
+  
+  # Chains
+  if ("CHAIN" %in% prot_data$type ) {
+    fig <- add_bars(fig, data = prot_data[prot_data$type == "CHAIN",],x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position),
+                    width = 0.02, orientation = 'h', showlegend = F , legendgroup = "Chains", # yaxis = ~Gene,  #xaxis = Gene
+                    marker = list(color = toRGB("gray50")), name = ~Gene, hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
+  }
+  
+  
+  # Folding
+  if ("HELIX" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type, legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  if ("STRAND" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  if ("TURN" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     opacity = 0.1 , hoverinfo = "name+text")
+  }
+  
+  # Repeat
+  if ("REPEAT" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.15, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
+                     opacity = 0.2, marker = list(color = toRGB("gray50"),
+                                                  line = list(color = toRGB("gray20"), width = 2)),
+                     hoverinfo = "name+text")
+  }
+  
+  # Region
+  if ("REGION" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Region', 
+                     hoverinfo = "name+text")
+  }
+  # Domain
+  if ("DOMAIN" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Domain', 
+                     hoverinfo = "name+text")
+  }
+  
+  # Topo_Domain
+  if ( ("TOPO_DOM" %in% prot_data$type ) | ("TRANSMEM" %in% prot_data$type)) {
+    fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Topo Domain', 
+                     hoverinfo = "name+text")
+  }
+  
+  
+  # Motif
+  if ("MOTIF" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Motif', 
+                     hoverinfo = "name+text")
+  }
+  
+  
+  # PFam
+  if ("PFAM" %in% prot_data$type ) {
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  # legendgroup = 'PFam', 
+                     hoverinfo = "name+text") 
+  }
+  
+  # # Phosphorilation NOT WORKING
+  # if ("MOD_RES" %in% prot_data$type) {
+  #   fig <- add_trace(fig, data = phospho_site_info(prot_data), x = ~c((begin)-(end)), y = ~Gene,type = 'scatter', base = ~(end-Protein_position),
+  #                    width = 0.04, orientation = 'h', showlegend = T, name = "Phosphorilation",  # legendgroup = 'PFam', 
+  #                    hoverinfo = "name+text") 
+  # }
+  
+  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 14),
+                         text = paste0(unique(prot_data$HGVS.query)) )  
+  
+  fig <- layout(fig, yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T),  # , domain= c(0, 0.85) will set the total height of the plot 
+                xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3),
+                barmode = 'overlay', showlegend = showlegend,legend = list(traceorder = "grouped", itemdoubleclick = "toggle", tracegroupgap = 20,
+                                                   title = list(text = "Grouped Domain Annotations",font = list(size = 14)))) 
+  fig <- config(fig, displayModeBar = T,
+                modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d",
+                                              "hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"),
+                toImageButtonOptions = list(format = "png",
+                                            width = "1800", height = "800"), displaylogo = F )
+  
+  
+  return(fig)
+}
+
+######
+
+# get pfam data ----
+get_Pfam <- function (proteins_acc) 
+{
+  proteins_acc_url <- gsub(" ", "%2C", proteins_acc)
+  
+  baseurl <- "http://pfam.xfam.org/protein/api/"
+  url <- paste0(baseurl, proteins_acc_url)
+  
+  pfam_eg <- suppressWarnings(suppressMessages(read_delim(url, "\t", escape_double = FALSE, col_names = FALSE, trim_ws = TRUE)))[,1:5] #%>% select()
+  
+  if (nrow(pfam_eg)>=1) {
+    print("Pfam download has worked.")
+  }
+  else {
+    print(paste("An error has occured."))
+  }
+  
+  #order=0
+  pfam_eg[c("type", "description", "begin", "end", "length", "accession", "entryName")] <- NA
+  for (i in 1:nrow(pfam_eg)) {
+    # set up cols
+    if (pfam_eg[i,1]=="P") {
+      pfam_eg$type[i] <- "PFAM_name"
+      pfam_eg$description[i] <- pfam_eg$X4[i]
+      pfam_eg$begin[i] <- "1"
+      pfam_eg$end[i] <- pfam_eg$X5[i] 
+      pfam_eg$length[i] <- pfam_eg$X5[i] -1
+      pfam_eg$accession[i] <- pfam_eg$X2[i]
+      pfam_eg$entryName[i] <- pfam_eg$X3[i]
+      
+      #order <- order + 1
+      #pfam_eg$order[i] <- order
+      
+    } else if (pfam_eg[i,1]=="A") {
+      pfam_eg$type[i] <- "PFAM"
+      pfam_eg$description[i] <- pfam_eg$X2[i]
+      pfam_eg$begin[i] <- pfam_eg$X4[i]
+      pfam_eg$end[i] <- pfam_eg$X5[i]
+      pfam_eg$length[i] <- pfam_eg$X5[i] - as.numeric(pfam_eg$X4[i])
+      pfam_eg$entryName[i] <- pfam_eg$X3[i]
+      
+      
+      #pfam_eg$order[i] <- order 
+      
+    }
+    if (is.na(pfam_eg$accession[i])){
+      pfam_eg$accession[i] <- pfam_eg$accession[i-1]
+    }
+    
+  }
+
+  return(pfam_eg[,6:12])
+}
+
+######
+
+# drawProteins functions ----
+get_features <- function (proteins_acc) 
+{
+  proteins_acc_url <- gsub(" ", "%2C", proteins_acc)
+  baseurl <- "https://www.ebi.ac.uk/proteins/api/features?offset=0&size=100&accession="
+  url <- paste0(baseurl, proteins_acc_url)
+  prots_feat <- httr::GET(url, httr::accept_json())
+  code <- httr::status_code(prots_feat)
+  if (code == 200) {
+    print("UniProt download has worked")
+  }
+  else {
+    print(paste("An error has occured. Code:", code))
+  }
+  prots_feat_red <- httr::content(prots_feat)
+  return(prots_feat_red)
+}
+
+feature_to_dataframe <- function (features_in_lists_of_six) 
+{
+  features_total_plot <- NULL
+  for (i in 1:length(features_in_lists_of_six)) {
+    features_temp <- extract_feat_acc(features_in_lists_of_six[[i]])
+    features_temp$order <- i
+    features_total_plot <- rbind(features_total_plot, features_temp)
+  }
+  return(features_total_plot)
+}
+
+extract_feat_acc <- function (features_list) 
+{
+  features <- NULL
+  for (i in 1:length(features_list$features)) {
+    if (is.null(features_list$features[[i]]$description) == 
+        TRUE) {
+      featuresTemp <- c(features_list$features[[i]]$type, 
+                        "NONE", as.numeric(features_list$features[[i]]$begin), 
+                        as.numeric(features_list$features[[i]]$end))
+    }
+    else {
+      featuresTemp <- c(features_list$features[[i]]$type, 
+                        as.character(features_list$features[[i]]$description), 
+                        as.numeric(features_list$features[[i]]$begin), 
+                        as.numeric(features_list$features[[i]]$end))
+    }
+    features <- rbind(features, featuresTemp)
+  }
+  features_dataframe <- as.data.frame(features, stringsAsFactors = FALSE)
+  colnames(features_dataframe) <- c("type", "description", 
+                                    "begin", "end")
+  features_dataframe$begin <- as.numeric(features_dataframe$begin)
+  features_dataframe$end <- as.numeric(features_dataframe$end)
+  features_dataframe$length <- features_dataframe$end - features_dataframe$begin
+  features_dataframe$accession <- rep(features_list$accession, 
+                                      times = nrow(features_dataframe))
+  features_dataframe$entryName <- rep(features_list$entryName, 
+                                      times = nrow(features_dataframe))
+  features_dataframe$taxid <- rep(features_list$taxid, times = nrow(features_dataframe))
+  return(features_dataframe)
+}
+
+phospho_site_info <- function (features) 
+{
+  features <- features[features$type == "MOD_RES", ]
+  phospho_list <- grep("Phospho", features$description)
+  phospho_features <- features[phospho_list, ]
+  return(phospho_features)
+}
+
+
+
+#######
