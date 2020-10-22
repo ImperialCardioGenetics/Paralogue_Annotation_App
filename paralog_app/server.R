@@ -118,7 +118,7 @@ shinyServer(function(input, output, session){
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
                                                              "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
                                                       buttons = list(list(extend = 'excel',
                                                                           text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
                                                                           filename = paste0("paralogue_annotation_",Sys.Date())),
@@ -130,7 +130,7 @@ shinyServer(function(input, output, session){
                                                                           extension = '.txt')),
                                                       paging = T,scrollX = TRUE,
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:21,26, 29:31)),
+                                                        list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
                                                         list(orderable = FALSE, className = 'details-control', targets = 0))),
                                                     callback = JS(childrow_JS_callback)
       ) %>%
@@ -150,7 +150,7 @@ shinyServer(function(input, output, session){
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
                                                              "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
                                                       buttons = list(list(extend = 'excel',
                                                                           text = ' <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
                                                                           filename = paste0("paralogue_positions_",Sys.Date())),
@@ -221,7 +221,7 @@ shinyServer(function(input, output, session){
                                                         dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
                                                              "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
                                                         buttons = list(list(extend = 'excel',
                                                                             text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
                                                                             filename = paste0("paralogue_positions_",Sys.Date())),
@@ -265,7 +265,7 @@ shinyServer(function(input, output, session){
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
                                                              "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
                                                       buttons = list(list(extend = 'excel',
                                                                           text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
                                                                           filename = paste0("paralogue_annotation_",Sys.Date())),
@@ -277,7 +277,7 @@ shinyServer(function(input, output, session){
                                                                           extension = '.txt')),
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:20,24, 28:30)),
+                                                        list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
                                                         list(orderable = FALSE, className = 'details-control', targets = 0))),
                                                     callback = JS(childrow_JS_callback)
                                                     ) %>%
@@ -297,7 +297,7 @@ shinyServer(function(input, output, session){
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
                                                              "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
                                                       buttons = list(list(extend = 'excel',
                                                                           text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
                                                                           filename = paste0("paralogue_positions_",Sys.Date())),
