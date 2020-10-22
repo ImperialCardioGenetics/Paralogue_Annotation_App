@@ -206,6 +206,7 @@ paralog_extra_colnames <- c(
   "ALT.query",
   "var.query",
   "ID.query",
+  "ClinVar.query",
   "Gene.query",
   "ENSG.query",
   "ENST.query",
@@ -222,6 +223,7 @@ paralog_extra_colnames <- c(
   "ALT.paralog",
   "var.paralog",
   "ID.paralog",
+  "ClinVar.paralog",
   "Gene.paralog",
   "ENSG.paralog",
   "ENST.paralog",
@@ -252,7 +254,7 @@ lookup_paralog <- function(input_data){
       #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
   
       #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
-      tabix_paralog_extra <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)))
+      tabix_paralog_extra <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/paralog_data.txt.gz ", query), intern = T,wait = T)))
 
       
       #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
@@ -305,7 +307,7 @@ lookup_paraloc <- function(input_data){
     #tabix_paraloc <- system(command =  paste0("tabix ", paraloc_data, " ", query), intern = T, wait = T)
     
     # tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
-    tabix_paraloc <-suppressMessages(suppressWarnings(system(command =  paste0("tabix data/paraloc_chr/paraloc_data_sorted_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)))
+    tabix_paraloc <-suppressMessages(suppressWarnings(system(command =  paste0("tabix data/paraloc_chr/paraloc_data_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)))
     
     
     #pc1 <- as.data.frame(t(unlist(strsplit(tabix_paraloc,split="\t"))),stringsAsFactors = F)
@@ -614,6 +616,7 @@ paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
              'ALT.query' = 'ALT.query',
              'Query variant' = 'var.query',
              'ClinVar.query' = 'ID.query',
+             'ClinVar Class.query' = 'ClinVar.query',
              'Gene.query' = 'Gene.query',
              'ENST.query' = 'ENST.query',
              'ENSG.query' = 'ENSG.query',
@@ -630,6 +633,7 @@ paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
              'ALT' = 'ALT.paralog',
              'Paralogue variant' = 'var.paralog',
              'ClinVar ID' = 'ID.paralog',
+             'ClinVar Class' = 'ClinVar.paralog',
              'Gene' = 'Gene.paralog',
              'ENSG' = 'ENSG.paralog',
              'ENST' = 'ENST.paralog',
@@ -664,6 +668,7 @@ childrow_JS_callback <- c("
     //    '<tr>'+
     //        '<th>Query variant</th>'+
     //        '<th>ClinVar ID</th>'+
+    //        '<th>ClinVar Class</th>'+
     //        '<th>Gene</th>'+
     //        '<th>HGVS</th>'+
     //        '<th>Codons</th>'+
@@ -675,9 +680,10 @@ childrow_JS_callback <- c("
     //        '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
     //        '<td>'+ d[6] +'</td>'+
     //        '<td>'+ d[7] +'</td>'+
-    //        '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
-    //        '<td>'+ d[15] +'</td>'+
+    //        '<td>'+ d[8] +'</td>'+
+    //        '<td>'+ d[10] + '(' + d[9] + '):' + d[11] + ' (' + d[12] + ')' +'</td>'+
     //        '<td>'+ d[16] +'</td>'+
+    //        '<td>'+ d[17] +'</td>'+
     //    '</tr>'+
     //  '</tbody>'+
         '<tr>'+
@@ -689,21 +695,25 @@ childrow_JS_callback <- c("
             '<td>'+ d[6] +'</td>'+
         '</tr>'+
         '<tr>'+
-            '<th>Gene</th>'+
+            '<th>ClinVar Class</th>'+
             '<td>'+ d[7] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Gene</th>'+
+            '<td>'+ d[8] +'</td>'+
         '</tr>'+
         '<tr>'+
             '<th>HGVS</th>'+
     //      '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
-            '<td>'+ d[9] + ':' + d[10] + ' (' + d[11] + ')' +'</td>'+
+            '<td>'+ d[10] + ':' + d[11] + ' (' + d[12] + ')' +'</td>'+
         '</tr>'+
         '<tr>'+
             '<th>Codons</th>'+
-            '<td>'+ d[15] +'</td>'+
+            '<td>'+ d[16] +'</td>'+
         '</tr>'+
         '<tr>'+
             '<th>Para_Z Score</th>'+
-            '<td>'+ d[16] +'</td>'+
+            '<td>'+ d[17] +'</td>'+
         '</tr>'+
     '</table>';
   };
@@ -837,26 +847,26 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   # Folding
   if ("HELIX" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.3, orientation = 'h', showlegend = T, name = ~type, legendgroup = "Folding",
+                     width = 0.2, orientation = 'h', showlegend = F, name = ~type, legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   if ("STRAND" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   if ("TURN" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.3, orientation = 'h', showlegend = T, name = ~type,  legendgroup = "Folding",
+                     width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   # Repeat
   if ("REPEAT" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.15, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
+                     width = 0.1, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
                      opacity = 0.2, marker = list(color = toRGB("gray50"),
                                                   line = list(color = toRGB("gray20"), width = 2)),
                      hoverinfo = "name+text")
@@ -865,20 +875,20 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   # Region
   if ("REGION" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Region', 
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   # Domain
   if ("DOMAIN" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Domain', 
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   
   # Topo_Domain
   if ( ("TOPO_DOM" %in% prot_data$type ) | ("TRANSMEM" %in% prot_data$type)) {
     fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Topo Domain', 
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   
@@ -886,7 +896,7 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   # Motif
   if ("MOTIF" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'Motif', 
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   
@@ -894,7 +904,7 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   # PFam
   if ("PFAM" %in% prot_data$type ) {
     fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  # legendgroup = 'PFam', 
+                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'PFam', 
                      hoverinfo = "name+text") 
   }
   

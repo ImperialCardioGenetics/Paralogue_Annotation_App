@@ -130,7 +130,7 @@ shinyServer(function(input, output, session){
                                                                           extension = '.txt')),
                                                       paging = T,scrollX = TRUE,
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:20,24, 28:30)),
+                                                        list(visible = FALSE, targets = c(1:4,6:21,26, 29:31)),
                                                         list(orderable = FALSE, className = 'details-control', targets = 0))),
                                                     callback = JS(childrow_JS_callback)
       ) %>%
