@@ -6,6 +6,8 @@ library(tidyverse)
 #library(drawProteins)
 library(plotly)
 library(grid)
+library(httr)
+
 
 
 
@@ -23,12 +25,6 @@ map_HGNC = setNames(HGNC_export$UniProt_ID, HGNC_export$Approved_symbol)
 #raw_data = readRDS("./data/raw_data_paralog.Rds")
 #Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
 
-
-
-
-#paralog_index<- read.delim("data/paralog_data_index.txt", stringsAsFactors = F)
-#saveRDS(paralog_index, "data/paralog_data_index.Rds")
-#paralog_index <- readRDS("data/paralog_data_index.Rds")
 
 # generate_test_data ----
 
@@ -61,28 +57,6 @@ generate_test_data <- function() {
   return(input_data)
 }
 
-generate_test_data_1 <- function() {
-  
-  # generate random input data for testing
-  input<-data.frame(chr="1",pos="115256528",ref="T")
-
-  #var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
-  var = paste(input$chr,input$pos,input$ref,sep = " ")
-  #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
-  var=var[nzchar(x=var)]
-  input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-  input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
-  input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
-  input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
-  
-  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
-  
-  
-  return(input_data)
-}
-
-# input_data <- generate_test_data()
-# input_line <- generate_test_data_1()
 
 # function to test/validate variant input
 validate_input <- function(input_data) {
@@ -93,16 +67,6 @@ validate_input <- function(input_data) {
   input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
   
 }
-
-# mb3 <- microbenchmark(out_new = (input_data$REF.query %in% c("A","C", "T", "G")),
-#                       output_old = (grepl("[ATGC]", input_data$REF.query)  & nchar(input_data$REF.query)==1))
-#  
-# autoplot(mb3)
-
-# input_line2 <- validate_input(input_line)
-# 
-# input_data2 <- validate_input(input_data)
-# 
 
 
 generate_test_data_2 <- function(var=NULL) {
@@ -149,10 +113,6 @@ generate_test_data_2 <- function(var=NULL) {
   return(input_data)
 }
 
-# input_data <- generate_test_data()
-# input_line <- generate_test_data_1()
-# input_data_2 <- generate_test_data_2()
-
 # validate_input ----
 
 # function to test/validate variant input
@@ -168,29 +128,6 @@ validate_input <- function(input_data) {
 
 # edit_paralog_colnames ----
 
-paralog_colnames <- c(
-  "CHR.query",
-  "POS.query",
-  "REF.query",
-  "ALT.query",
-  "var.query",
-  "ID.query",
-  "Gene.query",
-  "Codons.query",
-  "Transcript.query",
-  "Protein_dot.query",
-  "Para_Z_score.query",
-  "CHR.paralog",
-  "POS.paralog",
-  "REF.paralog",
-  "ALT.paralog",
-  "var.paralog",
-  "ID.paralog",
-  "SYMBOL.paralog",
-  "Codons.paralog",
-  "Protein_dot.paralog",
-  "Para_Z_score.paralog"
-)
 paraloc_colnames<- c(
   "CHR.query",
   "POS.query",
@@ -199,7 +136,7 @@ paraloc_colnames<- c(
   "Gene.query",
   "Positions.paralog")
 
-paralog_extra_colnames <- c(
+paralog_colnames <- c(
   "CHR.query",
   "POS.query",
   "REF.query",
@@ -241,8 +178,6 @@ paralog_extra_colnames <- c(
 lookup_paralog <- function(input_data){
   
   paralog_out <- NULL
-  #paralog_out <- read.csv(text = paste(paralog_colnames,collapse = ","))
-  
   
   for (i in 1:nrow(input_data)) {
     
@@ -261,7 +196,7 @@ lookup_paralog <- function(input_data){
       #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
       
       #pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
-      pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog_extra, pattern = "\t", length(paralog_extra_colnames)), stringsAsFactors = F)
+      pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog_extra, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
       
       #colnames(pg1) <- paralog_colnames
       
@@ -276,24 +211,18 @@ lookup_paralog <- function(input_data){
   #paralog_out = rbind(paralog_out, pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),])
   
   #colnames(paralog_out) <- paralog_colnames
-  colnames(paralog_out) <- paralog_extra_colnames
+  colnames(paralog_out) <- paralog_colnames
   
-  #paralog_out <- paralog_out[,c(1:7,9:32)]
-  #paralog_out <- dplyr::na_if(paralog_out, "NA")
+  # sort df to avoid sorting later
+  #chrOrder<-c(1:22,"X","Y")
+  paralog_out <- paralog_out[order(factor(paralog_out$CHR.query , levels = c(1:22,"X","Y")), 
+                                   as.numeric(paralog_out$POS.query),
+                                   factor(paralog_out$CHR.paralog , levels = c(1:22,"X","Y")), 
+                                   as.numeric(paralog_out$POS.paralog)), ]
   
-  
-  # if (nrow(paralog_out)!=0) {
-  #   #paralog_out <- dplyr::na_if(paralog_out, "NA")
-  #   return(paralog_out)
-  # } else {
-  #   paralog_out <- NA
-  #   return(paralog_out)
-  # }
+
   return(paralog_out)
 }
-
-# call lookup function 
-# paralog_out<- lookup_paralog(input_data)
 
 
 lookup_paraloc <- function(input_data){
@@ -325,13 +254,7 @@ lookup_paraloc <- function(input_data){
   #paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
   
   colnames(paraloc_out) <- paraloc_colnames
-  # if (nrow(paraloc_out)!=0) {
-  #   #paralog_out <- dplyr::na_if(paralog_out, "NA")
-  #   return(unique(paraloc_out))
-  # } else {
-  #   paraloc_out <- NA
-  #   return(paraloc_out)
-  # }
+
   return(unique(paraloc_out))
   
 }
@@ -344,7 +267,8 @@ predict_output_tabix = function(input_data){
 
 
   #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
-
+  # input_data <- validate_input(generate_test_data_2(1))
+  
     paralog <- lookup_paralog(input_data)
     paraloc <- lookup_paraloc(input_data)
 
@@ -358,11 +282,11 @@ predict_output_tabix = function(input_data){
   
 predict_output = function(input_data){
   #### select through RDS objects ####
-  paralog_output = raw_data[raw_data$var %in%  input_data$mutation,]
-  paraloc_output = Paraloc_data[Paraloc_data$var %in% input_data$paraloc,]
+  paralog = raw_data[raw_data$var %in%  input_data$mutation,]
+  paraloc = Paraloc_data[Paraloc_data$var %in% input_data$paraloc,]
   
   # will change subset to dplyr::select to change colnames at the same time
-  paralog_output = dplyr::select(paralog_output,
+  paralog= dplyr::select(paralog_output,
                          var.query=var,
                          ID.query=ID,
                          Gene.query=Gene,
@@ -378,55 +302,13 @@ predict_output = function(input_data){
                          Para_Z_score.paralog=Para_Z_score.y)
   
   #convert numeric to character so as all output df columns left align when renderDataTable()
-  paralog_output = dplyr::mutate_if(paralog_output, is.numeric, as.character)
+  paralog = dplyr::mutate_if(paralog, is.numeric, as.character)
   
-  return(list("output" = paralog_output, "paraloc_output" = paraloc_output))
-  # print(output)
+  return(list("paralog" = paralog, "paraloc" = paraloc))
+
 }
 
-#result <- predict_output(input_data = input_data)
 
-
-
-# # BENCHMARK
-# mb2 <- microbenchmark(out_new = predict_out(input_data),
-#                      output_old = predict_output(input_data), times = 10)
-# 
-# 
-# mb_pg <- microbenchmark(
-#   pg1 = separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames),
-#   pg2 = as.data.frame(str_split_fixed(tabix_paralog, pattern = "\t", n = length(paralog_colnames)), stringsAsFactors = F),
-# times = 30)
-# 
-# mb <- microbenchmark(paralog_out = lookup_paralog(input_data),
-#                       paraloc_out = lookup_paraloc(input_data),
-#                       paralog_output = raw_data[raw_data$var %in%  input_data$mutation,],
-#                       paraloc_output = Paraloc_data[Paraloc_data$var %in% input_data$paraloc,], times = 10)
-# 
-# 
-# autoplot(mb)
-# autoplot(mb_pg)
-# autoplot(mb2)
-# 
-
-# edit_download_colnames ----
-
-# use tidyr::separate to split var.query and var.paralog columns for downloaded
-# edit_download_cols = function(df) {
-#   
-#   #df <- tidyr::separate(df, var.query, into = c("CHR.query", "POS.query", "REF.query", "ALT.query") )
-#   df <- tidyr::separate(df, var.paralog, into = c("CHR.paralog", "POS.paralog", "REF.paralog", "ALT.paralog") )
-#   
-#   return(df)
-# }
-
-# edit_download_cols_paraloc = function(df) {
-#   
-#   df <- tidyr::separate(df, var, into = c("CHR.query", "POS.query", "REF.query") )
-#   #df <- tidyr::separate(df, var.paralog, into = c("CHR.paralog", "POS.paralog", "REF.paralog", "ALT.paralog") )
-#   colnames(df) <- c("CHR.query", "POS.query", "REF.query", "Gene.query", "Positions.paralog")
-#   return(df)
-# }
 
 # check_upload_file ----
 
@@ -488,61 +370,127 @@ check_upload_file = function(inFile) {
 
 # add_URLs ---- 
 
-# function to add ensembl URL link
-add_paraloc_gene_URLs <- function(pos) {
+# example data
+# input_data_2 <- generate_test_data_2(1)
+# # input_data_2 <- rbind(generate_test_data_2(1) ,generate_test_data_2(2))
+# result_paraloc <- predict_output_tabix(validate_input(input_data_2))$paraloc
+
+
+# function to tap into Ensembl API to retreive transcriptid, gene id and protein position for paraloc position varint.
+query_paraloc_API <- function(para_split_df_long) {
   
-  # split position string
-  line <- str_split(unlist(pos[1]) , pattern = " ", simplify = T)
-  # paste ensembl gene URL
-  line[1,1] <- paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(line[1])]), "' target='_blank'>", unlist(line[1]), "</a>")
-  # paste back to string
-  pos <- paste(line[1,],collapse = " ")
   
-  return(pos)
+  for (i in 1:nrow(para_split_df_long)) {
+  
+    # paraloc_gene <- para_split_df_long$Gene.paraloc[2]
+    # para_split_df_long <- para_split_df_long[2,]
+    # url_string <- paste0("https://grch37.rest.ensembl.org/vep/human/region/",para_split_df_long$chr.paraloc,":",para_split_df_long$AA_pos.paraloc,":1/G?canonical=1")
+
+    url_string <- paste0("https://grch37.rest.ensembl.org/vep/human/region/",para_split_df_long$chr.paraloc[i],":",para_split_df_long$AA_pos.paraloc[i],":1/G?canonical=1")
+    
+    API_out <- content(GET(url_string , content_type("text/plain")))[[1]] #[[1]]$transcript_consequences
+    
+    #API_out_1 <- API_out[[1]]
+    #transcript_consequences <- API_out$transcript_consequences
+    
+    for ( l in c(1:length(API_out[["transcript_consequences"]]))) {
+      
+      #transcript_consequences <-  transcript_consequences[[l]]
+      
+      if ((!is.null(API_out[["transcript_consequences"]][[l]][["canonical"]]) && API_out[["transcript_consequences"]][[l]][["canonical"]]==1) && ((!is.null(API_out[["transcript_consequences"]][[l]][["gene_symbol"]]) && API_out[["transcript_consequences"]][[l]][["gene_symbol"]]==para_split_df_long$Gene.paraloc[i]))){
+        para_split_df_long$ENST.paraloc[i] <- API_out[["transcript_consequences"]][[l]]["transcript_id"]
+        para_split_df_long$ENSG.paraloc[i] <- API_out[["transcript_consequences"]][[l]]["gene_id"]
+        para_split_df_long$Protein_position.paraloc[i] <- API_out[["transcript_consequences"]][[l]]["protein_start"]
+      }
+      
+      # if ((!is.null(transcript_consequences[[l]]$canonical) && transcript_consequences[[l]]$canonical==1) && ((!is.null(transcript_consequences[[l]]$gene_symbol) && transcript_consequences[[l]]$gene_symbol==para_split_df_long$Gene.paraloc[i]))){
+      #   para_split_df_long$ENST.paraloc[i] <- transcript_consequences[[l]]$transcript_id
+      #   para_split_df_long$ENSG.paraloc[i] <- transcript_consequences[[l]]$gene_id
+      #   para_split_df_long$Protein_position.paraloc[i] <- transcript_consequences[[l]]$protein_start
+      # }
+      # 
+    }
+    
+    
+  }
+  return(para_split_df_long)
+  
 }
+
+
+
 
 # function to add ensembl URLs to paralg positions in genes
-add_paraloc_URL = function(result_paraloc) {
-  
-  # result_paraloc$Gene<- ifelse(!is.na(result_paraloc$Gene), 
-  #                             (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene)]), "' target='_blank'>", result_paraloc$Gene, "</a>")),
-  #                             "-")
-  
-  # split all positions into a vector/list
-  
-  #result_paraloc <- result_paraloc[complete.cases(result_paraloc),]
+add_paraloc_URL_new = function(result_paraloc) {
   
   if (nrow(result_paraloc)!=0){
+    
+    #embl_api <- "https://grch37.rest.ensembl.org"
+    para_split_df <- NULL
+    
+    
     result_paraloc$Positions.paralog <- str_split(result_paraloc$Positions.paralog , pattern = ", ", simplify = F)
     
-    
-    # #Ensembl ENSG.query for paraloc
-    # result_paraloc$ENSG.query <- ifelse(!is.na(result_paraloc$Gene.query),
-    #                                     (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", map[unlist(result_paraloc$Gene.query)], "</a>")),
-    #                                     "-")
-    
-    #Ensembl Gene.query for paraloc
-    result_paraloc$Gene.query<- ifelse(!is.na(result_paraloc$Gene.query), 
-                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(result_paraloc$Gene.query)]), "' target='_blank'>", result_paraloc$Gene.query, "</a>")),
-                                       "-")
-    
-    
-    
-    for (i in c(1:nrow(result_paraloc))){ 
+    for (i in 1:nrow(result_paraloc)){ 
       # get all positions from list and apply add_URLs function to every position
       # then paste back as string
-      result_paraloc$Positions.paralog[i] <- paste(unlist(lapply(unlist(result_paraloc$Positions.paralog[i]), function(line) add_paraloc_gene_URLs(line))), collapse = ", ")
+      
+      # uncomment to use inside the loop
+      # para_split_df_long <- suppressMessages(suppressWarnings(cbind(result_paraloc[1,1:5] ,
+      #                            separate(data = (data.frame(result_paraloc$Positions.paralog[1]) %>% rename(para_split=1)),col = "para_split" ,into = c("Gene.paraloc", "chr.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " " ))))
+
+
+      para_split_df_long <- suppressMessages(suppressWarnings(cbind(result_paraloc[i,1:5] , 
+                            separate(data = (data.frame(result_paraloc$Positions.paralog[i]) %>% rename(para_split=1)),col = "para_split" ,into = c("Gene.paraloc", "chr.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " " ))))
+      
+      para_split_df_long$ENST.paraloc <- NA
+      para_split_df_long$ENSG.paraloc <- NA
+      para_split_df_long$Protein_position.paraloc <- NA
+      
+      # run the query to Ensembl API to get transcript, gene and protein position for paraloc
+      para_split_df_long_API <- query_paraloc_API(para_split_df_long)
+        
+
+      # example code to tap into Ensembl API
+      #para_split_df_long$Codons <- content(GET(paste(embl_api, ext[i], sep = ""), content_type("text/plain")))
+    
+      
+      if (is.null(para_split_df)){
+        para_split_df = para_split_df_long_API
+      } else {
+        para_split_df = rbind(para_split_df, para_split_df_long_API)
+      }
       
     }
+
+      
+    #Ensembl Gene.query for paraloc
+    para_split_df$Gene.query<- ifelse(!is.na(para_split_df$Gene.query),
+                                      (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(para_split_df$Gene.query)]), "' target='_blank'>", para_split_df$Gene.query, "</a>")),
+                                      "-")
+
+    #Ensembl gene for paraloc
+    para_split_df$Gene.paraloc<- ifelse(!is.na(para_split_df$Gene.paraloc),
+                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(para_split_df$Gene.paraloc)]), "' target='_blank'>", para_split_df$Gene.paraloc, "</a>")),
+                                        "-")
+
+    #Ensembl ENST.paraloc
+    para_split_df$ENST.paraloc<- ifelse(!is.na(para_split_df$ENST.paraloc),
+                                        (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",para_split_df$ENSG.paraloc,";t=",para_split_df$ENST.paraloc), "' target='_blank'>", para_split_df$ENST.paraloc, "</a>")),
+                                        "-")
+
+    #para_split_df <- para_split_df[1:8,10,12,9]
+    para_split_df <- para_split_df[order(factor(para_split_df$CHR.query , levels = c(1:22,"X","Y")),
+                                         as.numeric(para_split_df$POS.query),
+                                         factor(para_split_df$chr.paraloc , levels = c(1:22,"X","Y")) #,as.numeric(para_split_df$AA_pos.paraloc) # its a character so cannot be ordered properly
+                                         ), c(1:8,10,12,9) ]
+    
   } else { 
-    result_paraloc <- NULL
+    para_split_df <- NULL
   }
   
-
-
-  return(result_paraloc)
+  return(para_split_df)
 }
-
 
 
 
@@ -580,18 +528,6 @@ add_paralog_URL = function(result) {
                                (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.paralog,";t=",result$ENST.paralog), "' target='_blank'>", result$ENST.paralog, "</a>")),
                                "-")
     
-    # https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000213281
-    #Ensembl ENSG.query
-    # result$ENSG.query<- ifelse(!is.na(result$ENSG.query), 
-    #                            (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$ENSG.query, "</a>")),
-    #                            "-")
-    # 
-    #Ensembl ENSG.paralog
-    # result$ENSG.paralog<- ifelse(!is.na(result$ENSG.paralog), 
-    #                              (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$ENSG.paralog, "</a>")),
-    #                              
-    #                              "-")
-    # 
     #HGNC Gene.query
     result$Gene.query<- ifelse(!is.na(result$Gene.query), 
                                (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$Gene.query, "</a>")),
@@ -646,12 +582,18 @@ paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
              'Para_Z Score' = 'Para_Z_score.paralog',
              'Ensembl alignment' = 'Ensembl_alignment_link')
 
+
 paraloc_DT_colnames <- c(
   'Query variant' = 'var.query',
-  'Gene' = 'Gene.query',
-  # 'ENSG' = 'ENSG.query',
-  'Paralogous positions' = 'Positions.paralog')
-
+  'Query gene' = 'Gene.query',
+  'Paralogous gene' = 'Gene.paraloc',
+  'Chromosome' = 'chr.paraloc',
+  'AA Position' = 'AA_pos.paraloc',
+  #'AA Residue' = 'AA.paraloc',
+  'ENST' = 'ENST.paraloc',
+  #'ENSG' = 'ENSG.paraloc',
+  'Protein positions' = 'Protein_position.paraloc',
+  'AA Residue' = 'AA.paraloc')
 
 
 
@@ -736,62 +678,89 @@ childrow_JS_callback <- c("
 ####### draw proteins example ######
 
 # "P51787 O43526 O43525 P56696 Q9NR82"
-
-# data("five_rel_data")
-# prot_data_example <- get_features("five_rel_data")
-# # prot_data_example <- get_features("Q04206 Q01201 Q04864 P19838 Q00653")
-# prot_data_example <- feature_to_dataframe(prot_data_example)
+# "Q04206 Q01201 Q04864 P19838 Q00653"
 
 
 ####################################
 
 # example data
-#input_data_2 <- generate_test_data_2(2) 
+# input_data_2 <- generate_test_data_2(4) 
+#input_data_2 <- rbind(generate_test_data_2(1) ,generate_test_data_2(4))
+# 
 #result <- predict_output_tabix(validate_input(input_data_2))$paralog
+#result <- add_paraloc_URL_new(predict_output_tabix(validate_input(input_data_2))$paraloc)
 
 # prepare draw protein dataframe ----
 
-get_prot_data <- function(result) {
+
+# function to order protein accession numbers to dispaly the query prot first
+query_protein_API <- function(query_proteins) {
   
-  # check number of input data vars
-  if (length(unique(result$var.query))!=1) {
-    result <- result[result$var.query == result$var.query[1],]
-  }
+  # example query_proteins
+  #query_proteins <- "P51787"
+  #query_proteins <- "P51787 O43526 O43525 P56696 Q9NR82"
   
-  #paste(map_HGNC[unlist("KCNQ2")],collapse = " ")
-  
-  result$UniProt_ID.paralog <- map_HGNC[unlist(result$Gene.paralog)]
-  result$UniProt_ID.query <- map_HGNC[unlist(result$Gene.query)]
-  
-  #query_proteins_rev <- paste(paste(rev(unique(result$UniProt_ID.paralog)),collapse = " "), map_HGNC[unlist(unique(result$Gene.query))],collapse = " ")
-  
-  query_proteins <- paste(map_HGNC[unlist(unique(result$Gene.query))], paste(unique(result$UniProt_ID.paralog),collapse = " "))
-  query_HGVS <- paste(unique(result$ENST.query),"(", unique(result$Gene.query),"):",unique(result$cDNA.query), " (",unique(result$Protein.query),")", sep = "")
-  
-  prot_data <- feature_to_dataframe(get_features(query_proteins))
+  # GET protein info from UniProt API
+  #prot_data <- feature_to_dataframe(get_features(query_proteins))
   
   
-  # get pfam data
+  # get pfam info from Pfam API
+  # ###changed the function get_Pfam to include order col
   pfam_data <- get_Pfam(query_proteins)
-  # left join protein data
-  pfam_data <- pfam_data %>% left_join(prot_data %>% select(accession, taxid, order) %>% unique.array(),
-                                       by = "accession")
+  
+  # left join UniProt order 
+  #pfam_data2 <- pfam_data %>% left_join(prot_data %>% select(accession, taxid, order) %>% unique.array(),by = "accession")
   pfam_data$begin <- as.numeric(pfam_data$begin)
   
   
-  # jon Uniprot and Pfam data
-  prot_data <- rbind(prot_data, pfam_data)
+  # join Uniprot and Pfam data
+  #prot_data <- rbind(prot_data, pfam_data)
   
+  #return(prot_data)
+  return(pfam_data)
+  
+}
+
+
+
+# 
+get_prot_data <- function(result) {
+  
+
+  result$UniProt_ID.paralog <- map_HGNC[unlist(result$Gene.paralog)]
+  result$UniProt_ID.query <- map_HGNC[unlist(result$Gene.query)]
+  
+  #query_proteins <- paste(map_HGNC[unlist(unique(result$Gene.query))], paste(unique(result$UniProt_ID.paralog),collapse = " "))
+  query_proteins_query  <- paste(map_HGNC[unlist(unique(result$Gene.query))])
+  query_proteins_paralog<- paste(unique(result$UniProt_ID.paralog),collapse = " ")
+  
+  
+  
+  
+  query_prot <- query_protein_API(query_proteins = query_proteins_query)
+  paralog_prot <-  query_protein_API(query_proteins = query_proteins_paralog)
+  
+  # reorder query prot so it comes up as first in the graph
+  query_prot$order <- as.numeric(max(paralog_prot$order)+1)
+  
+  #rbind query and paralog prot
+  prot_data <- rbind(query_prot,paralog_prot)
   
   # left join protein data
   prot_data <- prot_data %>% left_join(rbind(result %>% select("UniProt_ID" = UniProt_ID.query, "Gene" = Gene.query, "ENSG" = ENSG.query, "Protein_position" = Protein_position.query) %>% unique.array(),
                                              result %>% select("UniProt_ID" = UniProt_ID.paralog, "Gene" = Gene.paralog, "ENSG" = ENSG.paralog, "Protein_position" = Protein_position.paralog) %>% unique.array()),
                                        by = c("accession"= "UniProt_ID"))
-    
-  prot_data$Protein_position <- as.numeric(prot_data$Protein_position)
-  prot_data$HGVS.query <- query_HGVS
-  #prot_data$description <- 
+
+
   
+  
+  
+  prot_data$Protein_position <- as.numeric(prot_data$Protein_position)
+  #query_HGVS
+  prot_data$HGVS.query <- paste(unique(result$ENST.query),"(", unique(result$Gene.query),"):",unique(result$cDNA.query), " (",unique(result$Protein.query),")", sep = "")
+  #query_var_ID
+  prot_data$query_var_ID <- paste(unique(result$var.query))
+
   #Add Gene URL
   prot_data$Gene<- ifelse(
     prot_data$Gene!="NA",
@@ -801,9 +770,6 @@ get_prot_data <- function(result) {
   
   prot_data <- separate(data = prot_data,col = description, into = "description", extra = "drop", sep = ";")
   
-  #list("prot_data" = prot_data, "query_HGVS" = query_HGVS)
-  #return(list("prot_data" = prot_data, "query_HGVS" = query_HGVS))
-  
   return(prot_data)
 }
 #####
@@ -811,34 +777,97 @@ get_prot_data <- function(result) {
 
 # draw the prot graph ----
 draw_prot_data_plotly <- function(input_data) {
-  
-  
   # get prot data
-  prot_data <- get_prot_data( input_data)
   
-  # uncomment and run for test data (1,2,3,4)
-  #prot_data <- get_prot_data( predict_output_tabix(validate_input(generate_test_data_2(4)))$paralog)
+  # #test
+  # input_data_2 <- generate_test_data_2(4)
+  # input_data_2 <- rbind(generate_test_data_2(1) ,generate_test_data_2(4))
+  # # 
+  prot_data <- list()
+  for ( i in unique(input_data$var.query)) {
+    
+    prot_slice <- input_data[input_data$var.query == i,]
+    
+    
+    name <- paste(i)
+    tmp <- get_prot_data( prot_slice)
+    prot_data[[name]] <- tmp
+    
+  }
+
   
-  fig <- draw_plotly_graph(prot_data = prot_data)
-
-
-  #fig_test <- subplot(draw_plotly_graph(prot_data = prot_data, showlegend = T), draw_plotly_graph(prot_data = prot_data_test, showlegend = F), nrows = 2, shareX = T) %>% layout(showlegend = T)
-
-
+  # subplot(lapply(prot_data, draw_plotly_graph),margin = 0.05,nrows = length(prot_data),)
+  #fig <- lapply(prot_data, draw_plotly_graph)
+  fig <- lapply(prot_data, draw_plotly_graph_PFAM)
+  
+  
+  
+  # #test
+  #
+  # input_data_2 <- generate_test_data_2(3)
+  # input_data <- predict_output_tabix(validate_input(input_data_2))$paralog
+  # prot_data <- get_prot_data(input_data[input_data$var.query == unique(input_data$var.query)[1],])# %>% dplyr::arrange(desc(order))
+  #
+  #  fig <- draw_plotly_graph(prot_data = prot_data)
+  # fig
+  # #
+  
 }
 
+
+
+# draw plotly graph PFAM positions ----
+
+draw_plotly_graph_PFAM <- function(prot_data, showlegend = T) {
+  
+
+  fig <- plot_ly(prot_data)
+  
+  # Chains
+  fig <- add_bars(fig, data = prot_data[prot_data$type == "PFAM_name",],x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position),
+                  width = 0.02, orientation = 'h', showlegend = F ,name = ~Gene, marker = list(color = toRGB("gray50")), 
+                  hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
+  # Pfam domains
+  fig <- add_bars(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position) ,#type = 'bar',
+                   width = 0.4, orientation = 'h', showlegend = T, name = ~description, 
+                   hoverinfo = "name+text")
+  # HGVS
+  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 14),
+                         text = paste0(unique(prot_data$HGVS.query)) )  
+  
+  # legend , title and margins
+  fig <- layout(fig,
+                barmode = 'overlay', showlegend = T,
+                title = list(text = paste0(unique(prot_data$query_var_ID)),font = list(size = 16), 
+                             xref = "paper",yref = "paper",xanchor = "left", x = 0 ),
+                legend = list(itemdoubleclick = "toggle", title = list(text = "Pfam Domains",font = list(size = 14))),
+                yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T) ,margin= c(0, 0.95),# will set the total height of the plot 
+                xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3)) 
+  
+  # plotly toolbox
+  fig <- plotly::config(fig, displayModeBar = T, 
+                        modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d","hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"), 
+                        toImageButtonOptions = list(format = "png",width = "1800", height = "800"), displaylogo = F )
+  
+  # fig
+
+  
+  return(fig)
+  
+
+}
 #####
 
 
 # draw plotly graph ----
 
-draw_plotly_graph <- function(prot_data, showlegend = T) {
+draw_plotly_graph <- function(prot_data, showlegend = T, title ) {
   
   fig <- plot_ly(prot_data)
   
   # Chains
   if ("CHAIN" %in% prot_data$type ) {
-    fig <- add_bars(fig, data = prot_data[prot_data$type == "CHAIN",],x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position),
+    fig <- add_bars(fig, data = prot_data[prot_data$type == "CHAIN",],x = ~c((begin)-(end)), y = ~reorder(Gene, order), base = ~(end-Protein_position),
                     width = 0.02, orientation = 'h', showlegend = F , legendgroup = "Chains", # yaxis = ~Gene,  #xaxis = Gene
                     marker = list(color = toRGB("gray50")), name = ~Gene, hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
   }
@@ -846,26 +875,26 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   
   # Folding
   if ("HELIX" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.2, orientation = 'h', showlegend = F, name = ~type, legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   if ("STRAND" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   if ("TURN" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
                      opacity = 0.1 , hoverinfo = "name+text")
   }
   
   # Repeat
   if ("REPEAT" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.1, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
                      opacity = 0.2, marker = list(color = toRGB("gray50"),
                                                   line = list(color = toRGB("gray20"), width = 2)),
@@ -874,20 +903,20 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   
   # Region
   if ("REGION" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   # Domain
   if ("DOMAIN" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
   
   # Topo_Domain
   if ( ("TOPO_DOM" %in% prot_data$type ) | ("TRANSMEM" %in% prot_data$type)) {
-    fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
@@ -895,7 +924,7 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   
   # Motif
   if ("MOTIF" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
                      hoverinfo = "name+text")
   }
@@ -903,7 +932,7 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   
   # PFam
   if ("PFAM" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene,type = 'bar', base = ~(end-Protein_position),
+    fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
                      width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'PFam', 
                      hoverinfo = "name+text") 
   }
@@ -915,18 +944,21 @@ draw_plotly_graph <- function(prot_data, showlegend = T) {
   #                    hoverinfo = "name+text") 
   # }
   
-  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 14),
+  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 12),
                          text = paste0(unique(prot_data$HGVS.query)) )  
   
-  fig <- layout(fig, yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T),  # , domain= c(0, 0.85) will set the total height of the plot 
+  fig <- layout(fig, 
+                yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T),   margin= c(0, 0.95), # will set the total height of the plot 
+                title = list(text = paste0(unique(prot_data$query_var_ID)),
+                              font = list(size = 16), xref = "paper",xref = "paper",xanchor = "left", x = 0 ),
                 xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3),
-                barmode = 'overlay', showlegend = showlegend,legend = list(traceorder = "grouped", itemdoubleclick = "toggle", tracegroupgap = 20,
-                                                   title = list(text = "Grouped Domain Annotations",font = list(size = 14)))) 
-  fig <- config(fig, displayModeBar = T,
-                modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d",
-                                              "hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"),
-                toImageButtonOptions = list(format = "png",
-                                            width = "1800", height = "800"), displaylogo = F )
+                barmode = 'overlay', showlegend = showlegend,legend = list(traceorder = "grouped", 
+                                                                           itemdoubleclick = "toggle", 
+                                                                           tracegroupgap = 20,
+                                                                           title = list(text = "Grouped Domain Annotations",font = list(size = 14)))) 
+  fig <- plotly::config(fig, displayModeBar = T, 
+                modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d","hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"), 
+                toImageButtonOptions = list(format = "png",width = "1800", height = "800"), displaylogo = F )
   
   
   return(fig)
@@ -944,15 +976,16 @@ get_Pfam <- function (proteins_acc)
   
   pfam_eg <- suppressWarnings(suppressMessages(read_delim(url, "\t", escape_double = FALSE, col_names = FALSE, trim_ws = TRUE)))[,1:5] #%>% select()
   
-  if (nrow(pfam_eg)>=1) {
-    print("Pfam download has worked.")
+  if (nrow(pfam_eg)==0) {
+    print(paste("An error has occured while trying to connect to Pfam API."))
+    #print("Pfam download has worked.")
   }
-  else {
-    print(paste("An error has occured."))
-  }
+  # else {
+  #   print(paste("An error has occured."))
+  # }
   
-  #order=0
-  pfam_eg[c("type", "description", "begin", "end", "length", "accession", "entryName")] <- NA
+  order=0
+  pfam_eg[c("type", "description", "begin", "end", "length", "accession", "entryName", "order")] <- NA
   for (i in 1:nrow(pfam_eg)) {
     # set up cols
     if (pfam_eg[i,1]=="P") {
@@ -964,8 +997,8 @@ get_Pfam <- function (proteins_acc)
       pfam_eg$accession[i] <- pfam_eg$X2[i]
       pfam_eg$entryName[i] <- pfam_eg$X3[i]
       
-      #order <- order + 1
-      #pfam_eg$order[i] <- order
+      order <- order + 1
+      pfam_eg$order[i] <- order
       
     } else if (pfam_eg[i,1]=="A") {
       pfam_eg$type[i] <- "PFAM"
@@ -976,7 +1009,7 @@ get_Pfam <- function (proteins_acc)
       pfam_eg$entryName[i] <- pfam_eg$X3[i]
       
       
-      #pfam_eg$order[i] <- order 
+      pfam_eg$order[i] <- order 
       
     }
     if (is.na(pfam_eg$accession[i])){
@@ -985,80 +1018,11 @@ get_Pfam <- function (proteins_acc)
     
   }
 
-  return(pfam_eg[,6:12])
+  return(pfam_eg[,6:13])
 }
 
 ######
 
-# drawProteins functions ----
-get_features <- function (proteins_acc) 
-{
-  proteins_acc_url <- gsub(" ", "%2C", proteins_acc)
-  baseurl <- "https://www.ebi.ac.uk/proteins/api/features?offset=0&size=100&accession="
-  url <- paste0(baseurl, proteins_acc_url)
-  prots_feat <- httr::GET(url, httr::accept_json())
-  code <- httr::status_code(prots_feat)
-  if (code == 200) {
-    print("UniProt download has worked")
-  }
-  else {
-    print(paste("An error has occured. Code:", code))
-  }
-  prots_feat_red <- httr::content(prots_feat)
-  return(prots_feat_red)
-}
-
-feature_to_dataframe <- function (features_in_lists_of_six) 
-{
-  features_total_plot <- NULL
-  for (i in 1:length(features_in_lists_of_six)) {
-    features_temp <- extract_feat_acc(features_in_lists_of_six[[i]])
-    features_temp$order <- i
-    features_total_plot <- rbind(features_total_plot, features_temp)
-  }
-  return(features_total_plot)
-}
-
-extract_feat_acc <- function (features_list) 
-{
-  features <- NULL
-  for (i in 1:length(features_list$features)) {
-    if (is.null(features_list$features[[i]]$description) == 
-        TRUE) {
-      featuresTemp <- c(features_list$features[[i]]$type, 
-                        "NONE", as.numeric(features_list$features[[i]]$begin), 
-                        as.numeric(features_list$features[[i]]$end))
-    }
-    else {
-      featuresTemp <- c(features_list$features[[i]]$type, 
-                        as.character(features_list$features[[i]]$description), 
-                        as.numeric(features_list$features[[i]]$begin), 
-                        as.numeric(features_list$features[[i]]$end))
-    }
-    features <- rbind(features, featuresTemp)
-  }
-  features_dataframe <- as.data.frame(features, stringsAsFactors = FALSE)
-  colnames(features_dataframe) <- c("type", "description", 
-                                    "begin", "end")
-  features_dataframe$begin <- as.numeric(features_dataframe$begin)
-  features_dataframe$end <- as.numeric(features_dataframe$end)
-  features_dataframe$length <- features_dataframe$end - features_dataframe$begin
-  features_dataframe$accession <- rep(features_list$accession, 
-                                      times = nrow(features_dataframe))
-  features_dataframe$entryName <- rep(features_list$entryName, 
-                                      times = nrow(features_dataframe))
-  features_dataframe$taxid <- rep(features_list$taxid, times = nrow(features_dataframe))
-  return(features_dataframe)
-}
-
-phospho_site_info <- function (features) 
-{
-  features <- features[features$type == "MOD_RES", ]
-  phospho_list <- grep("Phospho", features$description)
-  phospho_features <- features[phospho_list, ]
-  return(phospho_features)
-}
 
 
 
-#######

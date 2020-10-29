@@ -108,15 +108,16 @@ shinyServer(function(input, output, session){
         
       output$paralog<-renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog_search()$paralog)),
                                                     escape = F,
-                                                    extensions = 'Buttons',
+                                                    extensions = c('Buttons','RowGroup'),
                                                     rownames = FALSE,
                                                     colnames = paralog_DT_colnames,
                                                     class = "display",
                                                     selection =  "none",
                                                     options = list(
+                                                      rowGroup = list(dataSrc = c(5)),
                                                       #dom = 'lfrti',
-                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
+                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+                                                             "<"row"<"col-sm-12"tr>>" +
                                                              "<"row"<"col-sm-6"i>>" +
                                                              "<"row"<"col-sm-6 btn-md"B>>"',
                                                       buttons = list(list(extend = 'excel',
@@ -131,21 +132,23 @@ shinyServer(function(input, output, session){
                                                       paging = T,scrollX = TRUE,
                                                       columnDefs = list(
                                                         list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
+                                                        list(width = "100px",targets = 5),
                                                         list(orderable = FALSE, className = 'details-control', targets = 0))),
                                                     callback = JS(childrow_JS_callback)
-      ) %>%
-        formatStyle(c(" ", "Query variant"), backgroundColor = '#f0f0f0')
-      )
+                                                    )
+                                      %>% formatStyle(c(" ", "Query variant"), backgroundColor = '#f0f0f0')
+                                      )
+
       
-      
-      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
+      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog_search()$paraloc) ),
                                                     escape = F,
-                                                    extensions = 'Buttons',
+                                                    extensions = c('Buttons','RowGroup'),
                                                     rownames = FALSE,
-                                                    colnames = paraloc_DT_colnames,
+                                                    colnames = paraloc_DT_colnames, #changed to new
                                                     class = "display",
                                                     selection =  "none",
                                                     options = list(
+                                                      rowGroup = list(dataSrc = c(3)),
                                                       #dom = 'lfrti',
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
@@ -163,11 +166,13 @@ shinyServer(function(input, output, session){
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
                                                         list(visible = FALSE, targets = c(0:2)),
-                                                        list(width = "85px",targets = 3),
-                                                        list(className = 'dt-center', targets = c(3))))
-      ) %>%
-        formatStyle( "Query variant", backgroundColor = '#f0f0f0')
-      )
+                                                        list(width = "130px",targets = 3),
+                                                        list(className = 'dt-center', targets = c(3))
+                                                        )
+                                                      )
+                                                    ) %>% 
+                                        formatStyle( "Query variant", backgroundColor = '#f0f0f0')
+                                      )
       
       # draw protein ----
       output$draw_prot <- renderUI({
@@ -175,6 +180,7 @@ shinyServer(function(input, output, session){
           # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
         
           fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))
+        #fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))
       })
       
     } else {
@@ -209,14 +215,15 @@ shinyServer(function(input, output, session){
         output$paralog<-isolate(NULL)
         output$draw_prot<-isolate(NULL)
         
-        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
+        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog_search()$paraloc) ),
                                                       escape = F,
-                                                      extensions = 'Buttons',
+                                                      extensions = c('Buttons','RowGroup'),
                                                       rownames = FALSE,
-                                                      colnames = paraloc_DT_colnames,
+                                                      colnames = paraloc_DT_colnames, #changed to new,
                                                       class = "display",
                                                       selection =  "none",
                                                       options = list(
+                                                        rowGroup = list(dataSrc = c(3)),
                                                         #dom = 'lfrti',
                                                         dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
@@ -234,12 +241,14 @@ shinyServer(function(input, output, session){
                                                         paging = T,scrollX = FALSE,
                                                         columnDefs = list(
                                                           list(visible = FALSE, targets = c(0:2)),
-                                                          list(width = "85px",targets = 3),
-                                                          list(className = 'dt-center', targets = c(3:4)))),
-        ) %>%
-          formatStyle("Query variant", backgroundColor = '#f0f0f0')
-        )
-      }
+                                                          list(width = "130px",targets = 3),
+                                                          list(className = 'dt-center', targets = c(3))
+                                                          )
+                                                        )
+                                                      ) %>% 
+                                          formatStyle("Query variant", backgroundColor = '#f0f0f0')
+                                        )
+        }
     }
   })
     
@@ -255,12 +264,13 @@ shinyServer(function(input, output, session){
       
       output$paralog<-renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog()$paralog)),
                                                     escape = F,
-                                                    extensions = 'Buttons',
+                                                    extensions = c('Buttons','RowGroup'),
                                                     rownames = FALSE,
                                                     colnames = paralog_DT_colnames,
                                                     class = "display",
                                                     selection =  "none",
                                                     options = list(
+                                                      rowGroup = list(dataSrc = c(5)),
                                                       #dom = 'lfrti',
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
@@ -278,6 +288,7 @@ shinyServer(function(input, output, session){
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
                                                         list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
+                                                        list(width = "100px",targets = 5),
                                                         list(orderable = FALSE, className = 'details-control', targets = 0))),
                                                     callback = JS(childrow_JS_callback)
                                                     ) %>%
@@ -285,14 +296,15 @@ shinyServer(function(input, output, session){
                                       )
 
 
-      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
+      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog()$paraloc) ),
                                                     escape = F,
-                                                    extensions = 'Buttons',
+                                                    extensions = c('Buttons','RowGroup'),
                                                     rownames = FALSE,
-                                                    colnames = paraloc_DT_colnames,
+                                                    colnames = paraloc_DT_colnames, #changed to new
                                                     class = "display",
                                                     selection =  "none",
                                                     options = list(
+                                                      rowGroup = list(dataSrc = c(3)),
                                                       #dom = 'lfrti',
                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
@@ -310,8 +322,10 @@ shinyServer(function(input, output, session){
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
                                                         list(visible = FALSE, targets = c(0:2)),
-                                                        list(width = "85px",targets = 3),
-                                                        list(className = 'dt-center', targets = c(3))))
+                                                        list(width = "130px",targets = 3),
+                                                        list(className = 'dt-center', targets = c(3))
+                                                        )
+                                                      )
                                                     ) %>%
                                         formatStyle( "Query variant", backgroundColor = '#f0f0f0')
                                       )
@@ -359,14 +373,15 @@ shinyServer(function(input, output, session){
         
 
        
-       output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
+       output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog()$paraloc) ),
                                                      escape = F,
-                                                     extensions = 'Buttons',
+                                                     extensions = c('Buttons','RowGroup'),
                                                      rownames = FALSE,
-                                                     colnames = paraloc_DT_colnames,
+                                                     colnames = paraloc_DT_colnames, #changed to new
                                                      class = "display",
                                                      selection =  "none",
                                                      options = list(
+                                                       rowGroup = list(dataSrc = c(3)),
                                                        #dom = 'lfrti',
                                                        dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
                                                              "<"row"<"col-sm-12"tr>>" + 
@@ -385,7 +400,9 @@ shinyServer(function(input, output, session){
                                                        columnDefs = list(
                                                          list(visible = FALSE, targets = c(0:2)),
                                                          list(width = "85px",targets = 3),
-                                                         list(className = 'dt-center', targets = c(3:4)))),
+                                                         list(className = 'dt-center', targets = c(3:4))
+                                                         )
+                                                       )
                                                      ) %>%
                                          formatStyle("Query variant", backgroundColor = '#f0f0f0')
                                        )
