@@ -448,8 +448,9 @@ add_paraloc_URL_new = function(result_paraloc) {
       para_split_df_long$Protein_position.paraloc <- NA
       
       # run the query to Ensembl API to get transcript, gene and protein position for paraloc
-      para_split_df_long_API <- query_paraloc_API(para_split_df_long)
-        
+      #para_split_df_long_API <- query_paraloc_API(para_split_df_long)  ############## revert API call 
+      para_split_df_long_API <- para_split_df_long
+      
 
       # example code to tap into Ensembl API
       #para_split_df_long$Codons <- content(GET(paste(embl_api, ext[i], sep = ""), content_type("text/plain")))

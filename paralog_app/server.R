@@ -165,7 +165,7 @@ shinyServer(function(input, output, session){
                                                                           extension = '.txt')),
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(0:2)),
+                                                        list(visible = FALSE, targets = c(0:2,8,9)),
                                                         list(width = "130px",targets = 3),
                                                         list(className = 'dt-center', targets = c(3))
                                                         )
@@ -240,7 +240,7 @@ shinyServer(function(input, output, session){
                                                                             extension = '.txt')),
                                                         paging = T,scrollX = FALSE,
                                                         columnDefs = list(
-                                                          list(visible = FALSE, targets = c(0:2)),
+                                                          list(visible = FALSE, targets = c(0:2,8,9)),
                                                           list(width = "130px",targets = 3),
                                                           list(className = 'dt-center', targets = c(3))
                                                           )
@@ -321,7 +321,7 @@ shinyServer(function(input, output, session){
                                                                           extension = '.txt')),
                                                       paging = T,scrollX = FALSE,
                                                       columnDefs = list(
-                                                        list(visible = FALSE, targets = c(0:2)),
+                                                        list(visible = FALSE, targets = c(0:2,8,9)),
                                                         list(width = "130px",targets = 3),
                                                         list(className = 'dt-center', targets = c(3))
                                                         )
@@ -398,7 +398,7 @@ shinyServer(function(input, output, session){
                                                                            extension = '.txt')),
                                                        paging = T,scrollX = FALSE,
                                                        columnDefs = list(
-                                                         list(visible = FALSE, targets = c(0:2)),
+                                                         list(visible = FALSE, targets = c(0:2,8,9)),
                                                          list(width = "85px",targets = 3),
                                                          list(className = 'dt-center', targets = c(3:4))
                                                          )
