@@ -172,6 +172,42 @@ paralog_colnames <- c(
   "Codons.paralog",
   "Para_Z_score.paralog")
 
+homolog_colnames <- c(
+  "CHR.query",
+  "POS.query",
+  "REF.query",
+  "ALT.query",
+  "var.query",
+  "ID.query",
+  "ClinVar.query",
+  "Gene.query",
+  "ENSG.query",
+  "ENST.query",
+  "cDNA.query",
+  "Protein.query",
+  "cDNA_position.query",
+  "Protein_position.query",
+  "AA.query",
+  "Codons.query",
+  "Pfam_domain.query",
+  "Pfam_pos.query",
+  "CHR.homolog",
+  "POS.homolog",
+  "REF.homolog",
+  "ALT.homolog",
+  "var.homolog",
+  "ID.homolog",
+  "ClinVar.homolog",
+  "Gene.homolog",
+  "ENSG.homolog",
+  "ENST.homolog",
+  "cDNA.homolog",
+  "Protein.homolog",
+  "cDNA_position.homolog",
+  "Protein_position.homolog",
+  "AA.homolog",
+  "Codons.homolog")
+
 
 # lookup_vars ----
 
@@ -259,6 +295,44 @@ lookup_paraloc <- function(input_data){
   
 }
 
+lookup_homolog <- function(input_data){
+  
+  homolog_out <- NULL
+  #input_data <- validate_input(generate_test_data_2(var = 1))
+
+  for (i in 1:nrow(input_data)) {
+    
+    #i=1
+    query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
+    tabix_homolog <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/homolog_data.txt.gz ", query), intern = T,wait = T)))
+    #homo <- system(command = paste0("tabix data/homolog_data.txt.gz ", query), intern = T,wait = T)
+    #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
+    #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
+    hg1 <- as.data.frame(stringr::str_split_fixed(tabix_homolog, pattern = "\t", length(homolog_colnames)), stringsAsFactors = F)
+
+    if (is.null(homolog_out)){
+      homolog_out = hg1[(hg1$V3==input_data$REF.query[i] & hg1$V4 == input_data$ALT.query[i]),]
+    } else {
+      homolog_out = rbind(homolog_out, hg1[(hg1$V3==input_data$REF.query[i] & hg1$V4 == input_data$ALT.query[i]),])
+    }
+  }
+  
+  colnames(homolog_out) <- homolog_colnames
+  
+  # sort df to avoid sorting later
+  #chrOrder<-c(1:22,"X","Y")
+  homolog_out <- homolog_out[order(factor(homolog_out$CHR.query , levels = c(1:22,"X","Y")), 
+                                   as.numeric(homolog_out$POS.query),
+                                   factor(homolog_out$CHR.homolog , levels = c(1:22,"X","Y")), 
+                                   as.numeric(homolog_out$POS.homolog)), ]
+  
+  
+  return(homolog_out)
+}
+
+
+
+
 # predict_output ----
 
 
@@ -271,8 +345,10 @@ predict_output_tabix = function(input_data){
   
     paralog <- lookup_paralog(input_data)
     paraloc <- lookup_paraloc(input_data)
+    homolog <- lookup_homolog(input_data)
+    
 
-  return(list("paralog" = paralog, "paraloc" = paraloc))
+  return(list("paralog" = paralog, "paraloc" = paraloc, "homolog" = homolog))
 
 }  
 
@@ -544,44 +620,93 @@ add_paralog_URL = function(result) {
     
 } 
 
+# function to add ensembl URLs to homolog positions in genes
+add_homolog_URL = function(result) {
+  
+  
+  #ClinVarID paralog URL
+  result$ID.homolog<- ifelse(#!is.na(result$ID.paralog),
+    result$ID.homolog!="NA",
+    (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.homolog,"/"), "' target='_blank'>", result$ID.homolog, "</a>")),
+    "-")
+  
+  #ClinVarID query URL
+  result$ID.query<- ifelse(#!is.na(result$ID.query),
+    result$ID.query!="NA",
+    (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
+    "-")
+  #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
+  #Ensembl alignment URL
+  # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
+  # result$Ensembl_alignment_link<- ifelse(!is.na(result$ENSG.paralog), 
+  #                                        (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",result$ENSG.query,";g1=",result$ENSG.paralog), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
+  #                                        "-") 
+  
+  # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
+  #Ensembl ENST.query
+  result$ENST.query<- ifelse(!is.na(result$ENST.query), 
+                             (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.query,";t=",result$ENST.query), "' target='_blank'>", result$ENST.query, "</a>")),
+                             "-")
+  
+  #Ensembl ENST.paralog
+  result$ENST.homolog<- ifelse(!is.na(result$ENST.homolog), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.homolog,";t=",result$ENST.homolog), "' target='_blank'>", result$ENST.homolog, "</a>")),
+                               "-")
+  
+  #HGNC Gene.query
+  result$Gene.query<- ifelse(!is.na(result$Gene.query), 
+                             (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$Gene.query, "</a>")),
+                             "-")
+  
+  #HGNC Gene.paralog
+  result$Gene.homolog<- ifelse(!is.na(result$Gene.homolog), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.homolog), "' target='_blank'>", result$Gene.homolog, "</a>")),
+                               "-")
+  
+  result <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', result )
+  return(result)
+  
+} 
+
 
 # DT_colnames ----
 
 paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
-             'Pos.query' = 'POS.query',
-             'REF.query' = 'REF.query',
-             'ALT.query' = 'ALT.query',
-             'Query variant' = 'var.query',
-             'ClinVar.query' = 'ID.query',
-             'ClinVar Class.query' = 'ClinVar.query',
-             'Gene.query' = 'Gene.query',
-             'ENST.query' = 'ENST.query',
-             'ENSG.query' = 'ENSG.query',
-             'cDNA.query' = 'cDNA.query',
-             'Protein.query' = 'Protein.query',
-             'cDNA position.query' = 'cDNA_position.query',
-             'Protein position.query' = 'Protein_position.query',
-             'AA.query' = 'AA.query',
-             'Codons.query' = 'Codons.query',
-             'Para_Z Score.query'='Para_Z_score.query',
-             'Chr' = 'CHR.paralog',
-             'Pos' = 'POS.paralog',
-             'REF' = 'REF.paralog',
-             'ALT' = 'ALT.paralog',
-             'Paralogue variant' = 'var.paralog',
-             'ClinVar ID' = 'ID.paralog',
-             'ClinVar Class' = 'ClinVar.paralog',
-             'Gene' = 'Gene.paralog',
-             'ENSG' = 'ENSG.paralog',
-             'ENST' = 'ENST.paralog',
-             'cDNA' = 'cDNA.paralog',
-             'Protein' = 'Protein.paralog',
-             'cDNA position' = 'cDNA_position.paralog',
-             'Protein position' = 'Protein_position.paralog',
-             'AA' = 'AA.paralog',
-             'Codons' = 'Codons.paralog',
-             'Para_Z Score' = 'Para_Z_score.paralog',
-             'Ensembl alignment' = 'Ensembl_alignment_link')
+                         'Pos.query' = 'POS.query',
+                         'REF.query' = 'REF.query',
+                         'ALT.query' = 'ALT.query',
+                         'Query variant' = 'var.query',
+                         'ClinVar.query' = 'ID.query',
+                         'ClinVar Class.query' = 'ClinVar.query',
+                         'Gene.query' = 'Gene.query',
+                         'ENST.query' = 'ENST.query',
+                         'ENSG.query' = 'ENSG.query',
+                         'cDNA.query' = 'cDNA.query',
+                         'Protein.query' = 'Protein.query',
+                         'cDNA position.query' = 'cDNA_position.query',
+                         'Protein position.query' = 'Protein_position.query',
+                         'AA.query' = 'AA.query',
+                         'Codons.query' = 'Codons.query',
+                         'Para_Z Score.query'='Para_Z_score.query',
+                         'Chr' = 'CHR.paralog',
+                         'Pos' = 'POS.paralog',
+                         'REF' = 'REF.paralog',
+                         'ALT' = 'ALT.paralog',
+                         'Paralogous variant' = 'var.paralog',
+                         'ClinVar ID' = 'ID.paralog',
+                         'ClinVar Class' = 'ClinVar.paralog',
+                         'Gene' = 'Gene.paralog',
+                         'ENSG' = 'ENSG.paralog',
+                         'ENST' = 'ENST.paralog',
+                         'cDNA' = 'cDNA.paralog',
+                         'Protein' = 'Protein.paralog',
+                         'cDNA position' = 'cDNA_position.paralog',
+                         'Protein position' = 'Protein_position.paralog',
+                         'AA' = 'AA.paralog',
+                         'Codons' = 'Codons.paralog',
+                         'Para_Z Score' = 'Para_Z_score.paralog',
+                         'Ensembl alignment' = 'Ensembl_alignment_link')
+
 
 
 paraloc_DT_colnames <- c(
@@ -596,11 +721,46 @@ paraloc_DT_colnames <- c(
   'Protein positions' = 'Protein_position.paraloc',
   'AA Residue' = 'AA.paraloc')
 
+homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
+                         'Pos.query' = 'POS.query',
+                         'REF.query' = 'REF.query',
+                         'ALT.query' = 'ALT.query',
+                         'Query variant' = 'var.query',
+                         'ClinVar.query' = 'ID.query',
+                         'ClinVar Class.query' = 'ClinVar.query',
+                         'Gene.query' = 'Gene.query',
+                         'ENST.query' = 'ENST.query',
+                         'ENSG.query' = 'ENSG.query',
+                         'cDNA.query' = 'cDNA.query',
+                         'Protein.query' = 'Protein.query',
+                         'cDNA position.query' = 'cDNA_position.query',
+                         'Protein position.query' = 'Protein_position.query',
+                         'AA.query' = 'AA.query',
+                         'Codons.query' = 'Codons.query',
+                         'Pfam domain' = 'Pfam_domain.query',
+                         'Pfam position' = 'Pfam_pos.query',
+                         'Chr' = 'CHR.homolog',
+                         'Pos' = 'POS.homolog',
+                         'REF' = 'REF.homolog',
+                         'ALT' = 'ALT.homolog',
+                         'Homologous variant' = 'var.homolog',
+                         'ClinVar ID' = 'ID.homolog',
+                         'ClinVar Class' = 'ClinVar.homolog',
+                         'Gene' = 'Gene.homolog',
+                         'ENSG' = 'ENSG.homolog',
+                         'ENST' = 'ENST.homolog',
+                         'cDNA' = 'cDNA.homolog',
+                         'Protein' = 'Protein.homolog',
+                         'cDNA position' = 'cDNA_position.homolog',
+                         'Protein position' = 'Protein_position.homolog',
+                         'AA' = 'AA.homolog',
+                         'Codons' = 'Codons.homolog')
+
 
 
 # childrow_JS_callback ----
 
-childrow_JS_callback <- c("
+childrow_JS_callback_paralog <- c("
   table.column(1).nodes().to$().css({cursor: 'pointer'});
   var format = function(d) {
     return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
@@ -629,16 +789,16 @@ childrow_JS_callback <- c("
     //        '<td>'+ d[17] +'</td>'+
     //    '</tr>'+
     //  '</tbody>'+
-        '<tr>'+
-            '<th>Query variant</th>'+
-            '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
-        '</tr>'+
+    //  '<tr>'+
+    //      '<th>Query variant</th>'+
+    //      '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
+    //  '</tr>'+
         '<tr>'+
             '<th>ClinVar ID</th>'+
             '<td>'+ d[6] +'</td>'+
         '</tr>'+
         '<tr>'+
-            '<th>ClinVar Class</th>'+
+            '<th>ClinVar class</th>'+
             '<td>'+ d[7] +'</td>'+
         '</tr>'+
         '<tr>'+
@@ -673,7 +833,57 @@ childrow_JS_callback <- c("
 );")
 
 
-
+childrow_JS_callback_homolog <- c("
+  table.column(1).nodes().to$().css({cursor: 'pointer'});
+  var format = function(d) {
+    return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
+      '<thead>'+
+    //  '<tr>'+
+    //      '<th>Query variant</th>'+
+    //      '<td>'+ d[1] + '-' + d[2] + '-' + d[3] + '-' + d[4] +'</td>'+
+    //  '</tr>'+
+        '<tr>'+
+            '<th>ClinVar ID</th>'+
+            '<td>'+ d[6] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>ClinVar class</th>'+
+            '<td>'+ d[7] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Gene</th>'+
+            '<td>'+ d[8] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>HGVS</th>'+
+    //      '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
+            '<td>'+ d[10] + ':' + d[11] + ' (' + d[12] + ')' +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Codons</th>'+
+            '<td>'+ d[16] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Pfam domain</th>'+
+            '<td>'+ d[17] +'</td>'+
+        '</tr>'+
+        '<tr>'+
+            '<th>Pfam domain position</th>'+
+            '<td>'+ d[18] +'</td>'+
+        '</tr>'+
+    '</table>';
+  };
+  table.on('click', 'td.details-control', function() {
+    var td = $(this), row = table.row(td.closest('tr'));
+    if (row.child.isShown()) {
+      row.child.hide();
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
+    } else {
+      row.child(format(row.data())).show();
+  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
+    }
+  }
+);")
 
 
 ####### draw proteins example ######
