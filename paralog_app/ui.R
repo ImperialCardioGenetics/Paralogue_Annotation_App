@@ -31,7 +31,7 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.2.7", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator DEMO version 0.3.1", id = "navbar",selected = "tab1",
 
                
                # Main box search and description -----------------------------------------
@@ -73,14 +73,17 @@ fluidPage(
                           ) # WellPanel
                         ), #Fluid row
                         fluidRow(column(width = 6, offset = 3, br(), br(), p("Paralogue Annotation utilizes information from evolutionarily related proteins, specifically paralogues, to help inform the clinical significance of missense variants associated with human diseases.",
-                                                                             align = "center"), p(""), style = "background-color: #ffffff"),
+                                                                             align = "center"), p(""), style = "background-color: #ffffff")
                                  ),
                         fluidRow(column(12, align="center",br(), br(),
                                  #img(src='./data/Logo_for_Imperial_College_London.svg.png', align = "center"),
                                  #titlePanel(title=div(img(src="nhl.jpg")))
                                  
                                  tags$a(href='https://www.imperial.ac.uk/', target="_blank",tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200' ))
-                                 ))
+                                 )),
+                        br(),
+                        br(),
+                        br()
                                  
                ),
                
@@ -131,9 +134,6 @@ fluidPage(
                                       ".txt",
                                       ".vcf",
                                       ".gz"))),
-                    #dont need below as now have shinycssloaders
-                    # conditionalPanel(condition="$('html').hasClass('shiny-busy')",
-                    #                  tags$div("Loading...",id="loadmessage")),
                     actionButton("submit_button","Submit"),
                     actionButton("reset_button", "Reset form")
                       ),
@@ -145,11 +145,10 @@ fluidPage(
                        id = "All_results",
                        type = "tabs",
                        tabPanel(value = "tab1",
-                                title = h4("Paralogue Annotation"),
-                                h4("Equivalent missense variant(s) identified by Paralogue Annotation"),
-                                #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
+                                title = h4("Paralogous Annotations"),
+                                h4("Equivalent missense variant(s) identified in ClinVar by Paralogue Annotation"),
+                                br(),
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paralog"))),
-                                                 #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),
                                 br(),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
@@ -158,8 +157,8 @@ fluidPage(
                                 ),
                        tabPanel(value = "tab2",
                                 title = h4("All Paralogous Positions"),
-                                h4("Equivalent positions identified by Paralogue Annotation"),
-                                #tags$head(tags$style("#paraloc  {white-space: nowrap;  }")), #set nowrap for table column names
+                                h4("All equivalent positions identified by Paralogue Annotation"),
+                                br(),
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paraloc"))),
                                 br(),
                                 # conditionalPanel("output.paraloc",downloadButton("download_paraloc","Download (.txt"),downloadButton("download_paraloc_excel","Download (.xlsx)")),
@@ -168,21 +167,31 @@ fluidPage(
                                 br()
                                 ),
                        tabPanel(value = "tab3",
-                                title = h4("Domain Annotation"),
-                                h4("Paralogous variant and protein domain alignment"),
+                                title = h4("Paralogous Domain Annotations"),
+                                h4("Query variant(s) and Pfam domain alignments identified in ClinVar by Paralogue Annotation"),
                                 br(),
-                                #tags$head(tags$style("#paralog  {white-space: nowrap;  }")), #set nowrap for table column names
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
-                                #condition = "input.search_button", withSpinner(dataTableOutput("paralog"))),
                                 br(),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
                                 br(),
                                 br()
-                       )
+                                ),
+                       tabPanel(value = "tab4",
+                                title = h4("Homologous Pfam Annotations"),
+                                h4("Equivalent missense variant(s) identified in ClinVar by homologous Pfam domain alignments"),
+                                br(),
+                                conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("homolog"))),
+                                br(),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
+                                #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
+                                br(),
+                                br()
+                                )
                        )
                      )
-                  )),
+                  )
+               ),
       tabPanel(title = "About", value = "tab3",
       style = "width:80%; margin-right:auto; margin-left:auto", 
       #includeHTML("about.html"), # This is an HTML file that is read in from dir 
@@ -191,4 +200,5 @@ fluidPage(
       )
       
     )
-  )
+  
+)

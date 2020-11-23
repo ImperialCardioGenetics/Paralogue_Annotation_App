@@ -7,7 +7,7 @@ library(writexl)
 
 #library(tidyverse)
 
-options(shiny.maxRequestSize=200*1024^2) #max upload size = 200 mb
+options(shiny.maxRequestSize=100*1024^2) #max upload size = 100 mb
 enableBookmarking("url")
 
 # options(shiny.sanitize.errors = TRUE)
@@ -15,16 +15,13 @@ enableBookmarking("url")
 shinyServer(function(input, output, session){
 
   get_paralog_search <- function(){
-    #print(input$line)
+
     var<-unlist(strsplit(input$line,split="\\, |\\,|\\n|\\s|\\t"))
     input_line<-data.frame(mutation=var, stringsAsFactors = FALSE)
     input_line$mutation = stringr::str_replace_all(input_line$mutation,"[[:punct:][:space:]]","-")
     input_line$mutation = stringr::str_replace_all(input_line$mutation,"^chr","")
     input_line$paraloc = substr(input_line$mutation, 1, nchar(input_line$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-    #print(input_data)
-    
-    #input_line <- tidyr::separate(input_line,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
-    
+
     #new tabix func
     result<-predict_output_tabix(validate_input(input_line))
     return(result)
@@ -33,365 +30,446 @@ shinyServer(function(input, output, session){
   
   
   get_paralog<-function(){
-    # print(input$line)
-    # print(input$var)
-    # print(input$file)
-    
-    # if (input$line != "" ) {
-    # 
-    #   #print(input$line)
-    #   var<-unlist(strsplit(input$line,split="\\, |\\,|\\n|\\s|\\t"))
-    #   input_line<-data.frame(mutation=var, stringsAsFactors = FALSE)
-    #   input_line$mutation = stringr::str_replace_all(input_line$mutation,"[[:punct:][:space:]]","-")
-    #   input_line$mutation = stringr::str_replace_all(input_line$mutation,"^chr","")
-    #   input_line$paraloc = substr(input_line$mutation, 1, nchar(input_line$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-    #   #print(input_line)
-    # 
-    #   #new tabix func
-    #   result<-predict_output_tabix( input_line)
-    #   # return(result)
-    # 
-    # } else 
-    
+
     if(input$format=='paste' ){
-      #shinyjs::reset("line") 
+
+      var<-unlist(strsplit(input$var,split="\\, |\\,|\\n|\\s|\\t"))
+      input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
+      input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
+      input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
+      input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
+
+      #new tabix func
+      result<-predict_output_tabix(validate_input(input_data))
       
-        #print(input$var)
-        var<-unlist(strsplit(input$var,split="\\, |\\,|\\n|\\s|\\t"))
-        #var=var[nzchar(x=var)]
-        input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-        input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
-        input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
-        input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        #print(input_data)
+    }else if(input$format == 'upload' ) {
         
-        #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
-        
-        #new tabix func
-        result<-predict_output_tabix(validate_input(input_data))
-
-    }else 
-
-      if(input$format == 'upload' ) {
-        #shinyjs::reset("line") 
-        
-
-        input_file <- check_upload_file(input$file)
-        
-        colnames(input_file) <- "mutation"
-        input_file$mutation = stringr::str_replace_all(input_file$mutation,"[[:punct:][:space:]]","-")
-        input_file$mutation = stringr::str_replace_all(input_file$mutation,"^chr","")
-        input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-        
-        #input_file <- tidyr::separate(input_file,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
-        
-        
-        #new tabix func
-        result<-predict_output_tabix(validate_input(input_file))
+      input_file <- check_upload_file(input$file)
+      
+      colnames(input_file) <- "mutation"
+      input_file$mutation = stringr::str_replace_all(input_file$mutation,"[[:punct:][:space:]]","-")
+      input_file$mutation = stringr::str_replace_all(input_file$mutation,"^chr","")
+      input_file$paraloc = substr(input_file$mutation, 1, nchar(input_file$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
+      
+      #new tabix func
+      result<-predict_output_tabix(validate_input(input_file))
 
     }
-        #print(input$format)
+    
     return(result)
     
   }
     
   
-
-
+  
+  paralog_search<- reactive({renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog_search()$paralog)),
+                                                escape = F,
+                                                extensions = c('Buttons','RowGroup'),
+                                                rownames = FALSE,
+                                                colnames = paralog_DT_colnames,
+                                                class = "display",
+                                                selection =  "none",
+                                                options = list(
+                                                  rowGroup = list(dataSrc = c(5)),
+                                                  #dom = 'lfrti',
+                                                  dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+                                                         "<"row"<"col-sm-12"tr>>" +
+                                                         "<"row"<"col-sm-6"i>>" +
+                                                         "<"row"<"col-sm-6 btn-md"B>>"',
+                                                  buttons = list(list(extend = 'excel',
+                                                                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                      filename = paste0("paralogous_annotations_",Sys.Date())),
+                                                                 list(extend = 'csv',
+                                                                      fieldBoundary = '',
+                                                                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                      fieldSeparator = '\t',
+                                                                      filename = paste0("paralogous_annotations_",Sys.Date()),
+                                                                      extension = '.txt')),
+                                                  paging = T,scrollX = TRUE,
+                                                  columnDefs = list(
+                                                    list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
+                                                    list(width = "100px",targets = 5),
+                                                    list(orderable = FALSE, className = 'details-control', targets = 0))),
+                                                callback = JS(childrow_JS_callback_paralog)) %>% formatStyle(c(" ", "Query variant"),backgroundColor = '#f0f0f0'))
+    })
+  
+  
+  paralog<- reactive({renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog()$paralog)),
+                                                           escape = F,
+                                                           extensions = c('Buttons','RowGroup'),
+                                                           rownames = FALSE,
+                                                           colnames = paralog_DT_colnames,
+                                                           class = "display",
+                                                           selection =  "none",
+                                                           options = list(
+                                                             rowGroup = list(dataSrc = c(5)),
+                                                             #dom = 'lfrti',
+                                                             dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+                                                         "<"row"<"col-sm-12"tr>>" +
+                                                         "<"row"<"col-sm-6"i>>" +
+                                                         "<"row"<"col-sm-6 btn-md"B>>"',
+                                                             buttons = list(list(extend = 'excel',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                                 filename = paste0("paralogous_annotations_",Sys.Date())),
+                                                                            list(extend = 'csv',
+                                                                                 fieldBoundary = '',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                                 fieldSeparator = '\t',
+                                                                                 filename = paste0("paralogous_annotations_",Sys.Date()),
+                                                                                 extension = '.txt')),
+                                                             paging = T,scrollX = TRUE,
+                                                             columnDefs = list(
+                                                               list(visible = FALSE, targets = c(1:4,6:21,26, 30:32)),
+                                                               list(width = "100px",targets = 5),
+                                                               list(orderable = FALSE, className = 'details-control', targets = 0))),
+                                                           callback = JS(childrow_JS_callback_paralog)) %>% formatStyle(c(" ", "Query variant"),backgroundColor = '#f0f0f0'))
+    })
+  
+  
+  paraloc_search <- reactive({renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog_search()$paraloc) ),
+                                                                            escape = F,
+                                                                            extensions = c('Buttons','RowGroup'),
+                                                                            rownames = FALSE,
+                                                                            colnames = paraloc_DT_colnames, #changed to new
+                                                                            class = "display",
+                                                                            selection =  "none",
+                                                                            options = list(
+                                                                              rowGroup = list(dataSrc = c(3)),
+                                                                              #dom = 'lfrti',
+                                                                              dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
+                                                             "<"row"<"col-sm-12"tr>>" + 
+                                                             "<"row"<"col-sm-6"i>>" +
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
+                                                                              buttons = list(list(extend = 'excel',
+                                                                                                  text = ' <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                                                  filename = paste0("paralogous_positions_",Sys.Date())),
+                                                                                             list(extend = 'csv',
+                                                                                                  fieldBoundary = '',
+                                                                                                  text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                                                  fieldSeparator = '\t',
+                                                                                                  filename = paste0("paralogous_positions_",Sys.Date()),
+                                                                                                  extension = '.txt')),
+                                                                              paging = T,scrollX = FALSE,
+                                                                              columnDefs = list(
+                                                                                list(visible = FALSE, targets = c(0:2,9,10 )),# delete the 9,10 to add API calls,9,10 ENST, prot_pos)),
+                                                                                list(width = "140px",targets = 3),
+                                                                                list(className = 'dt-center', targets = c(3))))) %>% formatStyle( c("Query variant","Query gene", "Query residue"), backgroundColor = '#f0f0f0'))
+    })
+  
+  paraloc <- reactive({renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog()$paraloc) ),
+                                                escape = F,
+                                                extensions = c('Buttons','RowGroup'),
+                                                rownames = FALSE,
+                                                colnames = paraloc_DT_colnames, #changed to new
+                                                class = "display",
+                                                selection =  "none",
+                                                options = list(
+                                                  rowGroup = list(dataSrc = c(3)),
+                                                  #dom = 'lfrti',
+                                                  dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
+                                                             "<"row"<"col-sm-12"tr>>" + 
+                                                             "<"row"<"col-sm-6"i>>" +
+                                                             "<"row"<"col-sm-6 btn-md"B>>"',
+                                                  buttons = list(list(extend = 'excel',
+                                                                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                      filename = paste0("paralogous_positions_",Sys.Date())),
+                                                                 list(extend = 'csv',
+                                                                      fieldBoundary = '',
+                                                                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                      fieldSeparator = '\t',
+                                                                      filename = paste0("paralogous_positions_",Sys.Date()),
+                                                                      extension = '.txt')),
+                                                  paging = T,scrollX = FALSE,
+                                                  columnDefs = list(
+                                                    list(visible = FALSE, targets = c(0:2,9,10)),
+                                                    list(width = "140px",targets = 3),
+                                                    list(className = 'dt-center', targets = c(3))))) %>% formatStyle( c("Query variant","Query gene", "Query residue"), backgroundColor = '#f0f0f0'))
+    
+  })
+  
+  
+  homolog_search<- reactive({renderDataTable(DT::datatable(isolate(add_homolog_URL(get_paralog_search()$homolog)),
+                                                           escape = F,
+                                                           extensions = c('Buttons','RowGroup'),
+                                                           rownames = FALSE,
+                                                           colnames = homolog_DT_colnames,
+                                                           class = "display",
+                                                           selection =  "none",
+                                                           options = list(
+                                                             rowGroup = list(dataSrc = c(5)),
+                                                             #dom = 'lfrti',
+                                                             dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+                                                         "<"row"<"col-sm-12"tr>>" +
+                                                         "<"row"<"col-sm-6"i>>" +
+                                                         "<"row"<"col-sm-6 btn-md"B>>"',
+                                                             buttons = list(list(extend = 'excel',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                                 filename = paste0("homologous_pfam_annotations_",Sys.Date())),
+                                                                            list(extend = 'csv',
+                                                                                 fieldBoundary = '',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                                 fieldSeparator = '\t',
+                                                                                 filename = paste0("homologous_pfam_annotations_",Sys.Date()),
+                                                                                 extension = '.txt')),
+                                                             paging = T,scrollX = TRUE,
+                                                             columnDefs = list(
+                                                               list(visible = FALSE, targets = c(1:4,6:22,27, 31:33)),
+                                                               list(width = "100px",targets = 5),
+                                                               list(orderable = FALSE, className = 'details-control', targets = 0))),
+                                                           callback = JS(childrow_JS_callback_homolog)) %>% formatStyle(c(" ", "Query variant"),backgroundColor = '#f0f0f0'))
+  })
+  
+  homolog <- reactive({renderDataTable(DT::datatable(isolate(add_homolog_URL(get_paralog()$homolog)),
+                                                           escape = F,
+                                                           extensions = c('Buttons','RowGroup'),
+                                                           rownames = FALSE,
+                                                           colnames = homolog_DT_colnames,
+                                                           class = "display",
+                                                           selection =  "none",
+                                                           options = list(
+                                                             rowGroup = list(dataSrc = c(5)),
+                                                             #dom = 'lfrti',
+                                                             dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+                                                         "<"row"<"col-sm-12"tr>>" +
+                                                         "<"row"<"col-sm-6"i>>" +
+                                                         "<"row"<"col-sm-6 btn-md"B>>"',
+                                                             buttons = list(list(extend = 'excel',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                                                                                 filename = paste0("homologous_pfam_annotations_",Sys.Date())),
+                                                                            list(extend = 'csv',
+                                                                                 fieldBoundary = '',
+                                                                                 text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                                                                                 fieldSeparator = '\t',
+                                                                                 filename = paste0("homologous_pfam_annotations_",Sys.Date()),
+                                                                                 extension = '.txt')),
+                                                             paging = T,scrollX = TRUE,
+                                                             columnDefs = list(
+                                                               list(visible = FALSE, targets = c(1:4,6:22,27, 31:33)),
+                                                               list(width = "100px",targets = 5),
+                                                               list(orderable = FALSE, className = 'details-control', targets = 0))),
+                                                           callback = JS(childrow_JS_callback_homolog)) %>% formatStyle(c(" ", "Query variant"),backgroundColor = '#f0f0f0'))
+  })
   
   
   
   observeEvent((input$search_button ), {
     
-    if (nrow(get_paralog_search()$paralog)>=1){ # check if result table is empty
-    #if (is.na(get_paralog_search()$paralog)){ # check if result table is empty
+    #Error catching for if query returns empty table
+    #if (nrow(get_paralog_search()$paralog)>=1) {
+    if (nrow(get_paralog_search()$paralog)>=1) {
         
-      output$paralog<-renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog_search()$paralog)),
-                                                    escape = F,
-                                                    extensions = 'Buttons',
-                                                    rownames = FALSE,
-                                                    colnames = paralog_DT_colnames,
-                                                    class = "display",
-                                                    selection =  "none",
-                                                    options = list(
-                                                      #dom = 'lfrti',
-                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                      buttons = list(list(extend = 'excel',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                          filename = paste0("paralogue_annotation_",Sys.Date())),
-                                                                     list(extend = 'csv',
-                                                                          fieldBoundary = '',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                          fieldSeparator = '\t',
-                                                                          filename = paste0("paralogue_annotation_",Sys.Date()),
-                                                                          extension = '.txt')),
-                                                      paging = T,scrollX = TRUE,
-                                                      columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:20,24, 28:30)),
-                                                        list(orderable = FALSE, className = 'details-control', targets = 0))),
-                                                    callback = JS(childrow_JS_callback)
-      ) %>%
-        formatStyle(c(" ", "Query variant"), backgroundColor = '#f0f0f0')
-      )
       
-      
-      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
-                                                    escape = F,
-                                                    extensions = 'Buttons',
-                                                    rownames = FALSE,
-                                                    colnames = paraloc_DT_colnames,
-                                                    class = "display",
-                                                    selection =  "none",
-                                                    options = list(
-                                                      #dom = 'lfrti',
-                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                      buttons = list(list(extend = 'excel',
-                                                                          text = ' <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                          filename = paste0("paralogue_positions_",Sys.Date())),
-                                                                     list(extend = 'csv',
-                                                                          fieldBoundary = '',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                          fieldSeparator = '\t',
-                                                                          filename = paste0("paralogue_positions_",Sys.Date()),
-                                                                          extension = '.txt')),
-                                                      paging = T,scrollX = FALSE,
-                                                      columnDefs = list(
-                                                        list(visible = FALSE, targets = c(0:2)),
-                                                        list(width = "85px",targets = 3),
-                                                        list(className = 'dt-center', targets = c(3))))
-      ) %>%
-        formatStyle( "Query variant", backgroundColor = '#f0f0f0')
-      )
-      
-      # draw protein ----
-      output$draw_prot <- renderUI({
-
-          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
+      if (nrow(get_paralog_search()$homolog)>=1) {
         
-          fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))
-      })
-      
-    } else {
-      
-      
-      if (nrow(isolate(get_paralog_search()$paraloc))==0) {
-        #Error catching for if query returns empty table
+        output$paralog <- paralog_search()
+        output$paraloc <- paraloc_search()
+        output$draw_prot <- renderUI({ fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))})
+        output$homolog <- homolog_search()
+        
+        } else {
+        
+        # display modal
         isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
-          HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE))
-        )
+          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
+          easyClose = TRUE)))
         
-        # show NULL tables
-        output$paralog<-isolate(NULL)
-        output$paraloc<-isolate(NULL)
-        output$draw_prot<-isolate(NULL)
+        output$paralog<- paralog_search()
+        output$paraloc <- paraloc_search()
+        output$draw_prot <- renderUI({ fluidRow(isolate(draw_prot_data_plotly(get_paralog_search()$paralog)))})
+        output$homolog <- isolate(NULL)
         
-        
-        shinyjs::reset("tab2_search") 
-        shinyjs::reset("All_results")
-        
+        }
       } else {
         #Error catching for if query returns empty table
-        updateTabsetPanel(session, "All_results", selected = "tab2")
-        
-        isolate(showModal(modalDialog(
-          title = "PARALOG Annotator",
-          HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
-          easyClose = TRUE)))
-      
-        output$paralog<-isolate(NULL)
-        output$draw_prot<-isolate(NULL)
-        
-        output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog_search()$paraloc) ),
-                                                      escape = F,
-                                                      extensions = 'Buttons',
-                                                      rownames = FALSE,
-                                                      colnames = paraloc_DT_colnames,
-                                                      class = "display",
-                                                      selection =  "none",
-                                                      options = list(
-                                                        #dom = 'lfrti',
-                                                        dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                        buttons = list(list(extend = 'excel',
-                                                                            text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                            filename = paste0("paralogue_positions_",Sys.Date())),
-                                                                       list(extend = 'csv',
-                                                                            fieldBoundary = '',
-                                                                            text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                            fieldSeparator = '\t',
-                                                                            filename = paste0("paralogue_positions_",Sys.Date()),
-                                                                            extension = '.txt')),
-                                                        paging = T,scrollX = FALSE,
-                                                        columnDefs = list(
-                                                          list(visible = FALSE, targets = c(0:2)),
-                                                          list(width = "85px",targets = 3),
-                                                          list(className = 'dt-center', targets = c(3:4)))),
-        ) %>%
-          formatStyle("Query variant", backgroundColor = '#f0f0f0')
-        )
+        if (nrow(isolate(get_paralog_search()$paraloc))>=1) {
+          
+          if (nrow(get_paralog_search()$homolog)>=1) {
+            
+            updateTabsetPanel(session, "All_results", selected = "tab2")
+            
+            # display modal
+            isolate(showModal(modalDialog(
+              title = "PARALOG Annotator",
+              HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
+              easyClose = TRUE)))
+            
+            output$paralog <- isolate(NULL)
+            output$draw_prot <- isolate(NULL)
+            output$paraloc <- paraloc_search()
+            output$homolog <- homolog_search()
+            
+            } else {
+              
+              updateTabsetPanel(session, "All_results", selected = "tab2")
+              
+              # display modal
+              isolate(showModal(modalDialog(
+                title = "PARALOG Annotator",
+                HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
+                easyClose = TRUE)))
+              
+              output$paralog <- isolate(NULL)
+              output$draw_prot <- isolate(NULL)
+              output$paraloc <- paraloc_search()
+              output$homolog <- isolate(NULL)
+              
+              }
+          
+          } else {
+            
+            if (nrow(get_paralog_search()$homolog)>=1) {
+              
+              updateTabsetPanel(session, "All_results", selected = "tab3")
+              
+              # display modal
+              isolate(showModal(modalDialog(
+                title = "PARALOG Annotator",
+                HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
+                easyClose = TRUE)))
+              
+              output$paralog <- isolate(NULL)
+              output$draw_prot <- isolate(NULL)
+              output$paraloc <- isolate(NULL)
+              output$homolog <- homolog_search()
+              
+              } else {
+              
+                # display modal
+                isolate(showModal(modalDialog(
+                  title = "PARALOG Annotator",
+                  HTML("Your query returned no results<br><br>Please try another input variant(s)<br>"),
+                  easyClose = TRUE))
+                )
+                
+                # show NULL tables
+                output$paralog <- isolate(NULL)
+                output$paraloc <- isolate(NULL)
+                output$draw_prot <- isolate(NULL)
+                output$homolog <- isolate(NULL)
+                
+                
+                shinyjs::reset("tab2_search") 
+                shinyjs::reset("All_results")
+                
+                }
+          
+          }
       }
-    }
   })
     
     
     
 
     
-  observeEvent((input$submit_button), {
+  observeEvent((input$submit_button ), {
     
-    if (nrow(get_paralog()$paralog)>=1){ # check if result table is empty
-    # if (is.na(get_paralog()$paralog)){ # check if result table is empty
+    #Error catching for if query returns empty table
+    if (nrow(get_paralog()$paralog)>=1) {
+      
+      if (nrow(get_paralog()$homolog)>=1) {
         
-      
-      output$paralog<-renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog()$paralog)),
-                                                    escape = F,
-                                                    extensions = 'Buttons',
-                                                    rownames = FALSE,
-                                                    colnames = paralog_DT_colnames,
-                                                    class = "display",
-                                                    selection =  "none",
-                                                    options = list(
-                                                      #dom = 'lfrti',
-                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                      buttons = list(list(extend = 'excel',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                          filename = paste0("paralogue_annotation_",Sys.Date())),
-                                                                     list(extend = 'csv',
-                                                                          fieldBoundary = '',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                          fieldSeparator = '\t',
-                                                                          filename = paste0("paralogue_annotation_",Sys.Date()),
-                                                                          extension = '.txt')),
-                                                      paging = T,scrollX = FALSE,
-                                                      columnDefs = list(
-                                                        list(visible = FALSE, targets = c(1:4,6:20,24, 28:30)),
-                                                        list(orderable = FALSE, className = 'details-control', targets = 0))),
-                                                    callback = JS(childrow_JS_callback)
-                                                    ) %>%
-                                        formatStyle(c(" ", "Query variant"), backgroundColor = '#f0f0f0')
-                                      )
-
-
-      output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
-                                                    escape = F,
-                                                    extensions = 'Buttons',
-                                                    rownames = FALSE,
-                                                    colnames = paraloc_DT_colnames,
-                                                    class = "display",
-                                                    selection =  "none",
-                                                    options = list(
-                                                      #dom = 'lfrti',
-                                                      dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                      buttons = list(list(extend = 'excel',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                          filename = paste0("paralogue_positions_",Sys.Date())),
-                                                                     list(extend = 'csv',
-                                                                          fieldBoundary = '',
-                                                                          text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                          fieldSeparator = '\t',
-                                                                          filename = paste0("paralogue_positions_",Sys.Date()),
-                                                                          extension = '.txt')),
-                                                      paging = T,scrollX = FALSE,
-                                                      columnDefs = list(
-                                                        list(visible = FALSE, targets = c(0:2)),
-                                                        list(width = "85px",targets = 3),
-                                                        list(className = 'dt-center', targets = c(3))))
-                                                    ) %>%
-                                        formatStyle( "Query variant", backgroundColor = '#f0f0f0')
-                                      )
-      
-
-      
-      # draw protein ----
-      output$draw_prot <- renderUI({
-        
-          # fluidRow(isolate(draw_prot_data(get_paralog_search()$paralog)))
-          
-          fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))
-          
-        })
-      
-      
-    } else {
-      if (nrow(isolate(get_paralog()$paraloc))==0) {
-        #Error catching for if query returns empty table
-        isolate(showModal(modalDialog(
-          title = "PARALOG Annotator",
-          HTML("Your query returned no variants<br>Please try another input variant(s)<br>"),
-          easyClose = TRUE))
-        )
-        
-        # show NULL tables
-        output$paralog<-isolate(NULL)
-        output$paraloc<-isolate(NULL)
-        output$draw_prot<-isolate(NULL)
-        
-        shinyjs::reset("tab2_search") 
-        shinyjs::reset("All_results")
+        output$paralog <- paralog()
+        output$paraloc <- paraloc()
+        output$draw_prot <- renderUI({ fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))})
+        output$homolog <- homolog()
         
       } else {
-        #Error catching for if query returns empty table
-        updateTabsetPanel(session, "All_results", selected = "tab2")
         
+        # display modal
         isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
-          HTML("Your query returned no paralogue variants<br>Your query has returned paralogous positions"), 
+          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
           easyClose = TRUE)))
         
-        output$paralog<-isolate(NULL)
-        output$draw_prot<-isolate(NULL)
+        output$paralog<- paralog()
+        output$paraloc <- paraloc()
+        output$draw_prot <- renderUI({ fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))})
+        output$homolog <- isolate(NULL)
         
-
-       
-       output$paraloc<-renderDataTable(DT::datatable(isolate( add_paraloc_URL(get_paralog()$paraloc) ),
-                                                     escape = F,
-                                                     extensions = 'Buttons',
-                                                     rownames = FALSE,
-                                                     colnames = paraloc_DT_colnames,
-                                                     class = "display",
-                                                     selection =  "none",
-                                                     options = list(
-                                                       #dom = 'lfrti',
-                                                       dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
-                                                             "<"row"<"col-sm-12"tr>>" + 
-                                                             "<"row"<"col-sm-6"i>>" +
-                                                             "<"row"<"col-sm-6 btn btn-md"B>>"',
-                                                       buttons = list(list(extend = 'excel',
-                                                                           text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
-                                                                           filename = paste0("paralogue_positions_",Sys.Date())),
-                                                                      list(extend = 'csv',
-                                                                           fieldBoundary = '',
-                                                                           text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
-                                                                           fieldSeparator = '\t',
-                                                                           filename = paste0("paralogue_positions_",Sys.Date()),
-                                                                           extension = '.txt')),
-                                                       paging = T,scrollX = FALSE,
-                                                       columnDefs = list(
-                                                         list(visible = FALSE, targets = c(0:2)),
-                                                         list(width = "85px",targets = 3),
-                                                         list(className = 'dt-center', targets = c(3:4)))),
-                                                     ) %>%
-                                         formatStyle("Query variant", backgroundColor = '#f0f0f0')
-                                       )
+      }
+      
+    } else {
+      
+      #Error catching for if query returns empty table
+      if (nrow(isolate(get_paralog()$paraloc))>=1) {
+        
+        if (nrow(get_paralog()$homolog)>=1) {
+          
+          updateTabsetPanel(session, "All_results", selected = "tab2")
+          
+          # display modal
+          isolate(showModal(modalDialog(
+            title = "PARALOG Annotator",
+            HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
+            easyClose = TRUE)))
+          
+          output$paralog <- isolate(NULL)
+          output$draw_prot <- isolate(NULL)
+          output$paraloc <- paraloc()
+          output$homolog <- homolog()
+          
+        } else {
+          
+          updateTabsetPanel(session, "All_results", selected = "tab2")
+          
+          # display modal
+          isolate(showModal(modalDialog(
+            title = "PARALOG Annotator",
+            HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
+            easyClose = TRUE)))
+          
+          output$paralog <- isolate(NULL)
+          output$draw_prot <- isolate(NULL)
+          output$paraloc <- paraloc()
+          output$homolog <- isolate(NULL)
+          
+        }
+        
+      } else {
+        
+        if (nrow(get_paralog()$homolog)>=1) {
+          
+          updateTabsetPanel(session, "All_results", selected = "tab3")
+          
+          # display modal
+          isolate(showModal(modalDialog(
+            title = "PARALOG Annotator",
+            HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
+            easyClose = TRUE)))
+          
+          output$paralog <- isolate(NULL)
+          output$draw_prot <- isolate(NULL)
+          output$paraloc <- isolate(NULL)
+          output$homolog <- homolog()
+          
+        } else {
+          
+          # display modal
+          isolate(showModal(modalDialog(
+            title = "PARALOG Annotator",
+            HTML("Your query returned no results<br><br>Please try another input variant(s)<br>"),
+            easyClose = TRUE))
+          )
+          
+          # show NULL tables
+          output$paralog <- isolate(NULL)
+          output$paraloc <- isolate(NULL)
+          output$draw_prot <- isolate(NULL)
+          output$homolog <- isolate(NULL)
+          
+          
+          shinyjs::reset("tab2_search") 
+          shinyjs::reset("All_results")
+          
+        }
+        
       }
     }
   })
+  
+  
+  
   
   observe({
     if (is.null(input$var) || input$var == ""){
@@ -419,7 +497,9 @@ shinyServer(function(input, output, session){
   
   observeEvent(input$search_button, {
     updateTabsetPanel(session, "navbar", selected = "tab2")
-    #shinyjs::reset("line") 
+    shinyjs::reset("var") 
+    shinyjs::reset("file") 
+    
     
   })
 
