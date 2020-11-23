@@ -151,7 +151,7 @@ shinyServer(function(input, output, session){
                                                                                                   extension = '.txt')),
                                                                               paging = T,scrollX = FALSE,
                                                                               columnDefs = list(
-                                                                                list(visible = FALSE, targets = c(0:2,8,9)),
+                                                                                list(visible = FALSE, targets = c(0:2,9,10 )),# delete the 9,10 to add API calls,9,10 ENST, prot_pos)),
                                                                                 list(width = "130px",targets = 3),
                                                                                 list(className = 'dt-center', targets = c(3))))) %>% formatStyle( "Query variant", backgroundColor = '#f0f0f0'))
     })
@@ -181,7 +181,7 @@ shinyServer(function(input, output, session){
                                                                       extension = '.txt')),
                                                   paging = T,scrollX = FALSE,
                                                   columnDefs = list(
-                                                    list(visible = FALSE, targets = c(0:2,8,9)),
+                                                    list(visible = FALSE, targets = c(0:2,9,10)),
                                                     list(width = "130px",targets = 3),
                                                     list(className = 'dt-center', targets = c(3))))) %>% formatStyle( "Query variant", backgroundColor = '#f0f0f0'))
   })
@@ -254,7 +254,9 @@ shinyServer(function(input, output, session){
   observeEvent((input$search_button ), {
     
     #Error catching for if query returns empty table
+    #if (nrow(get_paralog_search()$paralog)>=1) {
     if (nrow(get_paralog_search()$paralog)>=1) {
+        
       
       if (nrow(get_paralog_search()$homolog)>=1) {
         
@@ -264,6 +266,12 @@ shinyServer(function(input, output, session){
         output$homolog <- homolog_search()
         
         } else {
+        
+        # display modal
+        isolate(showModal(modalDialog(
+          title = "PARALOG Annotator",
+          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
+          easyClose = TRUE)))
         
         output$paralog<- paralog_search()
         output$paraloc <- paraloc_search()
@@ -282,7 +290,7 @@ shinyServer(function(input, output, session){
             # display modal
             isolate(showModal(modalDialog(
               title = "PARALOG Annotator",
-              HTML("Your query returned no paralogous variants<br>Your query has returned paralogous positions"), 
+              HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
               easyClose = TRUE)))
             
             output$paralog <- isolate(NULL)
@@ -297,7 +305,7 @@ shinyServer(function(input, output, session){
               # display modal
               isolate(showModal(modalDialog(
                 title = "PARALOG Annotator",
-                HTML("Your query returned no paralogous variants<br>Your query has returned paralogous positions"), 
+                HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
                 easyClose = TRUE)))
               
               output$paralog <- isolate(NULL)
@@ -316,7 +324,7 @@ shinyServer(function(input, output, session){
               # display modal
               isolate(showModal(modalDialog(
                 title = "PARALOG Annotator",
-                HTML("Your query returned no paralogous variants or paralogous positions<br>Your query has returned homologous Pfam variants"), 
+                HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
                 easyClose = TRUE)))
               
               output$paralog <- isolate(NULL)
@@ -329,7 +337,7 @@ shinyServer(function(input, output, session){
                 # display modal
                 isolate(showModal(modalDialog(
                   title = "PARALOG Annotator",
-                  HTML("Your query returned no results<br>Please try another input variant(s)<br>"),
+                  HTML("Your query returned no results<br><br>Please try another input variant(s)<br>"),
                   easyClose = TRUE))
                 )
                 
@@ -367,6 +375,12 @@ shinyServer(function(input, output, session){
         
       } else {
         
+        # display modal
+        isolate(showModal(modalDialog(
+          title = "PARALOG Annotator",
+          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
+          easyClose = TRUE)))
+        
         output$paralog<- paralog()
         output$paraloc <- paraloc()
         output$draw_prot <- renderUI({ fluidRow(isolate(draw_prot_data_plotly(get_paralog()$paralog)))})
@@ -386,7 +400,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous variants<br>Your query has returned paralogous positions"), 
+            HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -401,7 +415,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous variants<br>Your query has returned paralogous positions"), 
+            HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -420,7 +434,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous variants or paralogous positions<br>Your query has returned homologous Pfam variants"), 
+            HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -433,7 +447,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no results<br>Please try another input variant(s)<br>"),
+            HTML("Your query returned no results<br><br>Please try another input variant(s)<br>"),
             easyClose = TRUE))
           )
           

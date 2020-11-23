@@ -295,6 +295,9 @@ lookup_paraloc <- function(input_data){
   
 }
 
+
+
+
 lookup_homolog <- function(input_data){
   
   homolog_out <- NULL
@@ -524,6 +527,8 @@ add_paraloc_URL_new = function(result_paraloc) {
       para_split_df_long$Protein_position.paraloc <- NA
       
       # run the query to Ensembl API to get transcript, gene and protein position for paraloc
+      ###
+      # uncomment bellow line to query API
       #para_split_df_long_API <- query_paraloc_API(para_split_df_long)  ############## revert API call 
       para_split_df_long_API <- para_split_df_long
       
@@ -561,7 +566,8 @@ add_paraloc_URL_new = function(result_paraloc) {
                                          as.numeric(para_split_df$POS.query),
                                          factor(para_split_df$chr.paraloc , levels = c(1:22,"X","Y")) #,as.numeric(para_split_df$AA_pos.paraloc) # its a character so cannot be ordered properly
                                          ), c(1:8,10,12,9) ]
-    
+    #print(names(para_split_df))
+    para_split_df <- para_split_df[,c(1:5,11,6:10)]
   } else { 
     para_split_df <- NULL
   }
@@ -616,6 +622,7 @@ add_paralog_URL = function(result) {
                                  "-")
     
     result <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', result )
+    
     return(result)
     
 } 
@@ -623,6 +630,8 @@ add_paralog_URL = function(result) {
 # function to add ensembl URLs to homolog positions in genes
 add_homolog_URL = function(result) {
   
+  
+  result$Pfam_pos.query <- strsplit(result$Pfam_pos.query,split = "=")[[1]][2]
   
   #ClinVarID paralog URL
   result$ID.homolog<- ifelse(#!is.na(result$ID.paralog),
@@ -712,14 +721,15 @@ paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
 paraloc_DT_colnames <- c(
   'Query variant' = 'var.query',
   'Query gene' = 'Gene.query',
+  'Query Residue' = 'AA.paraloc',
   'Paralogous gene' = 'Gene.paraloc',
   'Chromosome' = 'chr.paraloc',
   'AA Position' = 'AA_pos.paraloc',
   #'AA Residue' = 'AA.paraloc',
   'ENST' = 'ENST.paraloc',
   #'ENSG' = 'ENSG.paraloc',
-  'Protein positions' = 'Protein_position.paraloc',
-  'AA Residue' = 'AA.paraloc')
+  'Protein positions' = 'Protein_position.paraloc'
+  )
 
 homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
                          'Pos.query' = 'POS.query',
