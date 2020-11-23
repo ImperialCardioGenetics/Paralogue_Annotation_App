@@ -721,7 +721,7 @@ paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
 paraloc_DT_colnames <- c(
   'Query variant' = 'var.query',
   'Query gene' = 'Gene.query',
-  'Query Residue' = 'AA.paraloc',
+  'Query residue' = 'AA.paraloc',
   'Paralogous gene' = 'Gene.paraloc',
   'Chromosome' = 'chr.paraloc',
   'AA Position' = 'AA_pos.paraloc',

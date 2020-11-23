@@ -152,8 +152,8 @@ shinyServer(function(input, output, session){
                                                                               paging = T,scrollX = FALSE,
                                                                               columnDefs = list(
                                                                                 list(visible = FALSE, targets = c(0:2,9,10 )),# delete the 9,10 to add API calls,9,10 ENST, prot_pos)),
-                                                                                list(width = "130px",targets = 3),
-                                                                                list(className = 'dt-center', targets = c(3))))) %>% formatStyle( "Query variant", backgroundColor = '#f0f0f0'))
+                                                                                list(width = "140px",targets = 3),
+                                                                                list(className = 'dt-center', targets = c(3))))) %>% formatStyle( c("Query variant","Query gene", "Query residue"), backgroundColor = '#f0f0f0'))
     })
   
   paraloc <- reactive({renderDataTable(DT::datatable(isolate( add_paraloc_URL_new(get_paralog()$paraloc) ),
@@ -182,8 +182,9 @@ shinyServer(function(input, output, session){
                                                   paging = T,scrollX = FALSE,
                                                   columnDefs = list(
                                                     list(visible = FALSE, targets = c(0:2,9,10)),
-                                                    list(width = "130px",targets = 3),
-                                                    list(className = 'dt-center', targets = c(3))))) %>% formatStyle( "Query variant", backgroundColor = '#f0f0f0'))
+                                                    list(width = "140px",targets = 3),
+                                                    list(className = 'dt-center', targets = c(3))))) %>% formatStyle( c("Query variant","Query gene", "Query residue"), backgroundColor = '#f0f0f0'))
+    
   })
   
   
