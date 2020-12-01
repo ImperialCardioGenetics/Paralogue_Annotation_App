@@ -61,6 +61,11 @@ generate_test_data <- function() {
 # function to test/validate variant input
 validate_input <- function(input_data) {
   
+  # # Keep only first 50 vars
+  # if (nrow(input_data)>=50) {
+  #   input_data <- input_data[1:50,]
+  # }
+  
   input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
   
   #chr = c(as.character(1:22),'x','X','y','Y')
@@ -215,6 +220,8 @@ lookup_paralog <- function(input_data){
   
   paralog_out <- NULL
   
+  #if (nrow(input_data)!=0){
+  
   for (i in 1:nrow(input_data)) {
     
     #i=1
@@ -256,7 +263,8 @@ lookup_paralog <- function(input_data){
                                    factor(paralog_out$CHR.paralog , levels = c(1:22,"X","Y")), 
                                    as.numeric(paralog_out$POS.paralog)), ]
   
-
+  #}
+  
   return(paralog_out)
 }
 
@@ -400,10 +408,10 @@ check_upload_file = function(inFile) {
   # input_1row = ncol(read.table(inFile$datapath,nrows = 1 ))
   
   #eg. msvcf
-  #input_1row = read.table("data/head200.vcf",nrows = 1, as.is =T)
-  
+  #input_1row = read.table("data/test_data/chr1_head200.vcf",nrows = 1, as.is =T)
+  #print(inFile$datapath)
   #filename <- "data/test_upload2.txt"
-  #filename2 <- "data/test_upload2.txt"
+  #filename2 <- "data/test_data/chr1_head200.vcf"
   
   
   # check if upload file is gz
@@ -443,6 +451,9 @@ check_upload_file = function(inFile) {
     # write NA table
     input_file<- data.frame(col1=NA)
   }
+  
+  # Keep only first 50 vars
+  input_file <- head(input_file,n = 50)
   
   return(input_file)
 }
@@ -597,7 +608,7 @@ add_paralog_URL = function(result) {
     #Ensembl alignment URL
     # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
     result$Ensembl_alignment_link<- ifelse(!is.na(result$ENSG.paralog), 
-                                           (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",result$ENSG.query,";g1=",result$ENSG.paralog), "' class='btn btn-default btn-sm btn-block active' target='_blank'>alignment</a>")) , 
+                                           (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",result$ENSG.query,";g1=",result$ENSG.paralog), "' class='btn btn-default btn-xs btn-block active' target='_blank'>alignment</a>")) , 
                                            "-") 
     
     # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
@@ -632,6 +643,14 @@ add_homolog_URL = function(result) {
   
   
   result$Pfam_pos.query <- strsplit(result$Pfam_pos.query,split = "=")[[1]][2]
+  # https://pfam.xfam.org/family/
+  
+  #ClinVarID paralog URL
+  result$Pfam_domain.query<- ifelse(#!is.na(result$ID.paralog),
+    result$Pfam_domain.query!="NA",
+    (paste0("<a href='", paste0("https://pfam.xfam.org/family/",result$Pfam_domain.query,"/"), "' target='_blank'>", result$Pfam_domain.query, "</a>")),
+    "-")
+  
   
   #ClinVarID paralog URL
   result$ID.homolog<- ifelse(#!is.na(result$ID.paralog),
@@ -1059,7 +1078,7 @@ draw_plotly_graph_PFAM <- function(prot_data, showlegend = T) {
   # legend , title and margins
   fig <- layout(fig,
                 barmode = 'overlay', showlegend = T,
-                title = list(text = paste0(unique(prot_data$query_var_ID)),font = list(size = 16), 
+                title = list(text = paste0("Query variant : ",unique(prot_data$query_var_ID)),font = list(size = 16), 
                              xref = "paper",yref = "paper",xanchor = "left", x = 0 ),
                 legend = list(itemdoubleclick = "toggle", title = list(text = "Pfam Domains",font = list(size = 14))),
                 yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T) ,margin= c(0, 0.95),# will set the total height of the plot 

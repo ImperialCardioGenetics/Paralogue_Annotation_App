@@ -7,7 +7,7 @@ library(writexl)
 
 #library(tidyverse)
 
-options(shiny.maxRequestSize=100*1024^2) #max upload size = 100 mb
+options(shiny.maxRequestSize=50*1024^2) #max upload size = 100 mb
 enableBookmarking("url")
 
 # options(shiny.sanitize.errors = TRUE)
@@ -21,7 +21,7 @@ shinyServer(function(input, output, session){
     input_line$mutation = stringr::str_replace_all(input_line$mutation,"[[:punct:][:space:]]","-")
     input_line$mutation = stringr::str_replace_all(input_line$mutation,"^chr","")
     input_line$paraloc = substr(input_line$mutation, 1, nchar(input_line$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-
+    
     #new tabix func
     result<-predict_output_tabix(validate_input(input_line))
     return(result)
@@ -38,7 +38,7 @@ shinyServer(function(input, output, session){
       input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
       input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
       input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2) #CAN OPTIMISED THIS MAYBE LATER, JUST GETTING IT TO WORK FOR NOW
-
+      
       #new tabix func
       result<-predict_output_tabix(validate_input(input_data))
       
