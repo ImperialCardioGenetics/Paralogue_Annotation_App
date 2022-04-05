@@ -31,7 +31,7 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator DEMO version 0.3.2", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator version 0.3.3", id = "navbar",selected = "tab1",
 
                
                # Main box search and description -----------------------------------------
@@ -79,7 +79,9 @@ fluidPage(
                                  #img(src='./data/Logo_for_Imperial_College_London.svg.png', align = "center"),
                                  #titlePanel(title=div(img(src="nhl.jpg")))
                                  
-                                 tags$a(href='https://www.imperial.ac.uk/', target="_blank",tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200' ))
+                                 tags$a(href='https://www.imperial.ac.uk/', target="_blank",tags$img(src='Logo_for_Imperial_College_London.svg.png',height='50',width='200' )),
+                                 tags$a(href='https://lms.mrc.ac.uk/', target="_blank",tags$img(src='Medical_Research_Council_logo.svg',height='50',width='200' ))
+                                 
                                  )),
                         br(),
                         br(),
@@ -188,12 +190,15 @@ fluidPage(
                                 br()
                                 ),
                        tabPanel(value = "tab3",
-                                title = h4("Paralogous Domain Annotations"),
+                                title = h4("Pfam Domain Annotations"),
                                 # h4("Query variant(s) and Pfam domain alignments identified in ClinVar by Paralogue Annotation"),
                                 # br(),
                                 h4("Shown below is a visualization of the protein domains of (missense) variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other members of the protein family by Paralogue Annotation"),
                                 br(),
-                                conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
+                                # 20220405 ADD PAGE UNDER CONSTRUCTION
+                                # conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
+                                conditionalPanel(condition = "input.submit_button || input.search_button", h4("PAGE UNDER CONSTRUCTION")),
+                                HTML("<img src='https://www.seekpng.com/png/detail/66-668689_page-under-construction-icon.png' alt='Page Under Construction Icon@seekpng.com'>"),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
                                 br(),
