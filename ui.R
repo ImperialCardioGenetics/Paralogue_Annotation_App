@@ -31,7 +31,7 @@ fluidPage(
   #   ),
   theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator version 0.3.3", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator version 0.3.4", id = "navbar",selected = "tab1",
 
                
                # Main box search and description -----------------------------------------
@@ -151,7 +151,7 @@ fluidPage(
                        type = "tabs",
                        tabPanel(value = "tab1",
                                 title = h4("Paralogous Annotations"),
-                                h4("Shown below are (missense) variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other members of the protein family by Paralogue Annotation"),
+                                h4("Shown below are missense variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other members of the protein family by Paralogue Annotation"),
                                 br(),
                                 fluidRow(conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("paralog")))),
                                 br(),
@@ -180,7 +180,7 @@ fluidPage(
                        
                        tabPanel(value = "tab4",
                                 title = h4("Homologous Pfam Annotations"),
-                                h4("Shown below are (missense) variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other homologous proteins that share a pfam protein domain"),
+                                h4("Shown below are missense variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other homologous proteins that share a pfam protein domain"),
                                 br(),
                                 conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(dataTableOutput("homolog"))),
                                 br(),
@@ -190,15 +190,16 @@ fluidPage(
                                 br()
                                 ),
                        tabPanel(value = "tab3",
-                                title = h4("Pfam Domain Annotations"),
+                                title = h4("Pfam Domains Visualized"),
                                 # h4("Query variant(s) and Pfam domain alignments identified in ClinVar by Paralogue Annotation"),
                                 # br(),
-                                h4("Shown below is a visualization of the protein domains of (missense) variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at the equivalent amino acid residue of other members of the protein family by Paralogue Annotation"),
+                                h4("PAGE UNDER CONSTRUCTION"),
+                                h4("Shown below will be a visualization of the protein domains that incorporate missense variants annotated as Pathogenic/Likely Pathogenic in ClinVar found at equivalent positions of other members of the protein family."),
                                 br(),
                                 # 20220405 ADD PAGE UNDER CONSTRUCTION
                                 # conditionalPanel(condition = "input.submit_button || input.search_button", withSpinner(uiOutput("draw_prot"))),
-                                conditionalPanel(condition = "input.submit_button || input.search_button", h4("PAGE UNDER CONSTRUCTION")),
-                                HTML("<img src='https://www.seekpng.com/png/detail/66-668689_page-under-construction-icon.png' alt='Page Under Construction Icon@seekpng.com'>"),
+                                # conditionalPanel(condition = "input.submit_button || input.search_button", h4("PAGE UNDER CONSTRUCTION")),
+                                # HTML("<img src='https://www.seekpng.com/png/detail/66-668689_page-under-construction-icon.png' alt='Page Under Construction Icon@seekpng.com'>"),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog","Download (.txt)"),downloadButton("download_paralog_excel","Download (.xslx)")),
                                 #conditionalPanel("output.paralog",downloadButton("download_paralog_excel","Download (.xslx)")),
                                 br(),

@@ -256,6 +256,8 @@ lookup_paralog <- function(input_data){
   #colnames(paralog_out) <- paralog_colnames
   colnames(paralog_out) <- paralog_colnames
   
+  # save(paralog_out, file="paralog_out.RData")
+  
   # sort df to avoid sorting later
   #chrOrder<-c(1:22,"X","Y")
   paralog_out <- paralog_out[order(factor(paralog_out$CHR.query , levels = c(1:22,"X","Y")), 
