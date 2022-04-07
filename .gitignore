@@ -2,3 +2,5 @@ data/db.sqlite
 Para_locations_all_chrom_noQC.RDS
 rsconnect
 data/paraloc_data.txt.gz
+paralog_app/
+paralog_out.RData
