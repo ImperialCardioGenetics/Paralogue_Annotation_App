@@ -2,77 +2,53 @@ library(shiny)
 library(DT)
 library(shinythemes)
 library(tidyverse)
-#library(microbenchmark)
-#library(drawProteins)
-library(plotly)
 library(grid)
-library(httr)
+#library(arrow)
 
+# max variants to keep from upload file
+max_upload=50
 
-
-
+# read clinvar
+clinvar <- read_rds("data/clinvar_20220624.rds")
 
 #read gene symbol/ENSG and write to dict
-# mart_export <- read.delim(paste0(dirname(rstudioapi::getActiveDocumentContext()$path),"/data/mart_export.txt"), quote="", stringsAsFactors=F)
-mart_export <- read.delim("data/mart_export.txt", quote="", stringsAsFactors=F)
-map=setNames(mart_export$Gene.stable.ID, mart_export$HGNC.symbol)
+# HGNC <- read_feather("data/HGNC_complete_2022.feather")
+HGNC <- read_rds("data/HGNC_complete_2022.rds")
 
-HGNC_export <- read.delim("data/HGNC_all_genes.txt", quote="", stringsAsFactors=F)
-# HGNC_export <- tidyr::separate(HGNC_export,HGNC_ID, into = c("HGNC", "ID"), remove = T)
-map_HGNC = setNames(HGNC_export$UniProt_ID, HGNC_export$Approved_symbol)
-
-# Load all data as Rds data
-#raw_data = readRDS("./data/raw_data_paralog.Rds")
-#Paraloc_data = readRDS("../../Paraloc_data_paraloc.Rds")
+# map_UniProt = setNames(HGNC$UniProt_ID, HGNC$Approved_symbol)
+map_ENSG=setNames(HGNC$Ensembl_ID, HGNC$Approved_symbol)
 
 
 # generate_test_data ----
 
-generate_test_data <- function() {
-  
-  # generate random input data for testing
-  input<-data.frame(chr="1",pos="115256528",ref="T")
-  input1<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
-  input2<-data.frame(chr="1",pos="115256528DD",ref="T",alt="G")
-  input3<-data.frame(chr="3",pos="38592567",ref="TA",alt="B")
-  input4<-data.frame(chr="21",pos="44592214",ref="WC",alt="T")
-  input5<-data.frame(chr="21B",pos="47421902",ref="G",alt="A")
-  input6<-data.frame(chr="XB",pos="70443591",ref="G",alt="A")
-
-  
-  input <- rbind(input1,input2,input3,input4,input5,input6)
-  
-  #var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
-  var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
-  #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
-  var=var[nzchar(x=var)]
-  input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
-  input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
-  input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
-  input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
-  
-  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
-  
-  
-  return(input_data)
-}
-
-
-# function to test/validate variant input
-validate_input <- function(input_data) {
-  
-  # # Keep only first 50 vars
-  # if (nrow(input_data)>=50) {
-  #   input_data <- input_data[1:50,]
-  # }
-  
-  input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
-  
-  #chr = c(as.character(1:22),'x','X','y','Y')
-  input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
-  
-}
-
+# generate_test_data <- function() {
+# 
+#   # generate random input data for testing
+#   input<-data.frame(chr="1",pos="115256528",ref="T")
+#   input1<-data.frame(chr="1",pos="115256528",ref="T",alt="C")
+#   input2<-data.frame(chr="1",pos="115256528DD",ref="T",alt="G")
+#   input3<-data.frame(chr="3",pos="38592567",ref="TA",alt="B")
+#   input4<-data.frame(chr="21",pos="44592214",ref="WC",alt="T")
+#   input5<-data.frame(chr="21B",pos="47421902",ref="G",alt="A")
+#   input6<-data.frame(chr="XB",pos="70443591",ref="G",alt="A")
+# 
+# 
+#   input <- rbind(input1,input2,input3,input4,input5,input6)
+# 
+#   #var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+#   var = paste(input$chr,input$pos,input$ref,input$alt,sep = " ")
+#   #var<-unlist(strsplit(input$var,split="\\, |\\,|\\n"))
+#   var=var[nzchar(x=var)]
+#   input_data<-data.frame(mutation=var, stringsAsFactors = FALSE)
+#   input_data$mutation = stringr::str_replace_all(input_data$mutation,"[[:punct:][:space:]]","-")
+#   input_data$mutation = stringr::str_replace_all(input_data$mutation,"^chr","")
+#   input_data$paraloc = substr(input_data$mutation, 1, nchar(input_data$mutation)-2)
+# 
+#   #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F)
+# 
+# 
+#   return(input_data)
+# }
 
 generate_test_data_2 <- function(var=NULL) {
   
@@ -100,6 +76,26 @@ generate_test_data_2 <- function(var=NULL) {
     input4<-data.frame(chr="X",pos="70443591",ref="G",alt="A")
 
     input <- rbind(input1,input2,input3,input4)
+
+  } else if (var==6){
+    #12-2690777-C-A  
+    input<-data.frame(chr="12",pos="2690777",ref="C",alt="A")    
+
+  } else if (var==7){
+    #12-2690777-C-A  
+    input0<-data.frame(chr="1",pos="115256513",ref="T",alt="G")
+    input1<-data.frame(chr="12",pos="2690777",ref="C",alt="A")
+    input2<-data.frame(chr="1",pos="115256528",ref="T",alt="G")
+    input3<-data.frame(chr="1",pos="115256527",ref="T",alt="G")
+    input4<-data.frame(chr="1",pos="24401872",ref="C",alt="A")
+    input5<-data.frame(chr="1",pos="120572581",ref="A",alt="C")
+    
+    input <- rbind(input0,input1,input2,input3,input4,input5)
+  
+  } else if (var==8){
+    #12-2690777-C-A  
+    input<-data.frame(chr="1",pos="115256527",ref="T",alt="G")    
+    
   }
   
 
@@ -118,17 +114,103 @@ generate_test_data_2 <- function(var=NULL) {
   return(input_data)
 }
 
+
 # validate_input ----
 
 # function to test/validate variant input
 validate_input <- function(input_data) {
   
-  input_data <- suppressWarnings(tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F))
+  if (!is.data.frame(input_data)) {
+    input_data <- data.frame(mutation=unlist(strsplit(input_data,split="\\, |\\,|\\n|\\s|\\t")), stringsAsFactors = FALSE)
+  } 
   
-  #chr = c(as.character(1:22),'x','X','y','Y')
-  input_data <- input_data[ ( input_data$CHR.query %in% c(as.character(1:22),'x','X','y','Y')  &  grepl("^\\d", suppressWarnings(as.numeric(input_data$POS.query))) & input_data$REF.query %in% c("A","C", "T", "G") & input_data$ALT.query %in% c("A","C", "T", "G") ) , ]
+  # validate and filter any worng input vars
+  input_data <- input_data %>%
+    mutate(mutation = str_replace_all(mutation, "[[:punct:][:space:]]","-")) %>%
+    mutate(mutation = str_replace_all(mutation, "^chr","")) %>%
+    mutate(paraloc = str_sub(mutation, 1, nchar(mutation)-2)) %>%
+    separate(mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) %>%
+    filter((CHR.query %in% c(as.character(1:22),'x','X','y','Y')) &
+             (grepl("^\\d", suppressWarnings(as.numeric(POS.query)))) &
+             (REF.query %in% c("A","C", "T", "G")) &
+             (ALT.query %in% c("A","C", "T", "G")))
   
+  
+  return(input_data)
+ 
 }
+
+
+
+# check_upload_file ----
+
+# function to check if uploaded variants file is valid
+check_upload_file = function(inFile) {
+  # very hacky way to read in vcf
+  # read 1st line only to get number of cols to check if its txt or vcf format
+  
+  # inFile <- NA
+  # inFile$datapath <- "data/test_data/test_upload1.txt"
+  # inFile$datapath <- "data/test_data/test_upload2.txt"
+  # inFile$datapath <- "data/test_data/test_upload3.txt"
+  # inFile$datapath <- "data/test_data/chr19.txt"
+
+  # inFile$datapath <- "data/test_data/chr1_head200.vcf"
+  
+  # check if upload file is gz
+  if (endsWith(inFile$datapath, ".gz")) {
+    input_1row = read.table(gzfile(inFile$datapath),nrows = 1,comment.char = "",colClasses = "character")
+  } else {
+    input_1row = read.table(inFile$datapath,nrows = 1,comment.char = "",colClasses = "character")
+    #input_1row
+  }
+  # input_1row = read_delim(inFile$datapath,comment = "#",col_names = NA)
+  # input_1row = read.table(file,nrows = 1,comment.char = "")
+  
+  # check if file is vcf
+  if (str_starts(input_1row[1,1],"##fileformat=VCF") | str_starts(input_1row[1,1],"#CHROM")) {
+    
+    if (ncol(input_1row)==1 | ncol(input_1row)>=5) {
+      #input_file <- read_delim(inFile$datapath, delim = "\t",col_select = (if_else ((ncol(input_1row)==1 | ncol(input_1row)>=5),as_vector(c(1,2,4,5)),as_vector(c(1,2,3,4)))),comment = "#",col_names = NA,show_col_types = F,col_types = cols(.default = "c")) %>%
+      #input_file <- read_delim(inFile$datapath, delim = "\t",col_select = (if_else ((ncol(input_1row)==1 | ncol(input_1row)>=5),select(c(1,2,4,5)),select(c(1,2,3,4)))),comment = "#",col_names = NA,show_col_types = F,col_types = cols(.default = "c")) %>%
+      input_file <- read_delim(inFile$datapath, delim = "\t",col_select = c(1,2,4,5),comment = "#",col_names = NA,show_col_types = F,col_types = cols(.default = "c")) %>%
+        slice_head(n=max_upload) %>%  # Keep only first 50 vars
+        #do(if(ncol(.) <= 4) . else select(.,c(1,2,4,5))) %>% 
+        filter(nchar(.[[3]])==nchar(.[[4]])) %>% 
+        unite(sep = ":",remove = T,col = "mutation") %>% 
+        filter((nchar(mutation)<10) | (str_ends(mutation,"[AGTC]$")) | (str_detect(mutation,"\\*")))
+      #input_file <- read_delim("data/test_data/chr1_head200.vcf", delim = "\t",col_select = c(1,2,4,5),comment = "#",col_names = NA) %>% unite(sep = ":",remove = T,col = "col1")
+    } else if (ncol(input_1row)==4) {
+      input_file <- read_delim(inFile$datapath, delim = "\t",col_select = c(1,2,3,4),comment = "#",col_names = NA,show_col_types = F,col_types = cols(.default = "c")) %>%
+        slice_head(n=max_upload) %>%   # Keep only first 50 vars
+        #do(if(ncol(.) <= 4) . else select(.,c(1,2,4,5))) %>% 
+        filter(nchar(.[[3]])==nchar(.[[4]])) %>% 
+        unite(sep = ":",remove = T,col = "mutation") %>% 
+        filter((nchar(mutation)<10) | (str_ends(mutation,"[AGTC]$")) | (str_detect(mutation,"\\*")))
+    }
+      #input_file <- read_delim("data/test_data/chr1_head200.vcf", delim = "\t",col_select = c(1,2,4,5),comment = "#",col_names = NA) %>% unite(sep = ":",remove = T,col = "col1")
+    # check if file is flat txt
+  } else if (ncol(input_1row)>=1 & ncol(input_1row)<=4 &  grepl("^chr|^[1-9]|^[XY]", input_1row[1])) {
+    
+    #input_file <- read_delim(inFile$datapath, delim = "[:punct:]", comment = "##",col_names = NA, show_col_types = F,col_types = cols(.default = "c")) #%>% 
+    input_file <- read.table(text = gsub("[[:punct:][:space:]]","\t",read_lines(inFile$datapath) %>% str_subset(pattern = "\\*",negate = T))) %>% 
+      slice_head(n=max_upload) %>%  # Keep only first 50 vars
+      filter(nchar(.[[3]])==nchar(.[[4]])) %>%
+      unite(sep = ":",remove = T,col = "mutation") %>% 
+      filter((nchar(mutation)<10) | (str_ends(mutation,"[AGTC]$")))
+    
+  } else {
+    # write NA table
+    input_file<- tibble(mutation=NA)
+  }
+  
+ 
+
+  # print("file uploaded")
+  # print(paste0("n vars ",nrow(input_file)))
+  return(input_file)
+}
+
 
 
 # edit_paralog_colnames ----
@@ -137,9 +219,9 @@ paraloc_colnames<- c(
   "CHR.query",
   "POS.query",
   "REF.query",
-  "var.query",
+  #"var.query",
   "Gene.query",
-  "Positions.paralog")
+  "Positions.paraloc")
 
 paralog_colnames <- c(
   "CHR.query",
@@ -219,26 +301,17 @@ homolog_colnames <- c(
 lookup_paralog <- function(input_data){
   
   paralog_out <- NULL
-  
-  #if (nrow(input_data)!=0){
-  
+
   for (i in 1:nrow(input_data)) {
     
     #i=1
     # check if ALT.query exists, if not skip and show only paraloc 
     #if (!is.na(input_data$ALT.query[i])) {
       query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
-      #CMD_paralog<- paste0("tabix ", paralog_data, " ", query)
-      #tabix_paralog <- system(command = paste0("tabix ", paralog_data, " ", query), intern = T,wait = T)
-  
+
       #tabix_paralog <- system(command = paste0("tabix data/paralog_data_sorted.txt.gz ", query), intern = T,wait = T)
       tabix_paralog_extra <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/paralog_data.txt.gz ", query), intern = T,wait = T)))
 
-      
-      #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
-      #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
-      
-      #pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
       pg1 <- as.data.frame(stringr::str_split_fixed(tabix_paralog_extra, pattern = "\t", length(paralog_colnames)), stringsAsFactors = F)
       
       #colnames(pg1) <- paralog_colnames
@@ -251,21 +324,15 @@ lookup_paralog <- function(input_data){
       }
     #}
   }
-  #paralog_out = rbind(paralog_out, pg1[(pg1$V3==input_data$REF.query[i] & pg1$V4 == input_data$ALT.query[i]),])
-  
-  #colnames(paralog_out) <- paralog_colnames
+
   colnames(paralog_out) <- paralog_colnames
   
-  # save(paralog_out, file="paralog_out.RData")
-  
   # sort df to avoid sorting later
-  #chrOrder<-c(1:22,"X","Y")
   paralog_out <- paralog_out[order(factor(paralog_out$CHR.query , levels = c(1:22,"X","Y")), 
                                    as.numeric(paralog_out$POS.query),
                                    factor(paralog_out$CHR.paralog , levels = c(1:22,"X","Y")), 
                                    as.numeric(paralog_out$POS.paralog)), ]
   
-  #}
   
   return(paralog_out)
 }
@@ -278,26 +345,17 @@ lookup_paraloc <- function(input_data){
   for (i in 1:nrow(input_data)) {
     
     query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
-    #CMD_paraloc<- paste0("tabix ", paraloc_data, " ", query)
-    #tabix_paraloc <- system(command =  paste0("tabix ", paraloc_data, " ", query), intern = T, wait = T)
     
-    # tabix_paraloc <- system(command =  paste0("tabix data/paraloc_data_sorted.txt.gz " , query), intern = T, wait = T)
     tabix_paraloc <-suppressMessages(suppressWarnings(system(command =  paste0("tabix data/paraloc_chr/paraloc_data_chr", input_data$CHR.query[i] ,".txt.gz " , query), intern = T, wait = T)))
     
-    
-    #pc1 <- as.data.frame(t(unlist(strsplit(tabix_paraloc,split="\t"))),stringsAsFactors = F)
     pc1<- as.data.frame(stringr::str_split_fixed(tabix_paraloc, pattern = "\t", n = length(paraloc_colnames)), stringsAsFactors = F)
-    #colnames(pc1) <- paraloc_colnames
-    
-    #pc1 <- pc1[(pc1$REF.query==input_data$REF.query[i]),]
-    
+
     if (is.null(paraloc_out)){
       paraloc_out = pc1[(pc1$V3==input_data$REF.query[i]),]
     } else {
       paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
     }
   }
-  #paraloc_out = rbind(paraloc_out, pc1[(pc1$V3==input_data$REF.query[i]),])
   
   colnames(paraloc_out) <- paraloc_colnames
 
@@ -306,21 +364,16 @@ lookup_paraloc <- function(input_data){
 }
 
 
-
-
 lookup_homolog <- function(input_data){
   
   homolog_out <- NULL
-  #input_data <- validate_input(generate_test_data_2(var = 1))
 
   for (i in 1:nrow(input_data)) {
     
     #i=1
     query <- paste0(input_data$CHR.query[i], ":", input_data$POS.query[i], "-", input_data$POS.query[i])
     tabix_homolog <- suppressMessages(suppressWarnings(system(command = paste0("tabix data/homolog_data.txt.gz ", query), intern = T,wait = T)))
-    #homo <- system(command = paste0("tabix data/homolog_data.txt.gz ", query), intern = T,wait = T)
-    #pg1 <- separate(as.data.frame(unlist(tabix_paralog)),1,sep = "\t", into =  paralog_colnames)
-    #pg1 <- pg1[(pg1$REF.query==input_data$REF.query[i] & pg1$ALT.query == input_data$ALT.query[i]),]
+
     hg1 <- as.data.frame(stringr::str_split_fixed(tabix_homolog, pattern = "\t", length(homolog_colnames)), stringsAsFactors = F)
 
     if (is.null(homolog_out)){
@@ -333,132 +386,116 @@ lookup_homolog <- function(input_data){
   colnames(homolog_out) <- homolog_colnames
   
   # sort df to avoid sorting later
-  #chrOrder<-c(1:22,"X","Y")
   homolog_out <- homolog_out[order(factor(homolog_out$CHR.query , levels = c(1:22,"X","Y")), 
                                    as.numeric(homolog_out$POS.query),
                                    factor(homolog_out$CHR.homolog , levels = c(1:22,"X","Y")), 
                                    as.numeric(homolog_out$POS.homolog)), ]
-  
-  
+
   return(homolog_out)
 }
 
 
-
-
-# predict_output ----
-
-
-
-predict_output_tabix = function(input_data){
-
-
-  #input_data <- tidyr::separate(input_data,mutation, into = c("CHR.query", "POS.query", "REF.query", "ALT.query"), remove = F) 
-  # input_data <- validate_input(generate_test_data_2(1))
+# lookup paralog new
+lookup_paralog_new <- function(input_data) {
   
-    paralog <- lookup_paralog(input_data)
-    paraloc <- lookup_paraloc(input_data)
-    homolog <- lookup_homolog(input_data)
-    
+  paralog <- input_data %>% 
+    left_join(clinvar,by = c("CHR.query" = "CHROM.c" ,"POS.query" = "POS.c", "REF.query" = "REF.c"),keep=T) %>% 
+    rename_with(~ gsub(.,pattern = "\\.c",replacement = "\\.query.c")) %>% 
+    rowwise() %>% 
+    mutate(tbx_out = list(suppressMessages(suppressWarnings(system(paste0("tabix data/paraloc_chr/paraloc_data_chr",CHR.query,".txt.gz ",CHR.query,":",POS.query,"-",POS.query), intern = T))))) %>% 
+    separate(tbx_out, into = c("CHR.query.p","POS.query.p","REF.query.p","Gene.query.p","Positions.paraloc.p"),sep = "\t",fill = "right")  %>%
+    filter(REF.query==REF.query.p) %>% 
+    separate_rows(Positions.paraloc.p,sep = ", ") %>%
+    separate(Positions.paraloc.p,into = c("Gene.paraloc", "CHR.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " ") %>%
+    separate(Gene.paraloc, into = c("Gene.paraloc","Gene.ext"),"-",fill = "right") %>% 
+    select(-Gene.ext) %>% 
+    separate(AA_pos.paraloc, into = c("AA_start.paraloc","AA_end.paraloc"),remove = F) %>%
+    mutate(POS.paraloc = map2(AA_start.paraloc, AA_end.paraloc, seq)) %>%
+    unnest(POS.paraloc) %>% 
+    mutate(across(everything(), as.character)) %>% 
+    left_join(clinvar,by = c("CHR.paraloc" = "CHROM.c" ,"POS.paraloc" = "POS.c"),keep=T) %>% 
+    filter(!is.na(CHROM.query.c), !is.na(CHROM.c),ALT.query==ALT.query.c) %>% 
+    select("CHR.query"               = CHROM.query.c,
+           "POS.query"               = POS.query.c,
+           "REF.query"               = REF.query.c,
+           "ALT.query"               = ALT.query.c,
+           "var_id.query"            = var_id.query.c,
+           "ID.query"                = ID.query.c,
+           "CLNSIG.query"            = CLNSIG.query.c,
+           "SYMBOL.query"            = SYMBOL.query.c,
+           "Gene.query"              = Gene.query.c,
+           "Feature.query"           = Feature.query.c,
+           "cDNA.query"              = cDNA.query.c,
+           "Amino_acids.query"       = Amino_acids.query.c,
+           "cDNA_position.query"     = cDNA_position.query.c,
+           "AA_position.query"       = Protein_position.query.c,
+           "Codons.query"            = Codons.query.c,
+           "Para_z_score.query"      = Para_z_score.query.c,
+           "CHR.paralog"             = CHROM.c,
+           "POS.paralog"             = POS.c,
+           "REF.paralog"             = REF.c,
+           "ALT.paralog"             = ALT.c,
+           "var_id.paralog"          = var_id.c,
+           "ID.paralog"              = ID.c,
+           "CLNSIG.paralog"          = CLNSIG.c,
+           "SYMBOL.paralog"          = SYMBOL.c,
+           "Gene.paralog"            = Gene.c,
+           "Feature.paralog"         = Feature.c,
+           "cDNA.paralog"            = cDNA.c,
+           "Amino_acids.paralog"     = Amino_acids.c,
+           "cDNA_position.paralog"   = cDNA_position.c,
+           "AA_position.paralog"     = Protein_position.c,
+           "Codons.paralog"          = Codons.c,
+           "Para_z_score.paralog"    = Para_z_score.c) %>% 
+    distinct() %>%
+    arrange(factor(CHR.query , levels = c(1:22,"X","Y")),
+            as.numeric(POS.query),
+            factor(CHR.paralog , levels = c(1:22,"X","Y")),
+            as.numeric(POS.query))
+  
+  return(paralog)
+  
+}
 
-  return(list("paralog" = paralog, "paraloc" = paraloc, "homolog" = homolog))
+
+# lookup paraloc new
+lookup_paraloc_new <- function(input_data) {
+  
+  paraloc <- input_data %>% 
+    left_join(clinvar,by = c("CHR.query" = "CHROM.c" ,"POS.query" = "POS.c", "REF.query" = "REF.c"),keep=T) %>% 
+    rename_with(~ gsub(.,pattern = "\\.c",replacement = "\\.query.c")) %>% 
+    rowwise() %>% 
+    mutate(tbx_out = list(suppressMessages(suppressWarnings(system(paste0("tabix data/paraloc_chr/paraloc_data_chr",CHR.query,".txt.gz ",CHR.query,":",POS.query,"-",POS.query), intern = T))))) %>% 
+    separate(tbx_out, into = c("CHR.query.p","POS.query.p","REF.query.p","Gene.query.p","Positions.paraloc.p"),sep = "\t",fill = "right")  %>%
+    filter(REF.query==REF.query.p) %>% 
+    separate_rows(Positions.paraloc.p,sep = ", ") %>%
+    separate(Positions.paraloc.p,into = c("Gene.paraloc", "CHR.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " ") %>%
+    separate(Gene.paraloc, into = c("Gene.paraloc","Gene.ext"),"-",fill = "right") %>% 
+    select(-Gene.ext) %>% 
+    separate(AA_pos.paraloc, into = c("AA_start.paraloc","AA_end.paraloc"),remove = F) %>%
+    mutate(POS.paraloc = map2(AA_start.paraloc, AA_end.paraloc, seq)) %>%
+    unnest(POS.paraloc) %>% 
+    mutate(across(everything(), as.character)) %>% 
+    left_join(clinvar,by = c("CHR.paraloc" = "CHROM.c" ,"POS.paraloc" = "POS.c"),keep=T) %>% 
+    select("CHR.query"               = CHR.query.p,
+             "POS.query"               = POS.query.p,
+             "REF.query"               = REF.query.p,
+             "var_id.query"            = paraloc,
+             "Gene.query"              = Gene.query.p,
+             "AA.query"                = AA.paraloc,
+             "Gene.paraloc"            = Gene.paraloc,
+             "CHR.paraloc"             = CHR.paraloc,
+             "AA_pos.paraloc"          = AA_pos.paraloc) %>% 
+    distinct() %>% 
+    arrange(factor(CHR.query , levels = c(1:22,"X","Y")),
+            as.numeric(POS.query),
+            factor(CHR.paraloc , levels = c(1:22,"X","Y"))) #%>% as_tibble()
+ return(paraloc)
 
 }  
 
 
-# result <- predict_output_tabix(input_data = input_line)
 
-  
-predict_output = function(input_data){
-  #### select through RDS objects ####
-  paralog = raw_data[raw_data$var %in%  input_data$mutation,]
-  paraloc = Paraloc_data[Paraloc_data$var %in% input_data$paraloc,]
-  
-  # will change subset to dplyr::select to change colnames at the same time
-  paralog= dplyr::select(paralog_output,
-                         var.query=var,
-                         ID.query=ID,
-                         Gene.query=Gene,
-                         Transcript.query=Transcript,
-                         Protein_dot.query=Protein_dot.x,
-                         Codons.query=Codons.x,
-                         Para_Z_score.query=Para_Z_score.x, 
-                         var.paralog=var2, 
-                         ID.paralog=ID.y, 
-                         SYMBOL.paralog=SYMBOL,
-                         Protein_dot.paralog=Protein_dot.y,
-                         Codons.paralog=Codons.y,
-                         Para_Z_score.paralog=Para_Z_score.y)
-  
-  #convert numeric to character so as all output df columns left align when renderDataTable()
-  paralog = dplyr::mutate_if(paralog, is.numeric, as.character)
-  
-  return(list("paralog" = paralog, "paraloc" = paraloc))
-
-}
-
-
-
-# check_upload_file ----
-
-
-# function to check if uploaded variants file is valid
-check_upload_file = function(inFile) {
-  # very hacky way to read in vcf
-  # read 1st line only to get number of cols to check if its txt or vcf format
-  # when using colClasses in read.table the columns set to NULL are completely ignored
-  # input_1row = ncol(read.table(inFile$datapath,nrows = 1 ))
-  
-  #eg. msvcf
-  #input_1row = read.table("data/test_data/chr1_head200.vcf",nrows = 1, as.is =T)
-  #print(inFile$datapath)
-  #filename <- "data/test_upload2.txt"
-  #filename2 <- "data/test_data/chr1_head200.vcf"
-  
-  
-  # check if upload file is gz
-  if (endsWith(inFile$datapath, ".gz")) {
-    input_1row = read.table(gzfile(inFile$datapath),nrows = 1, as.is =T)
-  } else {
-    input_1row = read.table(inFile$datapath,nrows = 1, as.is =T)
-  }
-  
-  # check if file is vcf
-  if (ncol(input_1row)>=8 & grepl("^chr|^[1-9]|^[XY]", input_1row$V1) & class(input_1row$V2)=="integer" & nchar(input_1row$V1,type = "chars")<=5) {
-    if (endsWith(inFile$datapath, ".gz")) {
-      input_vcf = read.table(gzfile(inFile$datapath), colClasses = c("character", "integer",rep("character", 3), rep("NULL",(ncol(input_1row)-5))), stringsAsFactors = F)
-    } else {
-      input_vcf = read.table(inFile$datapath, colClasses = c("character", "integer",rep("character", 3), rep("NULL",(ncol(input_1row)-5))), stringsAsFactors = F)
-    }
-    input_file <- data.frame(do.call(paste, c(input_vcf[,1:2],input_vcf[,4:5], sep=":")),stringsAsFactors = F)
-    
-    # check if file is flat txt
-  } else if (ncol(input_1row)>=1 & ncol(input_1row)<=4 & grepl("^chr|^[1-9]|^[XY]", input_1row$V1)) {
-    if (endsWith(inFile$datapath, ".gz")) {
-      input_vcf = read.table(gzfile(inFile$datapath), colClasses = "character", stringsAsFactors = F, as.is = T)
-    } else {
-      input_vcf = read.table(inFile$datapath, colClasses = "character",stringsAsFactors = F,as.is = T)
-      #input_vcf = read.table(filename, colClasses = "character",stringsAsFactors = F,as.is = T)
-      
-    }
-    input_file <- data.frame(do.call(paste, c(input_vcf[colnames(input_vcf)],sep=":")),stringsAsFactors = F)
-    
-    # check if table if correct format
-    if (nchar(input_file[1,1],type = "chars")<10 | !grepl("[AGTC]$", input_file[1,1])) {
-      
-      # write NA table
-      input_file<- data.frame(col1=NA)
-    }
-  } else {
-    # write NA table
-    input_file<- data.frame(col1=NA)
-  }
-  
-  # Keep only first 50 vars
-  input_file <- head(input_file,n = 50)
-  
-  return(input_file)
-}
 
 # add_URLs ---- 
 
@@ -509,56 +546,72 @@ query_paraloc_API <- function(para_split_df_long) {
   
 }
 
+# function to add ensembl URLs to paralg positions in genes
+add_paraloc_URL_new = function(paraloc) {
+  #if (nrow(paraloc)!=0){
+    #Ensembl Gene.query for paraloc
+  
+  paraloc$Gene_ENSG.query   <- map_ENSG[unlist(paraloc$Gene.query)] 
+  paraloc$Gene_ENSG.paraloc <- map_ENSG[unlist(paraloc$Gene.paraloc)] 
 
+    paraloc$Gene.query <- ifelse(paraloc$Gene.query!="NA",
+                                 (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",paraloc$Gene_ENSG.query), "' target='_blank'>", paraloc$Gene.query, "</a>")),
+                                 "-")
+    #Ensembl gene for paraloc
+    paraloc$Gene.paraloc<- ifelse(paraloc$Gene.paraloc!="NA",
+                                  (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",paraloc$Gene_ENSG.paraloc), "' target='_blank'>", paraloc$Gene.paraloc, "</a>")),
+                                  "-")
+    paraloc <- select(paraloc,-c("Gene_ENSG.query","Gene_ENSG.paraloc"))
 
+}
 
 # function to add ensembl URLs to paralg positions in genes
-add_paraloc_URL_new = function(result_paraloc) {
-  
+add_paraloc_URL_old = function(result_paraloc) {
+
   if (nrow(result_paraloc)!=0){
-    
+
     #embl_api <- "https://grch37.rest.ensembl.org"
     para_split_df <- NULL
-    
-    
+
+
     result_paraloc$Positions.paralog <- str_split(result_paraloc$Positions.paralog , pattern = ", ", simplify = F)
-    
-    for (i in 1:nrow(result_paraloc)){ 
+
+    for (i in 1:nrow(result_paraloc)){
       # get all positions from list and apply add_URLs function to every position
       # then paste back as string
-      
+
       # uncomment to use inside the loop
       # para_split_df_long <- suppressMessages(suppressWarnings(cbind(result_paraloc[1,1:5] ,
       #                            separate(data = (data.frame(result_paraloc$Positions.paralog[1]) %>% rename(para_split=1)),col = "para_split" ,into = c("Gene.paraloc", "chr.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " " ))))
 
 
-      para_split_df_long <- suppressMessages(suppressWarnings(cbind(result_paraloc[i,1:5] , 
+      para_split_df_long <- suppressMessages(suppressWarnings(cbind(result_paraloc[i,1:5] ,
                             separate(data = (data.frame(result_paraloc$Positions.paralog[i]) %>% rename(para_split=1)),col = "para_split" ,into = c("Gene.paraloc", "chr.paraloc", "AA_pos.paraloc","AA.paraloc"),sep = " " ))))
-      
+
       para_split_df_long$ENST.paraloc <- NA
       para_split_df_long$ENSG.paraloc <- NA
       para_split_df_long$Protein_position.paraloc <- NA
-      
+
       # run the query to Ensembl API to get transcript, gene and protein position for paraloc
       ###
       # uncomment bellow line to query API
-      #para_split_df_long_API <- query_paraloc_API(para_split_df_long)  ############## revert API call 
+      #para_split_df_long_API <- query_paraloc_API(para_split_df_long)  ############## revert API call
       para_split_df_long_API <- para_split_df_long
-      
+
 
       # example code to tap into Ensembl API
       #para_split_df_long$Codons <- content(GET(paste(embl_api, ext[i], sep = ""), content_type("text/plain")))
-    
-      
+
+
       if (is.null(para_split_df)){
         para_split_df = para_split_df_long_API
       } else {
         para_split_df = rbind(para_split_df, para_split_df_long_API)
       }
-      
+
     }
 
-      
+
     #Ensembl Gene.query for paraloc
     para_split_df$Gene.query<- ifelse(!is.na(para_split_df$Gene.query),
                                       (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",map[unlist(para_split_df$Gene.query)]), "' target='_blank'>", para_split_df$Gene.query, "</a>")),
@@ -581,62 +634,59 @@ add_paraloc_URL_new = function(result_paraloc) {
                                          ), c(1:8,10,12,9) ]
     #print(names(para_split_df))
     para_split_df <- para_split_df[,c(1:5,11,6:10)]
-  } else { 
+  } else {
     para_split_df <- NULL
   }
-  
+
   return(para_split_df)
 }
 
-
-
-
 # function to add ensembl URLs to paralg positions in genes
-add_paralog_URL = function(result) {
+add_paralog_URL = function(paralog) {
   
 
     #ClinVarID paralog URL
-    result$ID.paralog<- ifelse(#!is.na(result$ID.paralog),
-      result$ID.paralog!="NA",
-      (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.paralog,"/"), "' target='_blank'>", result$ID.paralog, "</a>")),
+    paralog$ID.paralog<- ifelse(#!is.na(paralog$ID.paralog),
+      paralog$ID.paralog!="NA",
+      (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",paralog$ID.paralog,"/"), "' target='_blank'>", paralog$ID.paralog, "</a>")),
       "-")
     
     #ClinVarID query URL
-    result$ID.query<- ifelse(#!is.na(result$ID.query),
-      result$ID.query!="NA",
-      (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",result$ID.query,"/"), "' target='_blank'>", result$ID.query, "</a>")),
+    paralog$ID.query<- ifelse(#!is.na(paralog$ID.query),
+      paralog$ID.query!="NA",
+      (paste0("<a href='", paste0("https://www.ncbi.nlm.nih.gov/clinvar/variation/",paralog$ID.query,"/"), "' target='_blank'>", paralog$ID.query, "</a>")),
       "-")
-    #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(result$Gene.query)],";g1=",map[unlist(result$SYMBOL.paralog)]))
+    #print(paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",map[unlist(paralog$Gene.query)],";g1=",map[unlist(paralog$SYMBOL.paralog)]))
     #Ensembl alignment URL
     # https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=ENSG00000213281;g1=ENSG00000133703;seq=cDNA
-    result$Ensembl_alignment_link<- ifelse(!is.na(result$ENSG.paralog), 
-                                           (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",result$ENSG.query,";g1=",result$ENSG.paralog), "' class='btn btn-default btn-xs btn-block active' target='_blank'>alignment</a>")) , 
+    paralog$Ensembl_alignment_link<- ifelse(!is.na(paralog$Gene.paralog), 
+                                           (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",paralog$Gene.query,";g1=",paralog$Gene.paralog), "' class='btn btn-default btn-xs btn-block active' target='_blank'>alignment</a>")) , 
                                            "-") 
     
     # https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=ENSG00000213281;t=ENST00000369535
     #Ensembl ENST.query
-    result$ENST.query<- ifelse(!is.na(result$ENST.query), 
-                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.query,";t=",result$ENST.query), "' target='_blank'>", result$ENST.query, "</a>")),
+    paralog$Feature.query<- ifelse(!is.na(paralog$Feature.query), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",paralog$Gene.query,";t=",paralog$Feature.query), "' target='_blank'>", paralog$Feature.query, "</a>")),
                                "-")
     
     #Ensembl ENST.paralog
-    result$ENST.paralog<- ifelse(!is.na(result$ENST.paralog), 
-                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",result$ENSG.paralog,";t=",result$ENST.paralog), "' target='_blank'>", result$ENST.paralog, "</a>")),
+    paralog$Feature.paralog<- ifelse(!is.na(paralog$Feature.paralog), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",paralog$Gene.paralog,";t=",paralog$Feature.paralog), "' target='_blank'>", paralog$Feature.paralog, "</a>")),
                                "-")
     
     #HGNC Gene.query
-    result$Gene.query<- ifelse(!is.na(result$Gene.query), 
-                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.query), "' target='_blank'>", result$Gene.query, "</a>")),
+    paralog$SYMBOL.query<- ifelse(!is.na(paralog$SYMBOL.query), 
+                               (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",paralog$Gene.query), "' target='_blank'>", paralog$SYMBOL.query, "</a>")),
                                "-")
     
     #HGNC Gene.paralog
-    result$Gene.paralog<- ifelse(!is.na(result$Gene.paralog), 
-                                 (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",result$ENSG.paralog), "' target='_blank'>", result$Gene.paralog, "</a>")),
+    paralog$SYMBOL.paralog<- ifelse(!is.na(paralog$SYMBOL.paralog), 
+                                 (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=",paralog$Gene.paralog), "' target='_blank'>", paralog$SYMBOL.paralog, "</a>")),
                                  "-")
     
-    result <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', result )
+    paralog <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', paralog )
     
-    return(result)
+    return(paralog)
     
 } 
 
@@ -698,59 +748,54 @@ add_homolog_URL = function(result) {
   
 } 
 
-
 # DT_colnames ----
 
 paralog_DT_colnames <- c('Chr.query' = 'CHR.query',
                          'Pos.query' = 'POS.query',
                          'REF.query' = 'REF.query',
                          'ALT.query' = 'ALT.query',
-                         'Query variant' = 'var.query',
+                         'Query variant' = 'var_id.query',
                          'ClinVar.query' = 'ID.query',
-                         'ClinVar Class.query' = 'ClinVar.query',
-                         'Gene.query' = 'Gene.query',
-                         'ENST.query' = 'ENST.query',
-                         'ENSG.query' = 'ENSG.query',
+                         'ClinVar Class.query' = 'CLNSIG.query',
+                         'Gene.query' = 'SYMBOL.query',
+                         'ENSG.query' = 'Gene.query',
+                         'ENST.query' = 'Feature.query',
                          'cDNA.query' = 'cDNA.query',
-                         'Protein.query' = 'Protein.query',
+                         'Residue.query' = 'Amino_acids.query',
                          'cDNA position.query' = 'cDNA_position.query',
-                         'Protein position.query' = 'Protein_position.query',
-                         'AA.query' = 'AA.query',
+                         'Residue_position.query' = 'AA_position.query',
                          'Codons.query' = 'Codons.query',
-                         'Para_Z Score.query'='Para_Z_score.query',
+                         'Para_Z Score.query'='Para_z_score.query',
                          'Chr' = 'CHR.paralog',
                          'Pos' = 'POS.paralog',
                          'REF' = 'REF.paralog',
                          'ALT' = 'ALT.paralog',
-                         'Paralogous variant' = 'var.paralog',
+                         'Paralogous variant' = 'var_id.paralog',
                          'ClinVar ID' = 'ID.paralog',
-                         'ClinVar Class' = 'ClinVar.paralog',
-                         'Gene' = 'Gene.paralog',
-                         'ENSG' = 'ENSG.paralog',
-                         'ENST' = 'ENST.paralog',
+                         'ClinVar Class' = 'CLNSIG.paralog',
+                         'Gene' = 'SYMBOL.paralog',
+                         'ENSG' = 'Gene.paralog',
+                         'ENST' = 'Feature.paralog',
                          'cDNA' = 'cDNA.paralog',
-                         'Protein' = 'Protein.paralog',
+                         'Residue' = 'Amino_acids.paralog',
                          'cDNA position' = 'cDNA_position.paralog',
-                         'Protein position' = 'Protein_position.paralog',
-                         'AA' = 'AA.paralog',
+                         'Residue position' = 'AA_position.paralog',
                          'Codons' = 'Codons.paralog',
-                         'Para_Z Score' = 'Para_Z_score.paralog',
+                         'Para_Z Score' = 'Para_z_score.paralog',
                          'Ensembl alignment' = 'Ensembl_alignment_link')
 
 
 
-paraloc_DT_colnames <- c(
-  'Query variant' = 'var.query',
-  'Query gene' = 'Gene.query',
-  'Query residue' = 'AA.paraloc',
-  'Paralogous gene' = 'Gene.paraloc',
-  'Chromosome' = 'chr.paraloc',
-  'AA Position' = 'AA_pos.paraloc',
-  #'AA Residue' = 'AA.paraloc',
-  'ENST' = 'ENST.paraloc',
-  #'ENSG' = 'ENSG.paraloc',
-  'Protein positions' = 'Protein_position.paraloc'
-  )
+paraloc_DT_colnames <-  c('POS' = 'CHR.query', 
+                          'CHR' = 'POS.query', 
+                          'REF' = 'REF.query', 
+                          'Query variant' = 'var_id.query',
+                          'Query gene' = 'Gene.query',
+                          'Query residue' = 'AA.query',
+                          'Paralogous gene' = 'Gene.paraloc',
+                          'Chromosome' = 'CHR.paraloc',
+                          'AA positions' = 'AA_pos.paraloc'
+                          )
 
 homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
                          'Pos.query' = 'POS.query',
@@ -763,9 +808,9 @@ homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
                          'ENST.query' = 'ENST.query',
                          'ENSG.query' = 'ENSG.query',
                          'cDNA.query' = 'cDNA.query',
-                         'Protein.query' = 'Protein.query',
+                         'Residue.query' = 'Protein.query',
                          'cDNA position.query' = 'cDNA_position.query',
-                         'Protein position.query' = 'Protein_position.query',
+                         'Residue_position.query' = 'Protein_position.query',
                          'AA.query' = 'AA.query',
                          'Codons.query' = 'Codons.query',
                          'Pfam domain' = 'Pfam_domain.query',
@@ -781,9 +826,9 @@ homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
                          'ENSG' = 'ENSG.homolog',
                          'ENST' = 'ENST.homolog',
                          'cDNA' = 'cDNA.homolog',
-                         'Protein' = 'Protein.homolog',
+                         'Residue' = 'Protein.homolog',
                          'cDNA position' = 'cDNA_position.homolog',
-                         'Protein position' = 'Protein_position.homolog',
+                         'Residue position' = 'Protein_position.homolog',
                          'AA' = 'AA.homolog',
                          'Codons' = 'Codons.homolog')
 
@@ -816,8 +861,8 @@ childrow_JS_callback_paralog <- c("
     //        '<td>'+ d[7] +'</td>'+
     //        '<td>'+ d[8] +'</td>'+
     //        '<td>'+ d[10] + '(' + d[9] + '):' + d[11] + ' (' + d[12] + ')' +'</td>'+
+    //        '<td>'+ d[15] +'</td>'+
     //        '<td>'+ d[16] +'</td>'+
-    //        '<td>'+ d[17] +'</td>'+
     //    '</tr>'+
     //  '</tbody>'+
     //  '<tr>'+
@@ -843,11 +888,11 @@ childrow_JS_callback_paralog <- c("
         '</tr>'+
         '<tr>'+
             '<th>Codons</th>'+
-            '<td>'+ d[16] +'</td>'+
+            '<td>'+ d[15] +'</td>'+
         '</tr>'+
         '<tr>'+
             '<th>Para_Z Score</th>'+
-            '<td>'+ d[17] +'</td>'+
+            '<td>'+ d[16] +'</td>'+
         '</tr>'+
     '</table>';
   };
@@ -917,354 +962,73 @@ childrow_JS_callback_homolog <- c("
 );")
 
 
-####### draw proteins example ######
-
-# "P51787 O43526 O43525 P56696 Q9NR82"
-# "Q04206 Q01201 Q04864 P19838 Q00653"
-
-
-####################################
-
-# example data
-# input_data_2 <- generate_test_data_2(4) 
-#input_data_2 <- rbind(generate_test_data_2(1) ,generate_test_data_2(4))
-# 
-#result <- predict_output_tabix(validate_input(input_data_2))$paralog
-#result <- add_paraloc_URL_new(predict_output_tabix(validate_input(input_data_2))$paraloc)
-
-# prepare draw protein dataframe ----
-
-
-# function to order protein accession numbers to dispaly the query prot first
-query_protein_API <- function(query_proteins) {
-  
-  # example query_proteins
-  #query_proteins <- "P51787"
-  #query_proteins <- "P51787 O43526 O43525 P56696 Q9NR82"
-  
-  # GET protein info from UniProt API
-  #prot_data <- feature_to_dataframe(get_features(query_proteins))
-  
-  
-  # get pfam info from Pfam API
-  # ###changed the function get_Pfam to include order col
-  pfam_data <- get_Pfam(query_proteins)
-  
-  # left join UniProt order 
-  #pfam_data2 <- pfam_data %>% left_join(prot_data %>% select(accession, taxid, order) %>% unique.array(),by = "accession")
-  pfam_data$begin <- as.numeric(pfam_data$begin)
-  
-  
-  # join Uniprot and Pfam data
-  #prot_data <- rbind(prot_data, pfam_data)
-  
-  #return(prot_data)
-  return(pfam_data)
-  
-}
+# DT options ----
+paralog_DT_options_list = list(
+  rowGroup = list(dataSrc = c(5)),
+  #dom = 'lfrti',
+  dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+         "<"row"<"col-sm-12"tr>>" +
+         "<"row"<"col-sm-6"i>>" +
+         "<"row"<"col-sm-6 btn-md"B>>"',
+  buttons = list(list(extend = 'excel',
+                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      filename = paste0("paralogous_annotations_",Sys.Date())),
+                 list(extend = 'csv',
+                      fieldBoundary = '',
+                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      fieldSeparator = '\t',
+                      filename = paste0("paralogous_annotations_",Sys.Date()),
+                      extension = '.txt')),
+  paging = T,scrollX = TRUE,
+  columnDefs = list(
+    list(visible = FALSE, targets = c(1:4,6:20,25,29,30)),
+    list(width = "100px",targets = 5),
+    list(orderable = FALSE, className = 'details-control', targets = 0)))
 
 
-
-# 
-get_prot_data <- function(result) {
-  
-
-  result$UniProt_ID.paralog <- map_HGNC[unlist(result$Gene.paralog)]
-  result$UniProt_ID.query <- map_HGNC[unlist(result$Gene.query)]
-  
-  #query_proteins <- paste(map_HGNC[unlist(unique(result$Gene.query))], paste(unique(result$UniProt_ID.paralog),collapse = " "))
-  query_proteins_query  <- paste(map_HGNC[unlist(unique(result$Gene.query))])
-  query_proteins_paralog<- paste(unique(result$UniProt_ID.paralog),collapse = " ")
-  
-  
-  
-  
-  query_prot <- query_protein_API(query_proteins = query_proteins_query)
-  paralog_prot <-  query_protein_API(query_proteins = query_proteins_paralog)
-  
-  # reorder query prot so it comes up as first in the graph
-  query_prot$order <- as.numeric(max(paralog_prot$order)+1)
-  
-  #rbind query and paralog prot
-  prot_data <- rbind(query_prot,paralog_prot)
-  
-  # left join protein data
-  prot_data <- prot_data %>% left_join(rbind(result %>% select("UniProt_ID" = UniProt_ID.query, "Gene" = Gene.query, "ENSG" = ENSG.query, "Protein_position" = Protein_position.query) %>% unique.array(),
-                                             result %>% select("UniProt_ID" = UniProt_ID.paralog, "Gene" = Gene.paralog, "ENSG" = ENSG.paralog, "Protein_position" = Protein_position.paralog) %>% unique.array()),
-                                       by = c("accession"= "UniProt_ID"))
+paraloc_DT_options_list = list(
+  rowGroup = list(dataSrc = c(3)),
+  #dom = 'lfrti',
+  dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" + 
+         "<"row"<"col-sm-12"tr>>" + 
+         "<"row"<"col-sm-6"i>>" +
+         "<"row"<"col-sm-6 btn-md"B>>"',
+  buttons = list(list(extend = 'excel',
+                      text = ' <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      filename = paste0("paralogous_positions_",Sys.Date())),
+                 list(extend = 'csv',
+                      fieldBoundary = '',
+                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      fieldSeparator = '\t',
+                      filename = paste0("paralogous_positions_",Sys.Date()),
+                      extension = '.txt')),
+  paging = T,scrollX = FALSE,
+  columnDefs = list(
+    list(visible = FALSE, targets = c(0:2)),#,9,10 )),# delete the 9,10 to add API calls,9,10 ENST, prot_pos)),
+    list(width = "140px",targets = 3),
+    list(className = 'dt-center', targets = c(3))))
 
 
-  
-  
-  
-  prot_data$Protein_position <- as.numeric(prot_data$Protein_position)
-  #query_HGVS
-  prot_data$HGVS.query <- paste(unique(result$ENST.query),"(", unique(result$Gene.query),"):",unique(result$cDNA.query), " (",unique(result$Protein.query),")", sep = "")
-  #query_var_ID
-  prot_data$query_var_ID <- paste(unique(result$var.query))
+homolog_DT_options_list = list(
+  rowGroup = list(dataSrc = c(5)),
+  #dom = 'lfrti',
+  dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
+         "<"row"<"col-sm-12"tr>>" +
+         "<"row"<"col-sm-6"i>>" +
+         "<"row"<"col-sm-6 btn-md"B>>"',
+  buttons = list(list(extend = 'excel',
+                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      filename = paste0("homologous_pfam_annotations_",Sys.Date())),
+                 list(extend = 'csv',
+                      fieldBoundary = '',
+                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      fieldSeparator = '\t',
+                      filename = paste0("homologous_pfam_annotations_",Sys.Date()),
+                      extension = '.txt')),
+  paging = T,scrollX = TRUE,
+  columnDefs = list(
+    list(visible = FALSE, targets = c(1:4,6:22,27, 31:33)),
+    list(width = "100px",targets = 5),
+    list(orderable = FALSE, className = 'details-control', targets = 0)))
 
-  #Add Gene URL
-  prot_data$Gene<- ifelse(
-    prot_data$Gene!="NA",
-    (paste0("<a href='", paste0("http://pfam.xfam.org/protein/",prot_data$accession,"/"), "' target='_blank'>", prot_data$Gene, "</a>")),
-    prot_data$Gene)
-  
-  
-  prot_data <- separate(data = prot_data,col = description, into = "description", extra = "drop", sep = ";")
-  
-  return(prot_data)
-}
-#####
-
-
-# draw the prot graph ----
-draw_prot_data_plotly <- function(input_data) {
-  # get prot data
-  
-  # #test
-  # input_data_2 <- generate_test_data_2(4)
-  # input_data_2 <- rbind(generate_test_data_2(1) ,generate_test_data_2(4))
-  # # 
-  prot_data <- list()
-  for ( i in unique(input_data$var.query)) {
-    
-    prot_slice <- input_data[input_data$var.query == i,]
-    
-    
-    name <- paste(i)
-    tmp <- get_prot_data( prot_slice)
-    prot_data[[name]] <- tmp
-    
-  }
-
-  
-  # subplot(lapply(prot_data, draw_plotly_graph),margin = 0.05,nrows = length(prot_data),)
-  #fig <- lapply(prot_data, draw_plotly_graph)
-  fig <- lapply(prot_data, draw_plotly_graph_PFAM)
-  
-  
-  
-  # #test
-  #
-  # input_data_2 <- generate_test_data_2(3)
-  # input_data <- predict_output_tabix(validate_input(input_data_2))$paralog
-  # prot_data <- get_prot_data(input_data[input_data$var.query == unique(input_data$var.query)[1],])# %>% dplyr::arrange(desc(order))
-  #
-  #  fig <- draw_plotly_graph(prot_data = prot_data)
-  # fig
-  # #
-  
-}
-
-
-
-# draw plotly graph PFAM positions ----
-
-draw_plotly_graph_PFAM <- function(prot_data, showlegend = T) {
-  
-
-  fig <- plot_ly(prot_data)
-  
-  # Chains
-  fig <- add_bars(fig, data = prot_data[prot_data$type == "PFAM_name",],x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position),
-                  width = 0.02, orientation = 'h', showlegend = F ,name = ~Gene, marker = list(color = toRGB("gray50")), 
-                  hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
-  # Pfam domains
-  fig <- add_bars(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~Gene, base = ~(end-Protein_position) ,#type = 'bar',
-                   width = 0.4, orientation = 'h', showlegend = T, name = ~description, 
-                   hoverinfo = "name+text")
-  # HGVS
-  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 14),
-                         text = paste0(unique(prot_data$HGVS.query)) )  
-  
-  # legend , title and margins
-  fig <- layout(fig,
-                barmode = 'overlay', showlegend = T,
-                title = list(text = paste0("Query variant : ",unique(prot_data$query_var_ID)),font = list(size = 16), 
-                             xref = "paper",yref = "paper",xanchor = "left", x = 0 ),
-                legend = list(itemdoubleclick = "toggle", title = list(text = "Pfam Domains",font = list(size = 14))),
-                yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T) ,margin= c(0, 0.95),# will set the total height of the plot 
-                xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3)) 
-  
-  # plotly toolbox
-  fig <- plotly::config(fig, displayModeBar = T, 
-                        modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d","hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"), 
-                        toImageButtonOptions = list(format = "png",width = "1800", height = "800"), displaylogo = F )
-  
-  # fig
-
-  
-  return(fig)
-  
-
-}
-#####
-
-
-# draw plotly graph ----
-
-draw_plotly_graph <- function(prot_data, showlegend = T, title ) {
-  
-  fig <- plot_ly(prot_data)
-  
-  # Chains
-  if ("CHAIN" %in% prot_data$type ) {
-    fig <- add_bars(fig, data = prot_data[prot_data$type == "CHAIN",],x = ~c((begin)-(end)), y = ~reorder(Gene, order), base = ~(end-Protein_position),
-                    width = 0.02, orientation = 'h', showlegend = F , legendgroup = "Chains", # yaxis = ~Gene,  #xaxis = Gene
-                    marker = list(color = toRGB("gray50")), name = ~Gene, hoverinfo = "name+text") # color = 'rgba(50, 171, 96, 0.6)'
-  }
-  
-  
-  # Folding
-  if ("HELIX" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "HELIX",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.2, orientation = 'h', showlegend = F, name = ~type, legendgroup = "Folding",
-                     opacity = 0.1 , hoverinfo = "name+text")
-  }
-  
-  if ("STRAND" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "STRAND",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
-                     opacity = 0.1 , hoverinfo = "name+text")
-  }
-  
-  if ("TURN" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "TURN",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.2, orientation = 'h', showlegend = F, name = ~type,  legendgroup = "Folding",
-                     opacity = 0.1 , hoverinfo = "name+text")
-  }
-  
-  # Repeat
-  if ("REPEAT" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "REPEAT",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.1, orientation = 'h', showlegend = F, name = ~description,  legendgroup = 'Repeat',
-                     opacity = 0.2, marker = list(color = toRGB("gray50"),
-                                                  line = list(color = toRGB("gray20"), width = 2)),
-                     hoverinfo = "name+text")
-  }
-  
-  # Region
-  if ("REGION" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "REGION",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
-                     hoverinfo = "name+text")
-  }
-  # Domain
-  if ("DOMAIN" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "DOMAIN",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
-                     hoverinfo = "name+text")
-  }
-  
-  # Topo_Domain
-  if ( ("TOPO_DOM" %in% prot_data$type ) | ("TRANSMEM" %in% prot_data$type)) {
-    fig <- add_trace(fig, data = prot_data[(prot_data$type == "TOPO_DOM" | prot_data$type == "TRANSMEM") ,], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
-                     hoverinfo = "name+text")
-  }
-  
-  
-  # Motif
-  if ("MOTIF" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "MOTIF",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'UniProt', 
-                     hoverinfo = "name+text")
-  }
-  
-  
-  # PFam
-  if ("PFAM" %in% prot_data$type ) {
-    fig <- add_trace(fig, data = prot_data[prot_data$type == "PFAM",], x = ~c((begin)-(end)), y = ~reorder(Gene, order),type = 'bar', base = ~(end-Protein_position),
-                     width = 0.4, orientation = 'h', showlegend = T, name = ~description,  legendgroup = 'PFam', 
-                     hoverinfo = "name+text") 
-  }
-  
-  # # Phosphorilation NOT WORKING
-  # if ("MOD_RES" %in% prot_data$type) {
-  #   fig <- add_trace(fig, data = phospho_site_info(prot_data), x = ~c((begin)-(end)), y = ~Gene,type = 'scatter', base = ~(end-Protein_position),
-  #                    width = 0.04, orientation = 'h', showlegend = T, name = "Phosphorilation",  # legendgroup = 'PFam', 
-  #                    hoverinfo = "name+text") 
-  # }
-  
-  fig <- add_annotations(fig, data = prot_data,x = 0,y = 1, yref = "paper", yanchor = "bottom", showarrow = F, font = list(size = 12),
-                         text = paste0(unique(prot_data$HGVS.query)) )  
-  
-  fig <- layout(fig, 
-                yaxis = list(title = "",autorange = T, showgrid = F, showline = F, showticklabels = T),   margin= c(0, 0.95), # will set the total height of the plot 
-                title = list(text = paste0(unique(prot_data$query_var_ID)),
-                              font = list(size = 16), xref = "paper",xref = "paper",xanchor = "left", x = 0 ),
-                xaxis = list(title = "",autorange = T, showgrid = T, showline = F, showticklabels = F,zeroline = T, zerolinewidth = 3),
-                barmode = 'overlay', showlegend = showlegend,legend = list(traceorder = "grouped", 
-                                                                           itemdoubleclick = "toggle", 
-                                                                           tracegroupgap = 20,
-                                                                           title = list(text = "Grouped Domain Annotations",font = list(size = 14)))) 
-  fig <- plotly::config(fig, displayModeBar = T, 
-                modeBarButtonsToRemove = list("pan2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d","resetScale2d","hoverClosestCartesian", "hoverCompareCartesian", "hoverClosestGl2d", "toggleSpikelines"), 
-                toImageButtonOptions = list(format = "png",width = "1800", height = "800"), displaylogo = F )
-  
-  
-  return(fig)
-}
-
-######
-
-# get pfam data ----
-get_Pfam <- function (proteins_acc) 
-{
-  proteins_acc_url <- gsub(" ", "%2C", proteins_acc)
-  
-  baseurl <- "http://pfam.xfam.org/protein/api/"
-  url <- paste0(baseurl, proteins_acc_url)
-  
-  pfam_eg <- suppressWarnings(suppressMessages(read_delim(url, "\t", escape_double = FALSE, col_names = FALSE, trim_ws = TRUE)))[,1:5] #%>% select()
-  
-  if (nrow(pfam_eg)==0) {
-    print(paste("An error has occured while trying to connect to Pfam API."))
-    #print("Pfam download has worked.")
-  }
-  # else {
-  #   print(paste("An error has occured."))
-  # }
-  
-  order=0
-  pfam_eg[c("type", "description", "begin", "end", "length", "accession", "entryName", "order")] <- NA
-  for (i in 1:nrow(pfam_eg)) {
-    # set up cols
-    if (pfam_eg[i,1]=="P") {
-      pfam_eg$type[i] <- "PFAM_name"
-      pfam_eg$description[i] <- pfam_eg$X4[i]
-      pfam_eg$begin[i] <- "1"
-      pfam_eg$end[i] <- pfam_eg$X5[i] 
-      pfam_eg$length[i] <- pfam_eg$X5[i] -1
-      pfam_eg$accession[i] <- pfam_eg$X2[i]
-      pfam_eg$entryName[i] <- pfam_eg$X3[i]
-      
-      order <- order + 1
-      pfam_eg$order[i] <- order
-      
-    } else if (pfam_eg[i,1]=="A") {
-      pfam_eg$type[i] <- "PFAM"
-      pfam_eg$description[i] <- pfam_eg$X2[i]
-      pfam_eg$begin[i] <- pfam_eg$X4[i]
-      pfam_eg$end[i] <- pfam_eg$X5[i]
-      pfam_eg$length[i] <- pfam_eg$X5[i] - as.numeric(pfam_eg$X4[i])
-      pfam_eg$entryName[i] <- pfam_eg$X3[i]
-      
-      
-      pfam_eg$order[i] <- order 
-      
-    }
-    if (is.na(pfam_eg$accession[i])){
-      pfam_eg$accession[i] <- pfam_eg$accession[i-1]
-    }
-    
-  }
-
-  return(pfam_eg[,6:13])
-}
-
-######
-
-
-
-
+#######
