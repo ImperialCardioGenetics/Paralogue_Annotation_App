@@ -1,2 +1,3 @@
+#CHROM	pos	ref	alt
 5	128335544	C	T
 1	115256528	T	G
