@@ -394,7 +394,7 @@ shinyServer(function(input, output, session){
     updateTabsetPanel(session, "navbar", selected = "tab2")
   })
   
-  output$about<-renderUI({includeHTML("about.html")})
+  # output$about<-renderUI({includeHTML("about.html")})
   
 })
 
