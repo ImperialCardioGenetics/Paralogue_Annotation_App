@@ -5,7 +5,6 @@ suppressWarnings(suppressPackageStartupMessages({
   library(shinycssloaders)
   library(tidyverse)
   library(DT)
-  library(kableExtra)
 }))
 
 options(shiny.maxRequestSize=10*1024^2) #max upload size = 100 mb
@@ -16,39 +15,26 @@ enableBookmarking("url")
 shinyServer(function(input, output, session){
   
   
-  table_data <- tibble(Chromosomes = paste0("Chromosome ", c(1:22,"X","Y"), " all possible missense variants")) 
-  
-  output$table <- renderUI({
-    
-    # downloadLink("cm_all_download","Cardiomyopathies variants prediction (tab-delimited text file)"),
+  table_data <- tibble(Chromosomes = paste0("Chromosome ", c(1:22,"X","Y"), " all possible missense variants")) %>% 
+    mutate(txt_file = paste0("paraloc_data_chr", c(1:22,"X","Y"),".txt.gz"),
+           tbi_file = paste0("paraloc_data_chr", c(1:22,"X","Y"),".txt.gz.tbi"),
+           Download_txt = map_chr(txt_file, ~ as.character(tags$a(href = .x, ".txt.gz", target = "_blank"))),
+           Download_tbi = map_chr(tbi_file, ~ as.character(tags$a(href = .x, ".txt.gz.tbi", target = "_blank"))))
 
-    table_html <- table_data |>
-      mutate(download_txt = paste0('<button id="download_txt_', Chromosomes, '">Download</button>')) |>
-      mutate(download_tbi = paste0('<button id="download_tbi_', Chromosomes, '">Download</button>')) |>
-      kbl("html", escape = FALSE) |>
-      kable_styling(full_width = T)
-    
-    HTML(table_html)
+  output$table <- renderDT({
+    datatable(table_data, escape = F,selection = 'none',rownames = F,
+              options = list(dom = 't',
+                             paging = F,
+                             selectize = F,
+                             columnDefs = list(list(targets = c(1,2), visible = FALSE))))
   })
   
-  # Create download handlers for each row
-  for (Chromosomes in seq_along(table_data$Chromosomes)) {
-    local({
-      output[[paste0("download_txt_", Chromosomes)]] <- downloadHandler(
-        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz") },
-        content = function(file) {
-          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz"), file)
-        }
-      )
-      output[[paste0("download_tbi_", Chromosomes)]] <- downloadHandler(
-        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz.tbi") },
-        content = function(file) {
-          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz.tbi"), file)
-        }
-      )
-      
-    })
-  }
+  
+  # Serve the files
+  observe({
+    walk(table_data$txt_file, ~ addResourcePath(.x, paste0("data/paraloc_chr/", .x)))
+    walk(table_data$tbi_file, ~ addResourcePath(.x, paste0("data/paraloc_chr/", .x)))
+  })
   
   
   
