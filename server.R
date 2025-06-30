@@ -408,12 +408,19 @@ shinyServer(function(input, output, session){
     updateTabsetPanel(session, "navbar", selected = "tab2")
   })
   
-  rmarkdown::render("README.md", output_format = rmarkdown::html_fragment(), output_file = "www/README.html", quiet = TRUE)
-  
+  rmarkdown::render("README.md",
+                    output_format = rmarkdown::html_fragment(),
+                    output_file = "www/README.html",
+                    output_options = list(metadata = list(title = "About")),
+                    quiet = TRUE)
+
   # output$about<-renderUI({includeHTML("about.html")})
   output$about<-renderUI({
     includeHTML("www/README.html")
     })
+  
+  
+
   
   # download data
   output$download_file <- downloadHandler(

@@ -185,6 +185,7 @@ fluidPage(
     tabPanel(title = "About", value = "tab4",
                style = "width:80%; margin-right:auto; margin-left:auto", 
                withSpinner(htmlOutput("about")), # This is an html file page that is read in from dir 
+               # withSpinner(uiOutput("about")), # This is an html file page that is read in from dir 
                br()
     )
   )
