@@ -1,11 +1,12 @@
-library(shiny)
-library(DT)
-library(shinythemes)
-library(shinyjs)
-library(shinycssloaders)
-library(writexl)
-
-#library(tidyverse)
+suppressWarnings(suppressPackageStartupMessages({
+  library(shiny)
+  library(shinythemes)
+  library(shinyjs)
+  library(shinycssloaders)
+  library(tidyverse)
+  library(DT)
+  library(kableExtra)
+}))
 
 options(shiny.maxRequestSize=10*1024^2) #max upload size = 100 mb
 enableBookmarking("url")
@@ -14,14 +15,54 @@ enableBookmarking("url")
 
 shinyServer(function(input, output, session){
   
+  
+  table_data <- tibble(Chromosomes = paste0("Chromosome ", c(1:22,"X","Y"), " all possible missense variants")) 
+  
+  output$table <- renderUI({
+    
+    # downloadLink("cm_all_download","Cardiomyopathies variants prediction (tab-delimited text file)"),
+
+    table_html <- table_data |>
+      mutate(download_txt = paste0('<button id="download_txt_', Chromosomes, '">Download</button>')) |>
+      mutate(download_tbi = paste0('<button id="download_tbi_', Chromosomes, '">Download</button>')) |>
+      kbl("html", escape = FALSE) |>
+      kable_styling(full_width = T)
+    
+    HTML(table_html)
+  })
+  
+  # Create download handlers for each row
+  for (Chromosomes in seq_along(table_data$Chromosomes)) {
+    local({
+      output[[paste0("download_txt_", Chromosomes)]] <- downloadHandler(
+        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz") },
+        content = function(file) {
+          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz"), file)
+        }
+      )
+      output[[paste0("download_tbi_", Chromosomes)]] <- downloadHandler(
+        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz.tbi") },
+        content = function(file) {
+          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz.tbi"), file)
+        }
+      )
+      
+    })
+  }
+  
+  
+  
+  
+  
+  
   # set search and main funcs for tabs separately
   get_paralog_search <- function(){lookup_paralog_new(validate_input(input$line))}
   get_paraloc_search <- function(){lookup_paraloc_new(validate_input(input$line))}
-  get_homolog_search <- function(){lookup_homolog(    validate_input(input$line))}
+  get_homolog_search <- function(){lookup_homolog_new(validate_input(input$line))}
 
   get_paralog_main <- function(){if (input$format=='paste') {lookup_paralog_new(validate_input(input$var))} else {lookup_paralog_new(validate_input(check_upload_file(input$file)))}}
   get_paraloc_main <- function(){if (input$format=='paste') {lookup_paraloc_new(validate_input(input$var))} else {lookup_paraloc_new(validate_input(check_upload_file(input$file)))}}
-  get_homolog_main <- function(){if (input$format=='paste') {lookup_homolog(    validate_input(input$var))} else {lookup_homolog(    validate_input(check_upload_file(input$file)))}}
+  get_homolog_main <- function(){if (input$format=='paste') {lookup_homolog_new(validate_input(input$var))} else {lookup_homolog_new(validate_input(check_upload_file(input$file)))}}
     
   
   # get number of vars output for modal msg
@@ -35,7 +76,7 @@ shinyServer(function(input, output, session){
   
 
   # write DT databale object
-  paralog_search<- reactive({renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog_search())),
+  paralog_search<- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_paralog_search())),
                                                            escape = F,
                                                            extensions = c('Buttons','RowGroup'),
                                                            rownames = FALSE,
@@ -46,7 +87,7 @@ shinyServer(function(input, output, session){
                                                            callback = JS(childrow_JS_callback_paralog)) %>% formatStyle(c(" ", "Query variant"),backgroundColor = '#f0f0f0'))
     })
   
-  paralog<- reactive({renderDataTable(DT::datatable(isolate(add_paralog_URL(get_paralog_main())), 
+  paralog<- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_paralog_main())), 
                                                     escape = F,
                                                     extensions = c('Buttons','RowGroup'),
                                                     rownames = FALSE,
@@ -59,7 +100,7 @@ shinyServer(function(input, output, session){
     })
   
 
-  paraloc_search <- reactive({renderDataTable(DT::datatable(isolate(add_paraloc_URL_new(get_paraloc_search())),
+  paraloc_search <- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_paraloc_search())),
                                                             escape = F,
                                                             extensions = c('Buttons','RowGroup'),
                                                             rownames = FALSE,
@@ -70,7 +111,7 @@ shinyServer(function(input, output, session){
     })
   
 
-  paraloc <- reactive({renderDataTable(DT::datatable(isolate(add_paraloc_URL_new(get_paraloc_main())),
+  paraloc <- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_paraloc_main())),
                                                      escape = F,
                                                      extensions = c('Buttons','RowGroup'),
                                                      rownames = FALSE,
@@ -82,7 +123,7 @@ shinyServer(function(input, output, session){
   })
   
   
-  homolog_search<- reactive({renderDataTable(DT::datatable(isolate(add_homolog_URL(get_homolog_search())),
+  homolog_search<- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_homolog_search())),
                                                            escape = F,
                                                            extensions = c('Buttons','RowGroup'),
                                                            rownames = FALSE,
@@ -95,7 +136,7 @@ shinyServer(function(input, output, session){
   
 
   
-  homolog <- reactive({renderDataTable(DT::datatable(isolate(add_homolog_URL(get_homolog_main())),
+  homolog <- reactive({renderDataTable(DT::datatable(isolate(add_URL(get_homolog_main())),
                                                      escape = F,
                                                      extensions = c('Buttons','RowGroup'),
                                                      rownames = FALSE,
@@ -128,7 +169,7 @@ shinyServer(function(input, output, session){
         # display modal
         isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
-          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
+          HTML("Your query returned no homologous pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions and paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
           easyClose = TRUE)))
         
         output$paralog<- isolate(paralog_search())
@@ -147,7 +188,7 @@ shinyServer(function(input, output, session){
             # display modal
             isolate(showModal(modalDialog(
               title = "PARALOG Annotator",
-              HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
+              HTML("Your query returned no paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions and homologous pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
               easyClose = TRUE)))
             
             output$paralog <- isolate(NULL)
@@ -161,7 +202,7 @@ shinyServer(function(input, output, session){
               # display modal
               isolate(showModal(modalDialog(
                 title = "PARALOG Annotator",
-                HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
+                HTML("Your query returned no paralogous or homologous Pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions"), 
                 easyClose = TRUE)))
               
               output$paralog <- isolate(NULL)
@@ -179,7 +220,7 @@ shinyServer(function(input, output, session){
               # display modal
               isolate(showModal(modalDialog(
                 title = "PARALOG Annotator",
-                HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
+                HTML("Your query returned no paralogous positions or paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned homologous Pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
                 easyClose = TRUE)))
               
               output$paralog <- isolate(NULL)
@@ -230,7 +271,7 @@ shinyServer(function(input, output, session){
         # display modal
         isolate(showModal(modalDialog(
           title = "PARALOG Annotator",
-          HTML("Your query returned no homologous pfam variants<br><br>Your query has returned paralogous variants and positions"), 
+          HTML("Your query returned no homologous pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions and paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
           easyClose = TRUE)))
         
         output$paralog <- isolate(paralog())
@@ -251,7 +292,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous variants<br><br>Your query has returned paralogous positions and homologous pfam variants"), 
+            HTML("Your query returned no paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions and homologous pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -265,7 +306,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous or homologous Pfam variants<br><br>Your query has returned paralogous positions"), 
+            HTML("Your query returned no paralogous or homologous Pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned paralogous positions"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -283,7 +324,7 @@ shinyServer(function(input, output, session){
           # display modal
           isolate(showModal(modalDialog(
             title = "PARALOG Annotator",
-            HTML("Your query returned no paralogous variants or paralogous positions<br><br>Your query has returned homologous Pfam variants"), 
+            HTML("Your query returned no paralogous positions or paralogous missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b><br><br>Your query has returned homologous Pfam missense variants annotated as <b>Pathogenic</b> or <b>Likely Pathogenic</b> in <b>ClinVar</b>"), 
             easyClose = TRUE)))
           
           output$paralog <- isolate(NULL)
@@ -367,7 +408,22 @@ shinyServer(function(input, output, session){
     updateTabsetPanel(session, "navbar", selected = "tab2")
   })
   
-
+  rmarkdown::render("README.md", output_format = rmarkdown::html_fragment(), output_file = "www/README.html", quiet = TRUE)
+  
+  # output$about<-renderUI({includeHTML("about.html")})
+  output$about<-renderUI({
+    includeHTML("www/README.html")
+    })
+  
+  # download data
+  output$download_file <- downloadHandler(
+    filename = function() {
+      "paralog_data.txt.gz"  # The name that will appear to the user
+    },
+    content = function(file) {
+      file.copy("paralog_data.txt.gz", file)  # Replace with the actual file path
+    }
+  )
   
 })
 
