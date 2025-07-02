@@ -380,8 +380,10 @@ add_URL = function(data) {
     # https://pfam.xfam.org/family/
     
     #ClinVarID homolog URL
+    # https://www.ebi.ac.uk/interpro/entry/pfam/PF00520/
     data$Pfam_domain.query<- ifelse(data$Pfam_domain.query!="NA",
-                                    (paste0("<a href='", paste0("https://pfam.xfam.org/family/",data$Pfam_domain.query,"/"), "' target='_blank'>", data$Pfam_domain.query, "</a>")),
+                                    # (paste0("<a href='", paste0("https://pfam.xfam.org/family/",data$Pfam_domain.query,"/"), "' target='_blank'>", data$Pfam_domain.query, "</a>")),
+                                    (paste0("<a href='", paste0("https://www.ebi.ac.uk/interpro/entry/pfam/",data$Pfam_domain.query,"/"), "' target='_blank'>", data$Pfam_domain.query, "</a>")),
                                     "-")
     
     #ClinVarID ID.query
@@ -414,7 +416,8 @@ add_URL = function(data) {
                                (paste0("<a href='", paste0("https://grch37.ensembl.org/Homo_sapiens/Transcript/Summary?db=core;g=",data$Gene.homolog,";t=",data$Feature.homolog), "' target='_blank'>", data$Feature.homolog, "</a>")),
                                "-")
     
-    data <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', data )
+    # data <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', data )
+    data <- cbind(' ' = ' ', data)
     
     
     
@@ -457,8 +460,8 @@ add_URL = function(data) {
                                           (paste0("<a href='", paste0("https://www.ensembl.org/Homo_sapiens/Gene/Compara_Paralog/Alignment?db=core;g=",data$Gene.query,";g1=",data$Gene.paralog),"' class='btn btn-default btn-xs btn-block active' style='border-radius:1px;padding:0px' target='_blank'>alignment</a>")),
                                           "-") 
     
-    data <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', data )
-    
+    # data <- cbind(' ' = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-plus-square fa-lg"></i>', data )
+    data <- cbind(' ' = ' ', data)
     
     } else if ("Gene.paraloc" %in% names(data)) {
       
@@ -581,118 +584,99 @@ homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
 # childrow_JS_callback ----
 
 childrow_JS_callback_paralog <- c("
-  table.column(1).nodes().to$().css({cursor: 'pointer'});
-  var format = function(d) {
-    return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
-      '<thead>'+
-        '<tr>'+
-            '<th>ClinVar ID</th>'+
-            '<td>'+ d[6] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>ClinVar class</th>'+
-            '<td>'+ d[7] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Gene</th>'+
-            '<td>'+ d[8] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>ENST</th>'+
-            '<td>'+ d[10] +'</td>'+
-        '</tr>'+
-        '<tr>'+        
-            '<th>HGVSc</th>'+
-    //      '<td>'+ d[9] + '(' + d[8] + '):' + d[10] + ' (' + d[11] + ')' +'</td>'+
-    //      '<td>'+ d[10] + ':' + d[11] + ' (' + d[12] + ')' +'</td>'+
-            '<td>'+ d[12] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>HGVSp</th>'+
-            '<td>'+ d[13] +'</td>'+
-        '</tr>'+
-        '<tr>'+        
-            '<th>Codons</th>'+
-            '<td>'+ d[17] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Para_Z Score</th>'+
-            '<td>'+ d[18] +'</td>'+
-        '</tr>'+
-    '</table>';
-  };
-  table.on('click', 'td.details-control', function() {
-    var td = $(this), row = table.row(td.closest('tr'));
-    if (row.child.isShown()) {
-      row.child.hide();
-  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
-    } else {
-      row.child(format(row.data())).show();
-  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
-    }
+//  table.column(1).nodes().to$().css({cursor: 'pointer'});
+
+table.on('click', 'tr.group', function () {
+  var groupRow = $(this);
+  var groupName = groupRow.text().trim();
+
+  // Check if child row already shown
+  if (groupRow.next().hasClass('group-child')) {
+    groupRow.next().remove();
+    groupRow.find('.toggle-icon').removeClass('fa-minus-square').addClass('fa-plus-square');
+  } else {
+    // Retrieve the first row that matches this group
+    var rowData = table.rows().data().toArray().find(function(d) {
+      return d[5] === groupName;
+    });
+
+    // Use your var_info-style format
+    var format = function(d) {
+      return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
+        '<tr><th>ClinVar ID</th><td>' + d[6] + '</td></tr>'+
+        '<tr><th>ClinVar class</th><td>' + d[7] + '</td></tr>'+
+        '<tr><th>Gene</th><td>' + d[8] + '</td></tr>'+
+        '<tr><th>ENST</th><td>' + d[10] + '</td></tr>'+
+        '<tr><th>HGVSc</th><td>' + d[12] + '</td></tr>'+
+        '<tr><th>HGVSp</th><td>' + d[13] + '</td></tr>'+
+        '<tr><th>Codons</th><td>' + d[17] + '</td></tr>'+
+        '<tr><th>Para_Z Score</th><td>' + d[18] + '</td></tr>'+
+      '</table>';
+    };
+
+    // Insert formatted row
+    $('<tr class=\"group-child\"/>')
+      .html('<td colspan=\"' + table.columns().header().length + '\">' + format(rowData) + '</td>')
+      .insertAfter(groupRow);
+
+    groupRow.find('.toggle-icon').removeClass('fa-plus-square').addClass('fa-minus-square');
   }
-);")
+});")
+
 
 
 childrow_JS_callback_homolog <- c("
-  table.column(1).nodes().to$().css({cursor: 'pointer'});
-  var format = function(d) {
-    return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
-      '<thead>'+
-        '<tr>'+
-            '<th>ClinVar ID</th>'+
-            '<td>'+ d[6] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>ClinVar class</th>'+
-            '<td>'+ d[7] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Gene</th>'+
-            '<td>'+ d[8] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>ENST</th>'+
-            '<td>'+ d[10] +'</td>'+
-        '</tr>'+
-        '<tr>'+ 
-            '<th>HGVSc</th>'+
-            '<td>'+ d[12] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>HGVSp</th>'+
-            '<td>'+ d[13] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Codons</th>'+
-            '<td>'+ d[17] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Pfam domain</th>'+
-            '<td>'+ d[18] +'</td>'+
-        '</tr>'+
-        '<tr>'+
-            '<th>Pfam domain position</th>'+
-            '<td>'+ d[19] +'</td>'+
-        '</tr>'+
-    '</table>';
-  };
-  table.on('click', 'td.details-control', function() {
-    var td = $(this), row = table.row(td.closest('tr'));
-    if (row.child.isShown()) {
-      row.child.hide();
-  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-plus-square fa-lg\"></i>');
-    } else {
-      row.child(format(row.data())).show();
-  //    td.html('<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css\"> <i class=\"fa fa-minus-square fa-lg\"></i>');
-    }
+//  table.column(1).nodes().to$().css({cursor: 'pointer'});
+
+table.on('click', 'tr.group', function () {
+  var groupRow = $(this);
+  var groupName = groupRow.text().trim();
+
+  // Check if child row already shown
+  if (groupRow.next().hasClass('group-child')) {
+    groupRow.next().remove();
+    groupRow.find('.toggle-icon').removeClass('fa-minus-square').addClass('fa-plus-square');
+  } else {
+    // Retrieve the first row that matches this group
+    var rowData = table.rows().data().toArray().find(function(d) {
+      return d[5] === groupName;
+    });
+
+    // Use your var_info-style format
+    var format = function(d) {
+      return '<table style=\"border-spacing:50px\" style=\"width:50%\" cellpadding=\"50px\" style=\"padding-left:50px\">'+
+        '<tr><th>ClinVar ID</th><td>' + d[6] + '</td></tr>'+
+        '<tr><th>ClinVar class</th><td>' + d[7] + '</td></tr>'+
+        '<tr><th>Gene</th><td>' + d[8] + '</td></tr>'+
+        '<tr><th>ENST</th><td>' + d[10] + '</td></tr>'+
+        '<tr><th>HGVSc</th><td>' + d[12] + '</td></tr>'+
+        '<tr><th>HGVSp</th><td>' + d[13] + '</td></tr>'+
+        '<tr><th>Codons</th><td>' + d[17] + '</td></tr>'+
+        '<tr><th>Pfam domain</th><td>' + d[18] + '</td></tr>'+
+        '<tr><th>Pfam domain position</th><td>' + d[19] + '</td></tr>'+
+      '</table>';
+    };
+
+    // Insert formatted row
+    $('<tr class=\"group-child\"/>')
+      .html('<td colspan=\"' + table.columns().header().length + '\">' + format(rowData) + '</td>')
+      .insertAfter(groupRow);
+
+    groupRow.find('.toggle-icon').removeClass('fa-plus-square').addClass('fa-minus-square');
   }
-);")
+});")
+
 
 
 # DT options ----
 paralog_DT_options_list = list(
-  rowGroup = list(dataSrc = c(5)),
+  rowGroup = list(dataSrc = c(5),
+                  startRender = JS(
+                    "function (rows, group) {
+           return $('<tr/>')
+             .append('<td colspan=\"100%\" style=\"cursor:pointer;\"><i class=\"fa fa-plus-square toggle-icon\"></i> <strong>' + group + '</strong></td>')
+             .addClass('group');
+         }")),
   #dom = 'lfrti',
   dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
          "<"row"<"col-sm-12"tr>>" +
@@ -738,7 +722,13 @@ paraloc_DT_options_list = list(
 
 
 homolog_DT_options_list = list(
-  rowGroup = list(dataSrc = c(5)),
+  rowGroup = list(dataSrc = c(5),
+                  startRender = JS(
+                    "function (rows, group) {
+           return $('<tr/>')
+             .append('<td colspan=\"100%\" style=\"cursor:pointer;\"><i class=\"fa fa-plus-square toggle-icon\"></i> <strong>' + group + '</strong></td>')
+             .addClass('group');
+         }")),
   #dom = 'lfrti',
   dom = '"<"row"<"col-sm-6"l><"col-sm-6"f>>" +
          "<"row"<"col-sm-12"tr>>" +
