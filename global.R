@@ -683,11 +683,11 @@ paralog_DT_options_list = list(
          "<"row"<"col-sm-6"i>>" +
          "<"row"<"col-sm-6 btn-md"B>>"',
   buttons = list(list(extend = 'excel',
-                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.xslx)")),
                       filename = paste0("paralogous_annotations_",Sys.Date())),
                  list(extend = 'csv',
                       fieldBoundary = '',
-                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.txt)")),
                       fieldSeparator = '\t',
                       filename = paste0("paralogous_annotations_",Sys.Date()),
                       extension = '.txt')),
@@ -706,11 +706,11 @@ paraloc_DT_options_list = list(
          "<"row"<"col-sm-6"i>>" +
          "<"row"<"col-sm-6 btn-md"B>>"',
   buttons = list(list(extend = 'excel',
-                      text = ' <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.xslx)")),
                       filename = paste0("paralogous_positions_",Sys.Date())),
                  list(extend = 'csv',
                       fieldBoundary = '',
-                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.txt)")),
                       fieldSeparator = '\t',
                       filename = paste0("paralogous_positions_",Sys.Date()),
                       extension = '.txt')),
@@ -735,11 +735,11 @@ homolog_DT_options_list = list(
          "<"row"<"col-sm-6"i>>" +
          "<"row"<"col-sm-6 btn-md"B>>"',
   buttons = list(list(extend = 'excel',
-                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.xslx)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.xslx)")),
                       filename = paste0("homologous_pfam_annotations_",Sys.Date())),
                  list(extend = 'csv',
                       fieldBoundary = '',
-                      text = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"> <i class="fa fa-download"></i>  Download (.txt)',
+                      text = paste(HTML("<i class='fa fa-download'></i> Download (.txt)")),
                       fieldSeparator = '\t',
                       filename = paste0("homologous_pfam_annotations_",Sys.Date()),
                       extension = '.txt')),
@@ -750,3 +750,116 @@ homolog_DT_options_list = list(
     list(orderable = FALSE, className = 'details-control', targets = 0)))
 
 #######
+
+
+# generate Paraloc RAW data Download Table
+generate_download_table <- function(output, session) {
+  chrom_labels <- paste0("Chromosome ", c(1:22, "X", "Y"), " all possible missense variants")
+  chr_nums <- c(1:22, "X", "Y")
+  
+  table_data <- tibble(Chromosomes = chrom_labels) %>% 
+    mutate(
+      chr_num = chr_nums,
+      file_path_txt = paste0("data/paraloc_chr/paraloc_data_chr", chr_num, ".txt.gz"),
+      file_path_tbi = paste0("data/paraloc_chr/paraloc_data_chr", chr_num, ".txt.gz.tbi"),
+      Size = purrr::map_chr(file_path_txt, ~ {
+        size <- file.info(.x)$size
+        if (is.na(size)) "File missing"
+        else paste0(formatC(size / 1024^2, format = "f", digits = 2), " MB")
+      }),
+      txt_id = paste0("download_txt_chr", chr_num),
+      tbi_id = paste0("download_tbi_chr", chr_num)
+    )
+  
+  purrr::walk2(table_data$txt_id, table_data$file_path_txt, ~ {
+    output[[.x]] <- downloadHandler(
+      filename = function() basename(.y),
+      content = function(file) file.copy(.y, file)
+    )
+  })
+  
+  purrr::walk2(table_data$tbi_id, table_data$file_path_tbi, ~ {
+    output[[.x]] <- downloadHandler(
+      filename = function() basename(.y),
+      content = function(file) file.copy(.y, file)
+    )
+  })
+  
+  # Custom style: borderless, soft padding, hover effect
+  tbl <- purrr::pmap(
+    list(table_data$Chromosomes, table_data$Size, table_data$txt_id, table_data$tbi_id),
+    function(chrom, size, txt_id, tbi_id) {
+      sprintf(
+        "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+        chrom,
+        size,
+        as.character(downloadButton(txt_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone")),
+        as.character(downloadButton(tbi_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone"))
+      )
+    }
+  )
+  
+  HTML(paste0(
+    "<style>
+        .dt-button-clone {
+        background-image: linear-gradient(to bottom, #f9f9f9 0%, #e0e0e0 100%);
+        border: 1px solid #999;
+        padding: 6px 12px;
+        font-size: 13px;
+        color: #333;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1);
+        transition: background-color 0.2s ease;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+      }
+    
+      .dt-button-clone:hover {
+        //background-image: linear-gradient(to bottom, #e0e0e0 0%, #d0d0d0 100%);
+        border-color: #666;
+      }
+    
+      .dt-button-clone i {
+        margin-right: 6px;
+      }
+      table.clean-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        table-layout: fixed;
+      }
+      table.clean-table th, table.clean-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid #ddd;
+        word-wrap: break-word;
+      }
+      table.clean-table th:nth-child(2),
+      table.clean-table th:nth-child(3),
+      table.clean-table th:nth-child(4),
+      table.clean-table td:nth-child(2),
+      table.clean-table td:nth-child(3),
+      table.clean-table td:nth-child(4) {
+       text-align: right;
+      }
+  
+      table.clean-table thead th {
+        font-weight: bold;
+        background-color: #f9f9f9;
+      }
+      table.clean-table tbody tr:hover {
+        background-color: #f1f1f1;
+      }
+    </style>",
+    "<table class='clean-table'><thead><tr><th>Chromosomes</th><th>Size</th><th>.txt.gz</th><th>.tx.gz.tbi</th></tr></thead><tbody>",
+    paste(tbl, collapse = ""),
+    "</tbody></table>"
+  ))
+}
+
+
+

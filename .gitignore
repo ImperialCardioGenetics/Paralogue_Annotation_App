@@ -1,6 +1,3 @@
-data/db.sqlite
-Para_locations_all_chrom_noQC.RDS
-rsconnect
-data/paraloc_data.txt.gz
-paralog_app/
-paralog_out.RData
+data/clinvar_20250623
+data/1_download_clinvar_latest.sh
+data/2_process_clinvar_latest.R

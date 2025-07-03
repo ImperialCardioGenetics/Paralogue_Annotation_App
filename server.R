@@ -15,47 +15,12 @@ enableBookmarking("url")
 
 shinyServer(function(input, output, session){
   
-  
-  table_data <- tibble(Chromosomes = paste0("Chromosome ", c(1:22,"X","Y"), " all possible missense variants")) 
-  
-  output$table <- renderUI({
-    
-    # downloadLink("cm_all_download","Cardiomyopathies variants prediction (tab-delimited text file)"),
-
-    table_html <- table_data |>
-      mutate(download_txt = paste0('<button id="download_txt_', Chromosomes, '">Download</button>')) |>
-      mutate(download_tbi = paste0('<button id="download_tbi_', Chromosomes, '">Download</button>')) |>
-      kbl("html", escape = FALSE) |>
-      kable_styling(full_width = T)
-    
-    HTML(table_html)
+  # generate Paraloc RAW data Download Table
+  output$table <- renderUI({generate_download_table(output, session)
   })
   
-  # Create download handlers for each row
-  for (Chromosomes in seq_along(table_data$Chromosomes)) {
-    local({
-      output[[paste0("download_txt_", Chromosomes)]] <- downloadHandler(
-        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz") },
-        content = function(file) {
-          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz"), file)
-        }
-      )
-      output[[paste0("download_tbi_", Chromosomes)]] <- downloadHandler(
-        filename = function() { paste0("paraloc_data_chr", Chromosomes, ".txt.gz.tbi") },
-        content = function(file) {
-          file.copy(paste("data/paraloc_chr/paraloc_data_chr",Chromosomes,".txt.gz.tbi"), file)
-        }
-      )
-      
-    })
-  }
   
-  
-  
-  
-  
-  
-  # set search and main funcs for tabs separately
+  # set search and main functionss for tabs separately
   get_paralog_search <- function(){lookup_paralog_new(validate_input(input$line))}
   get_paraloc_search <- function(){lookup_paraloc_new(validate_input(input$line))}
   get_homolog_search <- function(){lookup_homolog_new(validate_input(input$line))}

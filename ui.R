@@ -6,6 +6,8 @@ suppressWarnings(suppressPackageStartupMessages({
   library(kableExtra)
 }))
 
+
+
 clinvar_version=20250623
 
 fluidPage(
@@ -14,7 +16,9 @@ fluidPage(
   #theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
     navbarPage(title = "PARALOG Annotator v0.4.3", id = "navbar",selected = "tab1",
-
+               
+               # Load awesome fonts stylesheet to be used in the app
+               header=tags$head(tags$link(rel = "stylesheet", href = "https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css")),
                
     # Main box search and description -----------------------------------------
     tabPanel(title = "Home", value = "tab1",
@@ -58,13 +62,13 @@ fluidPage(
                             p(""), style = "background-color: #ffffff")
             ),
             
-            fluidRow(column(12, align="center",
-                            br(),
-                            # tags$p("You can download the data ",
-                            #        tags$a("here", id = "download_file", href = "session/download/download_file", download = "paralog_data.txt.gz"))),
-                            tags$p("You can download the data ",downloadLink("download_file", "here"))),
-                            br()
-            ),
+            # fluidRow(column(12, align="center",
+            #                 br(),
+            #                 # tags$p("You can download the data ",
+            #                 #        tags$a("here", id = "download_file", href = "session/download/download_file", download = "paralog_data.txt.gz"))),
+            #                 tags$p("You can download the data ",downloadLink("download_file", "here"))),
+            #                 br()
+            # ),
             fluidRow(column(12, align="center",
                             br(), 
                             br(),
