@@ -387,15 +387,29 @@ shinyServer(function(input, output, session){
   
 
   
-  # download data
-  output$download_file <- downloadHandler(
+  # # download data
+  # output$download_file <- downloadHandler(
+  #   filename = function() {
+  #     "paralog_data.txt.gz"  # The name that will appear to the user
+  #   },
+  #   content = function(file) {
+  #     file.copy("paralog_data.txt.gz", file)  # Replace with the actual file path
+  #   }
+  # )
+  
+  # download all_pos_mis_PA
+  output$all_pos_mis_PA <- downloadHandler(
     filename = function() {
-      "paralog_data.txt.gz"  # The name that will appear to the user
+      paste0("all_possible_missense_PA_noQC.txt")
     },
     content = function(file) {
-      file.copy("paralog_data.txt.gz", file)  # Replace with the actual file path
+      file.copy(paste("data/all_possible_missense_PA_noQC.txt"), file)
     }
   )
+  
+  
+  
+  
   
 })
 

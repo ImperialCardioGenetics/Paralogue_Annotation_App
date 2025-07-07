@@ -176,13 +176,21 @@ fluidPage(
       
       
     tabPanel(title = "Data", value = "tab3",
-               style = "width:80%; margin-right:auto; margin-left:auto", 
-               h2("Downloads"),
-               p("Download all possible amino acid substitutions on all paralogous genes annotated by PARALOG Annotator for all possible missiense variants."),
-               p("All data mapped to GRCh37 reference genome"),
-               br(),
-               uiOutput("table"),
-               br()
+             style = "width:80%; margin-right:auto; margin-left:auto", 
+             h2("Downloads"),
+             br(),
+             p("Download the list of all possible missense variants (855K) and their annotated gene that are predicted to be pathogenic by paralogous annotation using the ClinVar P/LP variants (version 20190114)."),
+             p("All data mapped to GRCh37 reference genome."),
+             # br(),
+             downloadButton("all_pos_mis_PA", label = HTML(sprintf("Download</button>")),class = "dt-button-clone"),
+             # uiOutput("table_mis_PA"),
+             br(),
+             br(),
+             p("Download all possible amino acid substitutions on all paralogous genes annotated by paralogous annotation for all possible missiense variants."),
+             p("All data mapped to GRCh37 reference genome."),
+             br(),
+             uiOutput("table"),
+             br()
     ),
       
       

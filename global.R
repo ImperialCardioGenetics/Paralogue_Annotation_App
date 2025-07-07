@@ -540,7 +540,7 @@ paraloc_DT_colnames <-  c('POS' = 'CHR.query',
                           'Query residue' = 'AA.query',
                           'Paralogous gene' = 'Gene.paraloc',
                           'Chromosome' = 'CHR.paraloc',
-                          'AA positions' = 'AA_pos.paraloc')
+                          'AA position' = 'AA_pos.paraloc')
 
 # homolog
 homolog_DT_colnames <- c('Chr.query' = 'CHR.query',
@@ -793,8 +793,10 @@ generate_download_table <- function(output, session) {
         "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
         chrom,
         size,
-        as.character(downloadButton(txt_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone")),
-        as.character(downloadButton(tbi_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone"))
+        # as.character(downloadButton(txt_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone")),
+        # as.character(downloadButton(tbi_id,label = HTML(sprintf("<i class='fa fa-download'></i> Download</button>")),class = "dt-button-clone"))
+        as.character(downloadButton(txt_id,label = HTML(sprintf("Download</button>")),class = "dt-button-clone")),
+        as.character(downloadButton(tbi_id,label = HTML(sprintf("Download</button>")),class = "dt-button-clone"))
       )
     }
   )
