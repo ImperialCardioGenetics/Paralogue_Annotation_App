@@ -15,7 +15,7 @@ fluidPage(
 
   #theme=shinytheme("yeti"), # eg. cosmo # https://rstudio.github.io/shinythemes/
   #shinythemes::themeSelector(),  # <--- Add this somewhere in the UI
-    navbarPage(title = "PARALOG Annotator v0.4.3", id = "navbar",selected = "tab1",
+    navbarPage(title = "PARALOG Annotator v0.4.4", id = "navbar",selected = "tab1",
                
                # Load awesome fonts stylesheet to be used in the app
                header=tags$head(tags$link(rel = "stylesheet", href = "https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css")),
@@ -179,15 +179,17 @@ fluidPage(
              style = "width:80%; margin-right:auto; margin-left:auto", 
              h2("Downloads"),
              br(),
-             p("Download the list of all possible missense variants (855K) and their annotated gene that are predicted to be pathogenic by paralogous annotation using the ClinVar P/LP variants (version 20190114)."),
-             p("All data mapped to GRCh37 reference genome."),
+             p(HTML("<b>1.</b> Download the list of all possible missense variants (855K) and their annotated gene that are predicted to be pathogenic by paralogous annotation using the ClinVar P/LP variants (version 20190114).")),
+             p(HTML("<i>All data mapped to GRCh37 reference genome.</i>")),
              # br(),
              downloadButton("all_pos_mis_PA", label = HTML(sprintf("Download</button>")),class = "dt-button-clone"),
              # uiOutput("table_mis_PA"),
              br(),
              br(),
-             p("Download all possible amino acid substitutions on all paralogous genes annotated by paralogous annotation for all possible missiense variants."),
-             p("All data mapped to GRCh37 reference genome."),
+             br(),
+             br(),
+             p(HTML("<b>2.</b> Download all possible amino acid substitutions on all paralogous genes annotated by paralogous annotation for all possible missiense variants.")),
+             p(HTML("<i>All data mapped to GRCh37 reference genome.</i>")),
              br(),
              uiOutput("table"),
              br()
